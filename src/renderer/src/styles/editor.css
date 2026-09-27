@@ -44,7 +44,83 @@
 
 .editor-host .cm-editor {
   height: 100%;
+}
+
+/* Formatting toolbar */
+.format-toolbar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 2px;
+  margin: 8px 20px 0;
+  padding: 4px 6px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg-side);
+}
+
+.format-toolbar .tool {
+  display: inline-grid;
+  place-items: center;
+  min-width: 30px;
+  height: 28px;
+  padding: 0 6px;
+  border: none;
+  border-radius: 5px;
+  background: none;
+  color: var(--text-muted);
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.format-toolbar .tool:hover {
+  background: var(--bg-hover);
+  color: var(--text);
+}
+
+.format-toolbar .tool.on {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.format-toolbar .serif {
+  font-family: Georgia, 'Times New Roman', serif;
+}
+
+.format-toolbar .mono {
+  font-family: var(--font-mono);
+  font-size: 11px;
+}
+
+.format-toolbar .math-glyph {
   font-size: 16px;
+}
+
+.tool-sep {
+  width: 1px;
+  height: 18px;
+  margin: 0 5px;
+  background: var(--border);
+}
+
+.style-select {
+  height: 28px;
+  padding: 0 6px;
+  border: 1px solid transparent;
+  border-radius: 5px;
+  background: none;
+  color: var(--text);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.style-select:hover {
+  background: var(--bg-hover);
+}
+
+.style-select option {
+  background: var(--bg-elevated);
 }
 
 /* Headings */

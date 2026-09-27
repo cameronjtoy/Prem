@@ -1,5 +1,6 @@
 import { useEffect } from 'react'
 import { Group, Panel, Separator } from 'react-resizable-panels'
+import { AppearanceMenu } from './components/AppearanceMenu'
 import { BacklinksPanel } from './components/Backlinks/BacklinksPanel'
 import { NoteEditor } from './components/Editor/NoteEditor'
 import { FileTree } from './components/FileTree/FileTree'
@@ -7,19 +8,22 @@ import { GraphView } from './components/Graph/GraphView'
 import { EditIcon, GraphIcon, TemplateIcon, VaultIcon } from './components/icons'
 import { TemplatePicker } from './components/TemplatePicker'
 import { WelcomeScreen } from './components/WelcomeScreen'
+import { AppearanceProvider } from './state/AppearanceContext'
 import { LinkIndexProvider } from './state/LinkIndexContext'
 import { useVault, VaultProvider } from './state/VaultContext'
 import { useWorkspace, WorkspaceProvider } from './state/WorkspaceContext'
 
 export function App() {
   return (
-    <VaultProvider>
-      <LinkIndexProvider>
-        <WorkspaceProvider>
-          <Shell />
-        </WorkspaceProvider>
-      </LinkIndexProvider>
-    </VaultProvider>
+    <AppearanceProvider>
+      <VaultProvider>
+        <LinkIndexProvider>
+          <WorkspaceProvider>
+            <Shell />
+          </WorkspaceProvider>
+        </LinkIndexProvider>
+      </VaultProvider>
+    </AppearanceProvider>
   )
 }
 
@@ -80,6 +84,7 @@ function Shell() {
                 </button>
               </div>
               <div className="toolbar-spacer" />
+              <AppearanceMenu />
               <button className="text-button" onClick={() => ws.showTemplatePicker(ws.currentFolder())}>
                 <TemplateIcon /> New from template
               </button>

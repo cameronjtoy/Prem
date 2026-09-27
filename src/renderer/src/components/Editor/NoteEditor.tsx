@@ -1,9 +1,11 @@
 import { useEffect, useRef, useState } from 'react'
+import type { EditorView } from '@codemirror/view'
 import { isInside } from '@shared/paths'
 import { errorMessage, vaultClient } from '../../services/vaultClient'
 import { useVault } from '../../state/VaultContext'
 import { useWorkspace } from '../../state/WorkspaceContext'
 import { createExtensions, refreshLinks, type EditorHost } from './extensions'
+import { FormattingToolbar } from './FormattingToolbar'
 import { NoteSession, type Conflict, type SaveStatus } from './NoteSession'
 
 const STATUS_LABEL: Record<SaveStatus, string> = {
@@ -22,6 +24,9 @@ export function NoteEditor({ path, cursor }: { path: string; cursor: number | nu
   const [conflict, setConflict] = useState<Conflict | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
+  const [view, setView] = useState<EditorView | null>(null)
+  // Re-render on edits and cursor moves so the toolbar shows the current formatting.
+  const [, setRevision] = useState(0)
 
   // The editor is created once per note; these refs give its callbacks the latest values.
   const latest = useRef({ resolver, noteTitles, openLink, showNotice })
@@ -45,11 +50,17 @@ export function NoteEditor({ path, cursor }: { path: string; cursor: number | nu
           file,
           hostRef.current,
           (s) => createExtensions(host, () => void s.save()),
-          { onStatus: setStatus, onConflict: setConflict, onError: setError },
+          {
+            onStatus: setStatus,
+            onConflict: setConflict,
+            onError: setError,
+            onViewUpdate: () => setRevision((r) => r + 1)
+          },
           cursor
         )
         sessionRef.current = session
         registerEditor({ path, flush: () => session.save(), discard: () => session.discard() })
+        setView(session.view)
         setLoading(false)
         // Don't steal focus from the file tree's rename box when a new note is being named.
         if (!(document.activeElement instanceof HTMLInputElement)) session.view.focus()
@@ -60,6 +71,7 @@ export function NoteEditor({ path, cursor }: { path: string; cursor: number | nu
       cancelled = true
       sessionRef.current?.close()
       sessionRef.current = null
+      setView(null)
       registerEditor(null)
     }
     // `cursor` is deliberately left out: it only matters when the note is first opened.
@@ -93,6 +105,7 @@ export function NoteEditor({ path, cursor }: { path: string; cursor: number | nu
         </div>
         {!loading && <span className={`save-status ${status}`}>{STATUS_LABEL[status]}</span>}
       </div>
+      {view && <FormattingToolbar view={view} />}
       {conflict && (
         <div className="banner warning">
           <span>This note was changed outside the app while you had unsaved edits.</span>

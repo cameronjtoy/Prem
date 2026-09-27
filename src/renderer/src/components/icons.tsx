@@ -63,7 +63,73 @@ export const VaultIcon = (p: IconProps) => (
   </svg>
 )
 
-export const ChevronIcon = (p: IconProps) => (
+export const BulletListIcon = (p: IconProps) => (
+  <svg {...base(p)}>
+    <path d="M9 6h11M9 12h11M9 18h11" />
+    <circle cx="4.5" cy="6" r="1" fill="currentColor" />
+    <circle cx="4.5" cy="12" r="1" fill="currentColor" />
+    <circle cx="4.5" cy="18" r="1" fill="currentColor" />
+  </svg>
+)
+
+export const NumberListIcon = (p: IconProps) => (
+  <svg {...base(p)}>
+    <path d="M10 6h10M10 12h10M10 18h10" />
+    <path d="M4 5l1.5-1v5M3.5 9h3M3.5 14.5a1.5 1.5 0 1 1 2.6 1L3.5 19h3" strokeWidth={1.4} />
+  </svg>
+)
+
+export const TaskListIcon = (p: IconProps) => (
+  <svg {...base(p)}>
+    <rect x="3" y="4" width="6" height="6" rx="1" />
+    <path d="M4.5 7l1.2 1.2L8 5.8" />
+    <rect x="3" y="14" width="6" height="6" rx="1" />
+    <path d="M13 7h8M13 17h8" />
+  </svg>
+)
+
+export const QuoteIcon = (p: IconProps) => (
+  <svg {...base(p)}>
+    <path d="M4 5v14M9 8h11M9 12h11M9 16h7" />
+  </svg>
+)
+
+export const LinkIcon = (p: IconProps) => (
+  <svg {...base(p)}>
+    <path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1" />
+    <path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1" />
+  </svg>
+)
+
+export const NoteLinkIcon = (p: IconProps) => (
+  <svg {...base(p)}>
+    <path d="M8 4H5v16h3M16 4h3v16h-3" />
+    <path d="M10 12h4" />
+  </svg>
+)
+
+export const TableIcon = (p: IconProps) => (
+  <svg {...base(p)}>
+    <rect x="3" y="4" width="18" height="16" rx="2" />
+    <path d="M3 10h18M3 15h18M10 4v16" />
+  </svg>
+)
+
+export const CodeBlockIcon = (p: IconProps) => (
+  <svg {...base(p)}>
+    <rect x="3" y="4" width="18" height="16" rx="2" />
+    <path d="M9 10l-2 2 2 2M15 10l2 2-2 2" />
+  </svg>
+)
+
+export const DividerIcon = (p: IconProps) => (
+  <svg {...base(p)}>
+    <path d="M3 12h18" />
+    <path d="M7 6h10M7 18h10" strokeOpacity={0.4} />
+  </svg>
+)
+
+export const ChevronIcon =(p: IconProps) => (
   <svg {...base({ width: 12, height: 12, ...p })}>
     <path d="M9 6l6 6-6 6" />
   </svg>

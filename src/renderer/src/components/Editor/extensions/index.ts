@@ -7,6 +7,7 @@ import { highlightSelectionMatches, searchKeymap } from '@codemirror/search'
 import { Prec, type Extension } from '@codemirror/state'
 import { drawSelection, dropCursor, EditorView, keymap } from '@codemirror/view'
 import { wikilinkAutocomplete } from './autocomplete'
+import { formattingKeymap } from './formatting'
 import { hostFacet, type EditorHost } from './host'
 import { livePreview } from './livePreview'
 import { MathSyntax, WikiLinkSyntax } from './syntax'
@@ -16,6 +17,7 @@ export function createExtensions(host: EditorHost, onSave: () => void): Extensio
   return [
     hostFacet.of(host),
     Prec.highest(keymap.of([{ key: 'Mod-s', preventDefault: true, run: () => (onSave(), true) }])),
+    formattingKeymap,
     history(),
     drawSelection(),
     dropCursor(),

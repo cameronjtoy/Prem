@@ -35,6 +35,9 @@
   --font-text: -apple-system, BlinkMacSystemFont, 'Segoe UI', Inter, system-ui, sans-serif;
   --font-mono: 'SF Mono', ui-monospace, Menlo, Consolas, monospace;
   --editor-width: 760px;
+  --editor-font: var(--font-text);
+  --editor-font-size: 16px;
+  --editor-line-height: 1.65;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -539,6 +542,100 @@ button {
   margin: 0 0 24px;
   color: var(--text-muted);
   line-height: 1.5;
+}
+
+/* Appearance menu */
+
+.appearance {
+  position: relative;
+}
+
+.text-button.on {
+  background: var(--bg-hover);
+  color: var(--text);
+}
+
+.aa {
+  font-family: Georgia, serif;
+  font-weight: 600;
+}
+
+.popover {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 60;
+  width: 340px;
+  padding: 12px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: var(--shadow);
+}
+
+.setting-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.setting-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.setting-row .segmented {
+  display: flex;
+}
+
+.setting-row .segmented button {
+  flex: 1;
+  justify-content: center;
+}
+
+.stepper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.stepper button {
+  padding: 3px 8px;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  background: var(--bg);
+  cursor: pointer;
+}
+
+.stepper button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.stepper input[type='range'] {
+  flex: 1;
+  accent-color: var(--accent);
+}
+
+.size-value {
+  width: 36px;
+  text-align: right;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.popover-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+}
+
+.popover-footer .hint {
+  margin: 0;
 }
 
 /* Template picker */
