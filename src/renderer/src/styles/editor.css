@@ -1,0 +1,192 @@
+.note-editor {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.note-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 20px 0;
+  font-size: 12px;
+  color: var(--text-faint);
+}
+
+.breadcrumb {
+  flex: 1;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.crumb + .crumb::before {
+  content: ' / ';
+}
+
+.crumb.current {
+  color: var(--text-muted);
+}
+
+.save-status.dirty,
+.save-status.saving {
+  color: var(--text-muted);
+}
+
+.save-status.error {
+  color: var(--danger);
+}
+
+.editor-host {
+  flex: 1;
+  min-height: 0;
+}
+
+.editor-host .cm-editor {
+  height: 100%;
+  font-size: 16px;
+}
+
+/* Headings */
+.cm-md-h1 { font-size: 1.9em; line-height: 1.3; padding-top: 0.4em; }
+.cm-md-h2 { font-size: 1.5em; line-height: 1.35; padding-top: 0.35em; }
+.cm-md-h3 { font-size: 1.25em; padding-top: 0.3em; }
+.cm-md-h4 { font-size: 1.1em; }
+.cm-md-h5, .cm-md-h6 { font-size: 1em; color: var(--text-muted); }
+
+.cm-md-frontmatter {
+  font-family: var(--font-mono);
+  font-size: 0.8em;
+  color: var(--text-faint);
+  background: var(--code-bg);
+}
+
+.cm-md-inline-code {
+  font-family: var(--font-mono);
+  font-size: 0.88em;
+  padding: 1px 4px;
+  border-radius: 4px;
+  background: var(--code-bg);
+}
+
+.cm-md-codeblock {
+  font-family: var(--font-mono);
+  font-size: 0.88em;
+  background: var(--code-bg);
+  padding-left: 14px !important;
+}
+
+.cm-md-quote {
+  border-left: 3px solid var(--accent);
+  padding-left: 14px !important;
+  color: var(--text-muted);
+}
+
+.cm-md-hr {
+  color: transparent;
+  background: linear-gradient(var(--border), var(--border)) center / 100% 1px no-repeat;
+}
+
+.cm-md-link {
+  color: var(--accent);
+  text-decoration: underline;
+  text-decoration-color: var(--accent-soft);
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.cm-md-list-mark {
+  color: var(--text-faint);
+}
+
+/* Wikilinks */
+.cm-wikilink {
+  color: var(--accent);
+  cursor: pointer;
+  text-decoration: underline;
+  text-decoration-color: var(--accent-soft);
+  text-underline-offset: 3px;
+}
+
+.cm-wikilink:hover {
+  text-decoration-color: var(--accent);
+}
+
+.cm-wikilink-unresolved {
+  color: var(--text-faint);
+  text-decoration-style: dashed;
+}
+
+.cm-wikilink-source {
+  color: var(--accent);
+}
+
+/* Math */
+.cm-math-inline {
+  padding: 0 2px;
+  cursor: text;
+}
+
+.cm-math-block {
+  padding: 8px 0;
+  overflow-x: auto;
+  cursor: text;
+}
+
+.cm-math-source {
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+  color: var(--syn-math);
+}
+
+.cm-math-error {
+  color: var(--danger);
+  font-family: var(--font-mono);
+}
+
+/* Tasks */
+.cm-task-checkbox {
+  width: 15px;
+  height: 15px;
+  margin: 0 6px 0 0;
+  vertical-align: -2px;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+.cm-task-done {
+  color: var(--text-faint);
+  text-decoration: line-through;
+}
+
+/* Tables */
+.cm-table-widget {
+  padding: 6px 0;
+  overflow-x: auto;
+  cursor: text;
+}
+
+.cm-table-widget table {
+  border-collapse: collapse;
+  font-size: 0.92em;
+}
+
+.cm-table-widget th,
+.cm-table-widget td {
+  padding: 6px 12px;
+  border: 1px solid var(--border);
+  text-align: left;
+}
+
+.cm-table-widget th {
+  background: var(--code-bg);
+  font-weight: 600;
+}
+
+.cm-table-widget code {
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+  padding: 1px 4px;
+  border-radius: 4px;
+  background: var(--code-bg);
+}

@@ -1,0 +1,48 @@
+import { closeBrackets, closeBracketsKeymap, completionKeymap } from '@codemirror/autocomplete'
+import { defaultKeymap, history, historyKeymap, indentWithTab } from '@codemirror/commands'
+import { markdown, markdownLanguage } from '@codemirror/lang-markdown'
+import { bracketMatching, indentOnInput, syntaxHighlighting } from '@codemirror/language'
+import { languages } from '@codemirror/language-data'
+import { highlightSelectionMatches, searchKeymap } from '@codemirror/search'
+import { Prec, type Extension } from '@codemirror/state'
+import { drawSelection, dropCursor, EditorView, keymap } from '@codemirror/view'
+import { wikilinkAutocomplete } from './autocomplete'
+import { hostFacet, type EditorHost } from './host'
+import { livePreview } from './livePreview'
+import { MathSyntax, WikiLinkSyntax } from './syntax'
+import { editorTheme, highlightStyle } from './theme'
+
+export function createExtensions(host: EditorHost, onSave: () => void): Extension[] {
+  return [
+    hostFacet.of(host),
+    Prec.highest(keymap.of([{ key: 'Mod-s', preventDefault: true, run: () => (onSave(), true) }])),
+    history(),
+    drawSelection(),
+    dropCursor(),
+    indentOnInput(),
+    bracketMatching(),
+    closeBrackets(),
+    highlightSelectionMatches(),
+    EditorView.lineWrapping,
+    EditorView.contentAttributes.of({ spellcheck: 'true' }),
+    markdown({
+      base: markdownLanguage,
+      codeLanguages: languages,
+      extensions: [WikiLinkSyntax, MathSyntax]
+    }),
+    syntaxHighlighting(highlightStyle),
+    livePreview,
+    wikilinkAutocomplete,
+    keymap.of([
+      ...closeBracketsKeymap,
+      ...completionKeymap,
+      ...defaultKeymap,
+      ...searchKeymap,
+      ...historyKeymap,
+      indentWithTab
+    ]),
+    editorTheme
+  ]
+}
+
+export { fromDisk, refreshLinks, type EditorHost } from './host'
