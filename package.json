@@ -1,0 +1,48 @@
+{
+  "name": "note-app",
+  "version": "0.1.0",
+  "private": true,
+  "description": "A desktop knowledge hub for notes, equations and runbooks, in the style of Obsidian.",
+  "main": "./out/main/index.js",
+  "type": "commonjs",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cameronjtoy/note-app.git"
+  },
+  "scripts": {
+    "postinstall": "node node_modules/electron/install.js",
+    "dev": "electron-vite dev",
+    "build": "electron-vite build",
+    "preview": "electron-vite preview",
+    "typecheck": "tsc --noEmit -p tsconfig.node.json --composite false && tsc --noEmit -p tsconfig.web.json --composite false",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@codemirror/autocomplete": "^6.20.3",
+    "@codemirror/commands": "^6.11.1",
+    "@codemirror/lang-markdown": "^6.5.2",
+    "@codemirror/language": "^6.12.4",
+    "@codemirror/language-data": "^6.5.2",
+    "@codemirror/search": "^6.7.2",
+    "@codemirror/state": "^6.7.6",
+    "@codemirror/view": "^6.43.13",
+    "@lezer/common": "^1.5.3",
+    "@lezer/highlight": "^1.2.4",
+    "@lezer/markdown": "^1.7.2",
+    "@types/node": "^26.6.3",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^5.2.0",
+    "chokidar": "^5.0.0",
+    "electron": "^44.4.5",
+    "electron-vite": "^5.0.0",
+    "katex": "^0.18.9",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "react-force-graph-2d": "^1.29.1",
+    "react-resizable-panels": "^4.14.1",
+    "typescript": "^7.0.2",
+    "vite": "^7.3.6",
+    "vitest": "^3.2.7"
+  }
+}
