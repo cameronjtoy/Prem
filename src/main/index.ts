@@ -30,7 +30,7 @@ function createWindow(): void {
     minWidth: 800,
     minHeight: 500,
     show: false,
-    title: 'Note App',
+    title: 'Prem',
     backgroundColor: '#1e1e1e',
     webPreferences: {
       preload: path.join(__dirname, '../preload/index.js'),

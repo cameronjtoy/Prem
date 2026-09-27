@@ -1,4 +1,4 @@
-# Note App
+# Prem
 
 A desktop knowledge hub in the style of Obsidian, where technical and business teams keep reference notes, formulas and runbooks. Notes are plain markdown files in a folder (a "vault"), so they stay portable and work with git or any other editor.
 

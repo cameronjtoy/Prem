@@ -7,7 +7,7 @@ export function WelcomeScreen() {
   return (
     <div className="welcome">
       <div className="welcome-card">
-        <h1>Note App</h1>
+        <h1>Prem</h1>
         <p>
           A shared home for your team's knowledge: reference notes, formulas and runbooks, all linked together.
         </p>
