@@ -11,6 +11,7 @@ const api: Api = {
   vault: {
     pickAndOpen: () => ipcRenderer.invoke(Channels.pickAndOpen),
     openLast: () => ipcRenderer.invoke(Channels.openLast),
+    connect: (url, token) => ipcRenderer.invoke(Channels.connect, url, token),
     list: () => ipcRenderer.invoke(Channels.list),
     read: (path) => ipcRenderer.invoke(Channels.read, path),
     write: (path, content, options) => ipcRenderer.invoke(Channels.write, path, content, options),

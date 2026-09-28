@@ -16,7 +16,10 @@
     "build": "electron-vite build",
     "preview": "electron-vite preview",
     "typecheck": "tsc --noEmit -p tsconfig.node.json --composite false && tsc --noEmit -p tsconfig.web.json --composite false",
-    "test": "vitest run"
+    "test": "vitest run",
+    "server:build": "vite build --config vite.server.config.ts",
+    "server": "npm run server:build && node out/server/index.js",
+    "server:token": "npm run server:build --silent && node out/server/index.js token"
   },
   "devDependencies": {
     "@codemirror/autocomplete": "^6.20.3",

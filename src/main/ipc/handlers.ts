@@ -2,7 +2,7 @@ import { dialog, ipcMain, shell, type BrowserWindow, type OpenDialogOptions } fr
 import { VaultError, type IpcResult } from '@shared/errors'
 import { Channels } from '@shared/ipc'
 import type { WriteOptions } from '@shared/types'
-import { loadSettings } from '../settings'
+import { loadSettings, recallToken } from '../settings'
 import type { VaultManager } from '../vault/vaultManager'
 
 function str(value: unknown, name: string): string {
@@ -44,8 +44,15 @@ export function registerIpc(vaults: VaultManager, getWindow: () => BrowserWindow
     return vaults.open(result.filePaths[0])
   })
 
+  handle(Channels.connect, (url, token) => vaults.connect(str(url, 'url'), str(token, 'token')))
+
   handle(Channels.openLast, async () => {
-    const { lastVault } = await loadSettings()
+    const { lastVault, lastServer } = await loadSettings()
+    if (lastServer) {
+      const token = recallToken(lastServer)
+      // A team server that's down shouldn't silently fall back to some other vault, so surface the error.
+      return token ? vaults.connect(lastServer.url, token) : null
+    }
     if (!lastVault) return null
     try {
       return await vaults.open(lastVault)

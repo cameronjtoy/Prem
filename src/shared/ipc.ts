@@ -14,6 +14,7 @@ import type {
 export const Channels = {
   pickAndOpen: 'vault:pickAndOpen',
   openLast: 'vault:openLast',
+  connect: 'vault:connect',
   list: 'vault:list',
   read: 'vault:read',
   write: 'vault:write',
@@ -35,6 +36,7 @@ export interface Api {
   vault: {
     pickAndOpen(): R<VaultInfo | null>
     openLast(): R<VaultInfo | null>
+    connect(url: string, token: string): R<VaultInfo>
     list(): R<VaultEntry[]>
     read(path: string): R<FileRecord>
     write(path: string, content: string, options?: WriteOptions): R<WriteResult>

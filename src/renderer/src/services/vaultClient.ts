@@ -11,6 +11,7 @@ async function unwrap<T>(pending: Promise<IpcResult<T>>): Promise<T> {
 export const vaultClient = {
   pickAndOpen: () => unwrap(window.api.vault.pickAndOpen()),
   openLast: () => unwrap(window.api.vault.openLast()),
+  connect: (url: string, token: string) => unwrap(window.api.vault.connect(url, token)),
   list: () => unwrap(window.api.vault.list()),
   read: (path: string) => unwrap(window.api.vault.read(path)),
   write: (path: string, content: string, options?: WriteOptions) =>
