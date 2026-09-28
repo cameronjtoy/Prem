@@ -8,12 +8,16 @@ export interface VaultEntry {
   kind: EntryKind
 }
 
+import type { AccessLevel } from './access'
+
 export interface VaultInfo {
   name: string
   /** A folder path for a local vault, or the server address for a team vault. */
   root: string
   /** Who the team server knows you as. Only set for team vaults. */
   user?: string
+  /** Your per-folder permissions on a team vault. Local vaults are fully writable. */
+  access?: Record<string, AccessLevel>
 }
 
 export interface FileRecord {

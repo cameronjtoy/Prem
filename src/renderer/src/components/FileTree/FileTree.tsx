@@ -23,8 +23,9 @@ function saveExpanded(key: string, expanded: Set<string>): void {
 }
 
 export function FileTree() {
-  const { info, entries } = useVault()
+  const { info, entries, canWrite } = useVault()
   const ws = useWorkspace()
+  const canCreate = canWrite(ws.currentFolder())
   const tree = useMemo(() => buildTree(entries), [entries])
   const storageKey = `expanded:${info?.root ?? ''}`
   const [expanded, setExpanded] = useState(() => loadExpanded(storageKey))
@@ -56,20 +57,25 @@ export function FileTree() {
     e.preventDefault()
     e.stopPropagation()
     const folder = node ? (node.kind === 'folder' ? node.path : dirname(node.path)) : ''
-    const items: (MenuItem | 'separator')[] = [
-      { label: 'New note', onSelect: () => void ws.createNote(folder) },
-      { label: 'New note from template…', onSelect: () => ws.showTemplatePicker(folder) },
-      { label: 'New folder', onSelect: () => void ws.createFolder(folder) }
-    ]
-    if (node) {
-      if (node.kind === 'folder') setExpanded((prev) => new Set(prev).add(node.path))
+    const items: (MenuItem | 'separator')[] = []
+    if (canWrite(folder)) {
       items.push(
-        'separator',
-        { label: 'Rename', onSelect: () => ws.startRename(node.path) },
-        { label: 'Delete', danger: true, onSelect: () => void ws.remove(node.path) }
+        { label: 'New note', onSelect: () => void ws.createNote(folder) },
+        { label: 'New note from template…', onSelect: () => ws.showTemplatePicker(folder) },
+        { label: 'New folder', onSelect: () => void ws.createFolder(folder) }
       )
     }
-    setMenu({ x: e.clientX, y: e.clientY, items })
+    if (node) {
+      if (node.kind === 'folder') setExpanded((prev) => new Set(prev).add(node.path))
+      if (canWrite(node.path)) {
+        if (items.length) items.push('separator')
+        items.push(
+          { label: 'Rename', onSelect: () => ws.startRename(node.path) },
+          { label: 'Delete', danger: true, onSelect: () => void ws.remove(node.path) }
+        )
+      }
+    }
+    if (items.length) setMenu({ x: e.clientX, y: e.clientY, items })
   }
 
   return (
@@ -78,19 +84,23 @@ export function FileTree() {
         <span className="pane-title" title={info?.user ? `${info.user} on ${info.root}` : info?.root}>
           {info?.name}
         </span>
-        <button className="icon-button" title="New note (⌘N)" onClick={() => void ws.createNote(ws.currentFolder())}>
-          <NewNoteIcon />
-        </button>
-        <button
-          className="icon-button"
-          title="New note from template (⌘⇧N)"
-          onClick={() => ws.showTemplatePicker(ws.currentFolder())}
-        >
-          <TemplateIcon />
-        </button>
-        <button className="icon-button" title="New folder" onClick={() => void ws.createFolder(ws.currentFolder())}>
-          <NewFolderIcon />
-        </button>
+        {canCreate && (
+          <>
+            <button className="icon-button" title="New note (⌘N)" onClick={() => void ws.createNote(ws.currentFolder())}>
+              <NewNoteIcon />
+            </button>
+            <button
+              className="icon-button"
+              title="New note from template (⌘⇧N)"
+              onClick={() => ws.showTemplatePicker(ws.currentFolder())}
+            >
+              <TemplateIcon />
+            </button>
+            <button className="icon-button" title="New folder" onClick={() => void ws.createFolder(ws.currentFolder())}>
+              <NewFolderIcon />
+            </button>
+          </>
+        )}
         <button className="icon-button" title="Collapse all" onClick={() => setExpanded(new Set())}>
           <CollapseIcon />
         </button>

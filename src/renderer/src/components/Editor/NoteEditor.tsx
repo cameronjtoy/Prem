@@ -14,7 +14,7 @@ const STATUS_LABEL: Record<SaveStatus, string> = {
 }
 
 export function NoteEditor({ path, cursor }: { path: string; cursor: number | null }) {
-  const { resolver, noteTitles, subscribe } = useVault()
+  const { resolver, noteTitles, subscribe, canWrite } = useVault()
   const { openLink, registerEditor, showNotice } = useWorkspace()
   const hostRef = useRef<HTMLDivElement>(null)
   const sessionRef = useRef<NoteSession | null>(null)
@@ -22,6 +22,7 @@ export function NoteEditor({ path, cursor }: { path: string; cursor: number | nu
   const [conflict, setConflict] = useState<Conflict | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
+  const readOnly = !canWrite(path)
 
   // The editor is created once per note; these refs give its callbacks the latest values.
   const latest = useRef({ resolver, noteTitles, openLink, showNotice })
@@ -44,7 +45,7 @@ export function NoteEditor({ path, cursor }: { path: string; cursor: number | nu
           path,
           file,
           hostRef.current,
-          (s) => createExtensions(host, () => void s.save()),
+          (s) => createExtensions(host, () => void s.save(), readOnly),
           { onStatus: setStatus, onConflict: setConflict, onError: setError },
           cursor
         )
@@ -63,7 +64,7 @@ export function NoteEditor({ path, cursor }: { path: string; cursor: number | nu
       registerEditor(null)
     }
     // `cursor` is deliberately left out: it only matters when the note is first opened.
-  }, [path, registerEditor])
+  }, [path, registerEditor, readOnly])
 
   useEffect(
     () =>
@@ -91,11 +92,18 @@ export function NoteEditor({ path, cursor }: { path: string; cursor: number | nu
             </span>
           ))}
         </div>
-        {!loading && <span className={`save-status ${status}`}>{STATUS_LABEL[status]}</span>}
+        {!loading &&
+          (readOnly ? (
+            <span className="save-status" title="You can read this note but not edit it">
+              Read only
+            </span>
+          ) : (
+            <span className={`save-status ${status}`}>{STATUS_LABEL[status]}</span>
+          ))}
       </div>
       {conflict && (
         <div className="banner warning">
-          <span>This note was changed outside the app while you had unsaved edits.</span>
+          <span>This note was changed somewhere else while you had unsaved edits.</span>
           <button onClick={() => sessionRef.current?.reloadFromDisk()}>Use version on disk</button>
           <button onClick={() => void sessionRef.current?.keepMine()}>Keep my edits</button>
         </div>

@@ -20,6 +20,8 @@ npm run dev
 ```
 Then choose **Open a folder as a vault** and pick `sample-vault/`, or any other folder.
 
+`prem-vault/` holds the runbooks for deploying and running your own Prem team server. Start with `Deploying Prem`.
+
 | Command | What it does |
 | --- | --- |
 | `npm run dev` | Run the app with hot reload |
@@ -50,7 +52,7 @@ The team server hosts a single vault folder so everyone works from the same runb
 3. Start the server: `npm run server`
 4. In the app, choose **Join your team's vault** and enter the server address and your token.
 
-**Permissions** map folders to `none`, `read` or `write`. The rule for the deepest matching folder wins, and anything no rule covers is hidden. For example, `{ "": "read", "Finance": "write" }` lets someone read everything and edit only Finance, and `{ "Runbooks": "read" }` gives a support bot read-only access to runbooks and nothing else. Notes someone can't read never reach their app: they don't appear in the file tree, links, graph or live updates.
+**Permissions** map folders to `none`, `read` or `write`. The rule for the deepest matching folder wins, and anything no rule covers is hidden. For example, `{ "": "read", "Finance": "write" }` lets someone read everything and edit only Finance, and `{ "Runbooks": "read" }` gives a support bot read-only access to runbooks and nothing else. Notes someone can't read never reach their app: they don't appear in the file tree, links, graph or live updates. Notes someone can read but not edit open as read-only, and the app only offers actions they're allowed to do.
 
 **Deploying.** The server listens on `127.0.0.1:4747` by default. To share it, put it behind a reverse proxy that terminates HTTPS (Caddy, nginx or your load balancer) and set `host` to `0.0.0.0` if the proxy runs on another machine. The app only sends tokens over `https://`, except to `localhost`. `GET /api/health` needs no token, for health checks. Saves, moves and deletes are logged with the user's name, and deleted notes go to a `.trash` folder inside the vault.
 
