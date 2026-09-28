@@ -4,6 +4,13 @@ A desktop knowledge hub in the style of Obsidian, where technical and business t
 
 ## Features
 - **Live-preview editor** (CodeMirror 6). Markdown syntax is hidden except on the line you're editing.
+- **Formatting toolbar** with the usual word-processor controls:
+  - Text style (normal text or headings 1–6), bold, italic, strikethrough and inline code
+  - Bulleted lists, numbered lists, checklists and quotes
+  - Note links, web links, tables, code blocks, equations and dividers
+
+  Every control writes standard markdown, so notes stay portable.
+- **Appearance settings** for font (sans, serif or mono), text size, line spacing and page width. These are saved per computer and never change the files themselves.
 - **Wikilinks** such as `[[Note name]]`, `[[Note|alias]]` and `[[Note#Heading]]`. Links autocomplete after `[[`. A link to a note that doesn't exist yet appears faded, and clicking it creates the note.
 - **Equations** with KaTeX: `$inline$` and `$$ block $$`.
 - **Runbook-friendly markdown**: clickable checkboxes, syntax-highlighted code blocks and rendered tables.
@@ -35,6 +42,10 @@ Then choose **Open a folder as a vault** and pick `sample-vault/`, or any other 
 | ⌘O | Open another vault |
 | ⌘S | Save now (notes also autosave) |
 | ⌘-click | Follow a link while its markdown is showing |
+| ⌘B / ⌘I / ⌘⇧X / ⌘E | Bold / italic / strikethrough / inline code |
+| ⌘K | Insert a web link |
+| ⌥⌘0 – ⌥⌘3 | Normal text, Heading 1–3 |
+| ⌘⇧7 / ⌘⇧8 / ⌘⇧9 | Numbered list / bulleted list / checklist |
 
 ## Architecture
 ```

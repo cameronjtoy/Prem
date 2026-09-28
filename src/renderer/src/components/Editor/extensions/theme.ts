@@ -28,7 +28,12 @@ export const highlightStyle = HighlightStyle.define([
 export const editorTheme = EditorView.theme({
   '&': { height: '100%', backgroundColor: 'transparent', color: 'var(--text)' },
   '&.cm-focused': { outline: 'none' },
-  '.cm-scroller': { fontFamily: 'var(--font-text)', lineHeight: '1.65', overflow: 'auto' },
+  '.cm-scroller': {
+    fontFamily: 'var(--editor-font)',
+    fontSize: 'var(--editor-font-size)',
+    lineHeight: 'var(--editor-line-height)',
+    overflow: 'auto'
+  },
   '.cm-content': {
     maxWidth: 'var(--editor-width)',
     margin: '0 auto',

@@ -16,6 +16,8 @@ export interface SessionCallbacks {
   onStatus(status: SaveStatus): void
   onConflict(conflict: Conflict | null): void
   onError(message: string | null): void
+  /** The text or cursor changed, e.g. so the formatting toolbar can refresh. */
+  onViewUpdate(): void
 }
 
 const AUTOSAVE_MS = 600
@@ -50,6 +52,7 @@ export class NoteSession {
           extensions(this),
           EditorView.updateListener.of((u) => {
             if (u.docChanged && !u.transactions.some((tr) => tr.annotation(fromDisk))) this.scheduleSave()
+            if (u.docChanged || u.selectionSet) this.ui.onViewUpdate()
           })
         ]
       })
