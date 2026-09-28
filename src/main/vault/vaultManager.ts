@@ -1,4 +1,5 @@
 import { realpath, stat } from 'node:fs/promises'
+import { shell } from 'electron'
 import { VaultError } from '@shared/errors'
 import { LinkIndex } from '@shared/linkIndex'
 import {
@@ -20,9 +21,10 @@ import type {
   WriteOptions,
   WriteResult
 } from '@shared/types'
-import { saveSettings } from '../settings'
+import { rememberServer, saveSettings } from '../settings'
 import { DEFAULT_TEMPLATES } from './defaultTemplates'
 import { LocalFsProvider } from './LocalFsProvider'
+import { RemoteProvider } from './RemoteProvider'
 import type { VaultProvider } from './VaultProvider'
 
 export interface VaultEvents {
@@ -49,16 +51,28 @@ export class VaultManager {
   async open(folder: string): Promise<VaultInfo> {
     const root = await realpath(folder)
     if (!(await stat(root)).isDirectory()) throw new VaultError('INVALID_PATH', 'Not a folder')
-    await this.close()
-
-    const provider = new LocalFsProvider(root)
+    const provider = new LocalFsProvider(root, { trash: (abs) => shell.trashItem(abs) })
     await this.seedTemplates(provider)
-    this.index = new LinkIndex()
-    this.index.build(await provider.readAllMarkdown())
+    await this.attach(provider)
+    await saveSettings({ lastVault: root, lastServer: undefined })
+    return { name: provider.name, root }
+  }
+
+  /** Opens a vault hosted by a team server. The server seeds templates and enforces who can see what. */
+  async connect(url: string, token: string): Promise<VaultInfo> {
+    const provider = await RemoteProvider.connect(url, token)
+    await this.attach(provider)
+    await rememberServer(provider.root, token)
+    return { name: provider.name, root: provider.root, user: provider.user }
+  }
+
+  private async attach(provider: VaultProvider): Promise<void> {
+    const index = new LinkIndex()
+    index.build(await provider.readAllMarkdown())
+    await this.close()
+    this.index = index
     this.provider = provider
     this.unwatch = provider.watch((changes) => void this.handleChanges(changes))
-    await saveSettings({ lastVault: root })
-    return { name: provider.name, root }
   }
 
   async close(): Promise<void> {

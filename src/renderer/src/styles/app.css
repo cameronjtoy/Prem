@@ -541,6 +541,31 @@ button {
   line-height: 1.5;
 }
 
+.connect-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 28px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+}
+
+.connect-form h2 {
+  margin: 0 0 4px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+.connect-form .text-button {
+  align-self: center;
+}
+
+.connect-form .text-button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
 /* Template picker */
 
 .modal-backdrop {

@@ -5,6 +5,9 @@ export type VaultErrorCode =
   | 'CONFLICT'
   | 'NO_VAULT'
   | 'INVALID_ARGUMENT'
+  | 'UNAUTHORIZED'
+  | 'FORBIDDEN'
+  | 'UNAVAILABLE'
   | 'UNKNOWN'
 
 export class VaultError extends Error {

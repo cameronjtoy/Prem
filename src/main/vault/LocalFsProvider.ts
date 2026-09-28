@@ -3,7 +3,6 @@ import { constants } from 'node:fs'
 import * as fs from 'node:fs/promises'
 import path from 'node:path'
 import { watch, type FSWatcher } from 'chokidar'
-import { shell } from 'electron'
 import { VaultError } from '@shared/errors'
 import { isMarkdown } from '@shared/paths'
 import type {
@@ -20,6 +19,7 @@ import type { VaultProvider } from './VaultProvider'
 
 const IGNORED_NAMES = new Set(['node_modules'])
 const isIgnoredName = (name: string): boolean => name.startsWith('.') || IGNORED_NAMES.has(name)
+const TRASH_FOLDER = '.trash'
 const SELF_WRITE_TTL_MS = 3000
 const BATCH_MS = 100
 
@@ -34,16 +34,33 @@ function wrapFsError(err: unknown, relPath: string): never {
   throw err
 }
 
+export interface LocalFsOptions {
+  /** Where deleted files go. Defaults to a hidden `.trash` folder inside the vault. */
+  trash?: (abs: string) => Promise<void>
+}
+
 /** A vault stored as a folder of markdown files on the local disk. */
 export class LocalFsProvider implements VaultProvider {
   readonly name: string
   private watcher: FSWatcher | null = null
   /** Versions produced by our own writes, so the watcher can ignore their echo. */
   private selfWrites = new Map<VaultPath, string>()
+  private readonly trash: (abs: string) => Promise<void>
 
   /** `root` must be a real (symlink-resolved) absolute path. */
-  constructor(readonly root: string) {
+  constructor(
+    readonly root: string,
+    options: LocalFsOptions = {}
+  ) {
     this.name = path.basename(root)
+    this.trash = options.trash ?? ((abs) => this.moveToVaultTrash(abs))
+  }
+
+  private async moveToVaultTrash(abs: string): Promise<void> {
+    const dir = path.join(this.root, TRASH_FOLDER)
+    await fs.mkdir(dir, { recursive: true })
+    const stamp = new Date().toISOString().replace(/[:.]/g, '-')
+    await fs.rename(abs, path.join(dir, `${stamp}-${randomBytes(3).toString('hex')} ${path.basename(abs)}`))
   }
 
   private async abs(relPath: string): Promise<string> {
@@ -144,7 +161,7 @@ export class LocalFsProvider implements VaultProvider {
     if (!relPath) throw new VaultError('INVALID_PATH', 'Cannot delete the vault root')
     const abs = await this.abs(relPath)
     if (!(await this.existsAbs(abs))) throw new VaultError('NOT_FOUND', `Not found: ${relPath}`)
-    await shell.trashItem(abs)
+    await this.trash(abs)
   }
 
   async exists(relPath: VaultPath): Promise<boolean> {

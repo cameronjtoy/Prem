@@ -75,7 +75,7 @@ export function FileTree() {
   return (
     <div className="file-tree">
       <div className="pane-toolbar">
-        <span className="pane-title" title={info?.root}>
+        <span className="pane-title" title={info?.user ? `${info.user} on ${info.root}` : info?.root}>
           {info?.name}
         </span>
         <button className="icon-button" title="New note (⌘N)" onClick={() => void ws.createNote(ws.currentFolder())}>

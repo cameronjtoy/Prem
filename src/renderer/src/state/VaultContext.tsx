@@ -14,6 +14,7 @@ interface VaultState {
   resolver: Resolver
   noteTitles: string[]
   openVault(): Promise<void>
+  connectServer(url: string, token: string): Promise<void>
   refresh(): Promise<void>
   subscribe(listener: ChangeListener): () => void
 }
@@ -70,6 +71,17 @@ export function VaultProvider({ children }: { children: ReactNode }) {
     }
   }, [load])
 
+  const connectServer = useCallback(
+    async (url: string, token: string) => {
+      try {
+        await load(await vaultClient.connect(url, token))
+      } catch (err) {
+        setError(errorMessage(err))
+      }
+    },
+    [load]
+  )
+
   const refresh = useCallback(async () => {
     if (info) setEntries(await vaultClient.list())
   }, [info])
@@ -90,8 +102,8 @@ export function VaultProvider({ children }: { children: ReactNode }) {
   )
 
   const value = useMemo(
-    () => ({ info, entries, starting, error, resolver, noteTitles, openVault, refresh, subscribe }),
-    [info, entries, starting, error, resolver, noteTitles, openVault, refresh, subscribe]
+    () => ({ info, entries, starting, error, resolver, noteTitles, openVault, connectServer, refresh, subscribe }),
+    [info, entries, starting, error, resolver, noteTitles, openVault, connectServer, refresh, subscribe]
   )
   return <VaultContext.Provider value={value}>{children}</VaultContext.Provider>
 }
