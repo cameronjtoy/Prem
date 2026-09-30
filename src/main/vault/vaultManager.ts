@@ -1,5 +1,5 @@
 import { mkdtemp, realpath, stat, writeFile } from 'node:fs/promises'
-import { tmpdir } from 'node:os'
+import { tmpdir, userInfo } from 'node:os'
 import { join } from 'node:path'
 import { shell } from 'electron'
 import {
@@ -12,6 +12,7 @@ import {
 } from '@shared/attachments'
 import { VaultError } from '@shared/errors'
 import { LinkIndex } from '@shared/linkIndex'
+import { dailyNotePath, parseDay } from '@shared/notebook'
 import {
   basename,
   isMarkdown,
@@ -33,7 +34,7 @@ import type {
   WriteResult
 } from '@shared/types'
 import { rememberServer, saveSettings } from '../settings'
-import { DEFAULT_TEMPLATES } from './defaultTemplates'
+import { DAILY_TEMPLATE, DEFAULT_TEMPLATES } from './defaultTemplates'
 import { LocalFsProvider } from './LocalFsProvider'
 import { RemoteProvider } from './RemoteProvider'
 import type { VaultProvider } from './VaultProvider'
@@ -51,6 +52,10 @@ export class VaultManager {
   private index = new LinkIndex()
   private unwatch: (() => void) | null = null
   private broadcastTimer: NodeJS.Timeout | null = null
+  /** Who's writing: the team server's name for you, or your login name for a local vault. */
+  private author = ''
+  /** Set for team vaults, where each person's notebook lives in its own folder. */
+  private user: string | undefined
 
   constructor(private readonly events: VaultEvents) {}
 
@@ -65,6 +70,8 @@ export class VaultManager {
     const provider = new LocalFsProvider(root, { trash: (abs) => shell.trashItem(abs) })
     await this.seedTemplates(provider)
     await this.attach(provider)
+    this.user = undefined
+    this.author = localUserName()
     await saveSettings({ lastVault: root, lastServer: undefined })
     return { name: provider.name, root }
   }
@@ -73,6 +80,8 @@ export class VaultManager {
   async connect(url: string, token: string): Promise<VaultInfo> {
     const provider = await RemoteProvider.connect(url, token)
     await this.attach(provider)
+    this.user = provider.user
+    this.author = provider.user
     await rememberServer(provider.root, token)
     return { name: provider.name, root: provider.root, user: provider.user, access: provider.access }
   }
@@ -121,7 +130,7 @@ export class VaultManager {
       const name = n === 0 ? baseName : `${baseName} ${n}`
       const path = joinPath(folder, `${name}.md`)
       if (await provider.exists(path)) continue
-      const { content, cursor } = renderTemplate(source, { title: name })
+      const { content, cursor } = renderTemplate(source, { title: name, author: this.author })
       try {
         await this.write(path, content, { createOnly: true })
         return { path, cursor }
@@ -176,6 +185,29 @@ export class VaultManager {
     if (error) throw new VaultError('UNKNOWN', `Couldn't open ${basename(path)}: ${error}`)
   }
 
+  /** Opens the daily entry for `day` (YYYY-MM-DD, in the user's own time zone), creating it on first use. */
+  async openDaily(day: string): Promise<CreatedNote> {
+    const provider = this.current
+    const path = dailyNotePath(day, this.user)
+    if (await provider.exists(path)) return { path, cursor: null }
+
+    const custom = `${TEMPLATES_FOLDER}/${DAILY_TEMPLATE}`
+    const source = (await provider.exists(custom)) ? (await provider.read(custom)).content : DEFAULT_TEMPLATES[DAILY_TEMPLATE]
+    // The entry is dated for the day asked for; {{time}} still means the time it was created.
+    const now = new Date()
+    const when = parseDay(day)
+    when.setHours(now.getHours(), now.getMinutes())
+    const { content, cursor } = renderTemplate(source, { title: day, now: when, author: this.author })
+    try {
+      await this.write(path, content, { createOnly: true })
+      return { path, cursor }
+    } catch (err) {
+      // Created a moment ago, e.g. by the same person on another machine.
+      if (err instanceof VaultError && err.code === 'EXISTS') return { path, cursor: null }
+      throw err
+    }
+  }
+
   private async seedTemplates(provider: VaultProvider): Promise<void> {
     if (await provider.exists(TEMPLATES_FOLDER)) return
     await provider.mkdir(TEMPLATES_FOLDER)
@@ -214,5 +246,13 @@ export class VaultManager {
       const snapshot = this.snapshot()
       if (snapshot) this.events.onIndexUpdated(snapshot)
     }, INDEX_BROADCAST_MS)
+  }
+}
+
+function localUserName(): string {
+  try {
+    return userInfo().username
+  } catch {
+    return ''
   }
 }

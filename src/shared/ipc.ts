@@ -27,6 +27,7 @@ export const Channels = {
   openFile: 'attachments:open',
   listTemplates: 'templates:list',
   createFromTemplate: 'templates:create',
+  openDaily: 'notebook:openDaily',
   getIndex: 'index:get',
   openExternal: 'app:openExternal',
   vaultChanged: 'vault:changed',
@@ -58,6 +59,10 @@ export interface Api {
   templates: {
     list(): R<TemplateInfo[]>
     create(templatePath: string, title: string, folder: string): R<CreatedNote>
+  }
+  notebook: {
+    /** Opens or creates the daily entry for a YYYY-MM-DD day. */
+    openDaily(day: string): R<CreatedNote>
   }
   index: {
     get(): R<LinkIndexSnapshot | null>

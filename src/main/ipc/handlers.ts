@@ -82,6 +82,8 @@ export function registerIpc(vaults: VaultManager, getWindow: () => BrowserWindow
     vaults.createFromTemplate(str(templatePath, 'templatePath'), str(title, 'title'), str(folder, 'folder'))
   )
 
+  handle(Channels.openDaily, (day) => vaults.openDaily(str(day, 'day')))
+
   handle(Channels.getIndex, () => vaults.snapshot())
 
   handle(Channels.openExternal, async (url) => {

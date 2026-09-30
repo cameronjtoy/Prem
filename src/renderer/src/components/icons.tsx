@@ -68,3 +68,11 @@ export const ChevronIcon = (p: IconProps) => (
     <path d="M9 6l6 6-6 6" />
   </svg>
 )
+
+export const TodayIcon = (p: IconProps) => (
+  <svg {...base(p)}>
+    <rect x="3" y="5" width="18" height="16" rx="2" />
+    <path d="M3 10h18M8 3v4M16 3v4" />
+    <rect x="8" y="13" width="3" height="3" rx="0.5" />
+  </svg>
+)

@@ -27,6 +27,7 @@ export const vaultClient = {
   listTemplates: () => unwrap(window.api.templates.list()),
   createFromTemplate: (templatePath: string, title: string, folder: string) =>
     unwrap(window.api.templates.create(templatePath, title, folder)),
+  openDaily: (day: string) => unwrap(window.api.notebook.openDaily(day)),
   getIndex: () => unwrap(window.api.index.get()),
   onIndexUpdated: window.api.index.onUpdated,
   openExternal: (url: string) => unwrap(window.api.app.openExternal(url))
