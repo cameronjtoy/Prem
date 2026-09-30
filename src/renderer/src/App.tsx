@@ -24,8 +24,9 @@ export function App() {
 }
 
 function Shell() {
-  const { info, openVault } = useVault()
+  const { info, openVault, canWrite } = useVault()
   const ws = useWorkspace()
+  const canCreate = canWrite(ws.currentFolder())
 
   useEffect(() => {
     if (!info) return
@@ -34,8 +35,11 @@ function Shell() {
       if (!(e.metaKey || e.ctrlKey) || e.altKey) return
       const key = e.key.toLowerCase()
       let handled = true
-      if (key === 'n' && e.shiftKey) ws.showTemplatePicker(ws.currentFolder())
-      else if (key === 'n') void ws.createNote(ws.currentFolder())
+      if (key === 'n' && e.shiftKey) {
+        if (canCreate) ws.showTemplatePicker(ws.currentFolder())
+      } else if (key === 'n') {
+        if (canCreate) void ws.createNote(ws.currentFolder())
+      }
       else if (key === 'g' && !e.shiftKey) ws.setView(ws.view === 'graph' ? 'editor' : 'graph')
       else if (key === 'o' && !e.shiftKey) void openVault()
       else handled = false
@@ -46,7 +50,7 @@ function Shell() {
     }
     window.addEventListener('keydown', onKey, true)
     return () => window.removeEventListener('keydown', onKey, true)
-  }, [info, ws, openVault])
+  }, [info, ws, openVault, canCreate])
 
   if (!info) return <WelcomeScreen />
 
@@ -80,9 +84,11 @@ function Shell() {
                 </button>
               </div>
               <div className="toolbar-spacer" />
-              <button className="text-button" onClick={() => ws.showTemplatePicker(ws.currentFolder())}>
-                <TemplateIcon /> New from template
-              </button>
+              {canCreate && (
+                <button className="text-button" onClick={() => ws.showTemplatePicker(ws.currentFolder())}>
+                  <TemplateIcon /> New from template
+                </button>
+              )}
               <button className="text-button" onClick={() => void openVault()} title="Open another vault (⌘O)">
                 <VaultIcon /> Switch vault
               </button>
@@ -116,6 +122,15 @@ function Shell() {
 
 function EmptyState() {
   const ws = useWorkspace()
+  const { canWrite } = useVault()
+  if (!canWrite('')) {
+    return (
+      <div className="empty-state">
+        <p>No note open.</p>
+        <p className="hint">Pick a note from the list on the left. ⌘G shows the graph.</p>
+      </div>
+    )
+  }
   return (
     <div className="empty-state">
       <p>No note open.</p>

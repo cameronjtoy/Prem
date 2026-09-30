@@ -4,7 +4,7 @@ import { markdown, markdownLanguage } from '@codemirror/lang-markdown'
 import { bracketMatching, indentOnInput, syntaxHighlighting } from '@codemirror/language'
 import { languages } from '@codemirror/language-data'
 import { highlightSelectionMatches, searchKeymap } from '@codemirror/search'
-import { Prec, type Extension } from '@codemirror/state'
+import { EditorState, Prec, type Extension } from '@codemirror/state'
 import { drawSelection, dropCursor, EditorView, keymap } from '@codemirror/view'
 import { wikilinkAutocomplete } from './autocomplete'
 import { hostFacet, type EditorHost } from './host'
@@ -12,9 +12,10 @@ import { livePreview } from './livePreview'
 import { MathSyntax, WikiLinkSyntax } from './syntax'
 import { editorTheme, highlightStyle } from './theme'
 
-export function createExtensions(host: EditorHost, onSave: () => void): Extension[] {
+export function createExtensions(host: EditorHost, onSave: () => void, readOnly = false): Extension[] {
   return [
     hostFacet.of(host),
+    EditorState.readOnly.of(readOnly),
     Prec.highest(keymap.of([{ key: 'Mod-s', preventDefault: true, run: () => (onSave(), true) }])),
     history(),
     drawSelection(),

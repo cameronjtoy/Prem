@@ -72,6 +72,7 @@ async function* serverSentEvents(body: ReadableStream<Uint8Array>, onActivity: (
 export class RemoteProvider implements VaultProvider {
   readonly name: string
   readonly user: string
+  readonly access: ServerInfo['access']
   private readonly clientId = randomUUID()
   private readonly streams = new Set<AbortController>()
   /** What this client last knew of the vault, so a reconnect can report what it missed. */
@@ -85,6 +86,7 @@ export class RemoteProvider implements VaultProvider {
   ) {
     this.name = info.name
     this.user = info.user
+    this.access = info.access
   }
 
   /** Checks the address and token, and fails with UNAUTHORIZED or UNAVAILABLE before anything is opened. */

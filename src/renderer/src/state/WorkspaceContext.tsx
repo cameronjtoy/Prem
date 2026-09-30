@@ -51,7 +51,7 @@ async function freePath(folder: VaultPath, name: string, ext: string): Promise<V
 }
 
 export function WorkspaceProvider({ children }: { children: ReactNode }) {
-  const { info, resolver, subscribe, refresh } = useVault()
+  const { info, resolver, subscribe, refresh, canWrite } = useVault()
   const [active, setActive] = useState<OpenNote | null>(null)
   const [view, setView] = useState<MainView>('editor')
   const [renamingPath, setRenamingPath] = useState<VaultPath | null>(null)
@@ -105,9 +105,11 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
       const resolved = resolver(target, fromPath)
       if (resolved) return openNote(resolved)
       const folder = target.includes('/') ? dirname(target) : ''
+      // On a team vault the note may exist in a folder you can't see, so don't offer to create it.
+      if (!canWrite(folder)) return setNotice(`"${target}" isn't a note you have access to.`)
       await createFromTemplate('', basename(target), folder)
     },
-    [resolver, openNote, createFromTemplate]
+    [resolver, openNote, createFromTemplate, canWrite]
   )
 
   const createNote = useCallback(

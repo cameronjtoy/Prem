@@ -80,8 +80,10 @@ export class CheckboxWidget extends WidgetType {
     box.type = 'checkbox'
     box.className = 'cm-task-checkbox'
     box.checked = this.checked
+    box.disabled = view.state.readOnly
     box.addEventListener('mousedown', (e) => {
       e.preventDefault()
+      if (view.state.readOnly) return
       const pos = view.posAtDOM(box)
       if (!/^\[[ xX]\]$/.test(view.state.sliceDoc(pos, pos + 3))) return
       view.dispatch({ changes: { from: pos + 1, to: pos + 2, insert: this.checked ? ' ' : 'x' } })

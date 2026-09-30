@@ -1,4 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
+import { Access } from '@shared/access'
 import { isInside, isMarkdown, isTemplate, noteTitle } from '@shared/paths'
 import { createResolver, type Resolver } from '@shared/resolve'
 import type { VaultChange, VaultEntry, VaultInfo } from '@shared/types'
@@ -13,6 +14,8 @@ interface VaultState {
   error: string | null
   resolver: Resolver
   noteTitles: string[]
+  /** Whether you may change this path. Always true for local vaults; team vaults follow your folder permissions. */
+  canWrite(path: string): boolean
   openVault(): Promise<void>
   connectServer(url: string, token: string): Promise<void>
   refresh(): Promise<void>
@@ -101,9 +104,15 @@ export function VaultProvider({ children }: { children: ReactNode }) {
     [notePaths]
   )
 
+  const canWrite = useMemo(() => {
+    if (!info?.access) return () => true
+    const access = new Access(info.access)
+    return (path: string) => access.canWrite(path)
+  }, [info])
+
   const value = useMemo(
-    () => ({ info, entries, starting, error, resolver, noteTitles, openVault, connectServer, refresh, subscribe }),
-    [info, entries, starting, error, resolver, noteTitles, openVault, connectServer, refresh, subscribe]
+    () => ({ info, entries, starting, error, resolver, noteTitles, canWrite, openVault, connectServer, refresh, subscribe }),
+    [info, entries, starting, error, resolver, noteTitles, canWrite, openVault, connectServer, refresh, subscribe]
   )
   return <VaultContext.Provider value={value}>{children}</VaultContext.Provider>
 }

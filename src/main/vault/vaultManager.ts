@@ -63,7 +63,7 @@ export class VaultManager {
     const provider = await RemoteProvider.connect(url, token)
     await this.attach(provider)
     await rememberServer(provider.root, token)
-    return { name: provider.name, root: provider.root, user: provider.user }
+    return { name: provider.name, root: provider.root, user: provider.user, access: provider.access }
   }
 
   private async attach(provider: VaultProvider): Promise<void> {
