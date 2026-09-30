@@ -1,5 +1,15 @@
-import { realpath, stat } from 'node:fs/promises'
+import { mkdtemp, realpath, stat, writeFile } from 'node:fs/promises'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
 import { shell } from 'electron'
+import {
+  attachmentFileName,
+  attachmentFolder,
+  attachmentMarkdown,
+  isSafeToOpen,
+  MAX_ATTACHMENT_BYTES,
+  numberedName
+} from '@shared/attachments'
 import { VaultError } from '@shared/errors'
 import { LinkIndex } from '@shared/linkIndex'
 import {
@@ -12,6 +22,7 @@ import {
 } from '@shared/paths'
 import { renderTemplate } from '@shared/templates'
 import type {
+  AddedAttachment,
   CreatedNote,
   LinkIndexSnapshot,
   TemplateInfo,
@@ -119,6 +130,50 @@ export class VaultManager {
       }
     }
     throw new VaultError('EXISTS', `Could not find a free name for "${baseName}"`)
+  }
+
+  /** Copies a file into the note's attachments folder under a free name, and returns the markdown that shows it. */
+  async addAttachment(notePath: VaultPath, fileName: string, data: Uint8Array): Promise<AddedAttachment> {
+    if (data.byteLength > MAX_ATTACHMENT_BYTES) {
+      throw new VaultError('INVALID_ARGUMENT', `"${fileName}" is larger than ${MAX_ATTACHMENT_BYTES / 1024 / 1024} MB`)
+    }
+    const provider = this.current
+    const folder = attachmentFolder(notePath)
+    const name = attachmentFileName(fileName)
+    for (let n = 0; n < 1000; n++) {
+      const path = joinPath(folder, numberedName(name, n))
+      try {
+        await provider.writeBinary(path, data, { createOnly: true })
+        return { path, markdown: attachmentMarkdown(notePath, path) }
+      } catch (err) {
+        if (!(err instanceof VaultError && err.code === 'EXISTS')) throw err
+      }
+    }
+    throw new VaultError('EXISTS', `Could not find a free name for "${name}"`)
+  }
+
+  readBinary(path: VaultPath): Promise<Uint8Array> {
+    return this.current.readBinary(path)
+  }
+
+  /**
+   * Opens an attachment in its default app. Only known data formats are opened; anything else,
+   * such as a script or installer, is shown in its folder instead so it can't run by accident.
+   */
+  async openFile(path: VaultPath): Promise<void> {
+    const provider = this.current
+    let file: string
+    if (provider instanceof LocalFsProvider) {
+      file = await provider.absolutePath(path)
+    } else {
+      // Team vault: download a copy. Edits to it aren't sent back; attach the changed file again instead.
+      const dir = await mkdtemp(join(tmpdir(), 'prem-'))
+      file = join(dir, basename(path))
+      await writeFile(file, await provider.readBinary(path))
+    }
+    if (!isSafeToOpen(path)) return shell.showItemInFolder(file)
+    const error = await shell.openPath(file)
+    if (error) throw new VaultError('UNKNOWN', `Couldn't open ${basename(path)}: ${error}`)
   }
 
   private async seedTemplates(provider: VaultProvider): Promise<void> {

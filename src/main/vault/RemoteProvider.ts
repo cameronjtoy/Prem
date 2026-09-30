@@ -14,6 +14,8 @@ import type {
 import type { VaultProvider } from './VaultProvider'
 
 const REQUEST_TIMEOUT_MS = 30_000
+/** Attachments can be large, so allow a slow connection time to move them. */
+const TRANSFER_TIMEOUT_MS = 10 * 60_000
 /** The server pings every 25s, so a stream that's silent this long has silently dropped. */
 const STREAM_IDLE_MS = 60_000
 const MAX_RETRY_MS = 30_000
@@ -112,19 +114,25 @@ export class RemoteProvider implements VaultProvider {
     return url
   }
 
-  private async request<T>(method: string, route: string, options: { path?: VaultPath; body?: unknown } = {}): Promise<T> {
-    let res: Response
+  private async send(method: string, url: URL, init: { headers: Record<string, string>; body?: string | Uint8Array; timeout: number }): Promise<Response> {
     try {
-      res = await fetch(this.url(route, options.path), {
-        method,
-        headers: this.headers(options.body !== undefined),
-        body: options.body === undefined ? undefined : JSON.stringify(options.body),
-        signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS)
-      })
+      return await fetch(url, { method, headers: init.headers, body: init.body, signal: AbortSignal.timeout(init.timeout) })
     } catch (err) {
       const reason = err instanceof Error ? err.message : String(err)
       throw new VaultError('UNAVAILABLE', `Can't reach the server at ${this.root} (${reason})`)
     }
+  }
+
+  private async request<T>(method: string, route: string, options: { path?: VaultPath; body?: unknown } = {}): Promise<T> {
+    const res = await this.send(method, this.url(route, options.path), {
+      headers: this.headers(options.body !== undefined),
+      body: options.body === undefined ? undefined : JSON.stringify(options.body),
+      timeout: REQUEST_TIMEOUT_MS
+    })
+    return this.parse<T>(res)
+  }
+
+  private async parse<T>(res: Response): Promise<T> {
     const text = await res.text()
     let data: unknown = null
     try {
@@ -161,6 +169,23 @@ export class RemoteProvider implements VaultProvider {
     const result = await this.request<WriteResult>('PUT', Routes.file, { path, body: { content, ...options } })
     this.versions.set(path, result.version)
     return result
+  }
+
+  async readBinary(path: VaultPath): Promise<Uint8Array> {
+    const res = await this.send('GET', this.url(Routes.blob, path), { headers: this.headers(false), timeout: TRANSFER_TIMEOUT_MS })
+    if (!res.ok) return this.parse<never>(res)
+    return new Uint8Array(await res.arrayBuffer())
+  }
+
+  async writeBinary(path: VaultPath, data: Uint8Array, options: WriteOptions = {}): Promise<WriteResult> {
+    const url = this.url(Routes.blob, path)
+    if (options.createOnly) url.searchParams.set('createOnly', '1')
+    const res = await this.send('PUT', url, {
+      headers: { ...this.headers(false), 'content-type': 'application/octet-stream' },
+      body: data,
+      timeout: TRANSFER_TIMEOUT_MS
+    })
+    return this.parse<WriteResult>(res)
   }
 
   async mkdir(path: VaultPath): Promise<void> {

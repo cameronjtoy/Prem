@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
-import { basename, dirname, isInside, joinPath, sanitizeFileName } from '@shared/paths'
+import { basename, dirname, isInside, isMarkdown, joinPath, sanitizeFileName } from '@shared/paths'
 import type { VaultPath } from '@shared/types'
 import { errorMessage, vaultClient } from '../services/vaultClient'
 import { useVault } from './VaultContext'
@@ -82,10 +82,15 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
 
   const fail = useCallback((err: unknown) => setNotice(errorMessage(err)), [])
 
-  const openNote = useCallback((path: VaultPath, cursor: number | null = null) => {
-    setActive({ path, cursor })
-    setView('editor')
-  }, [])
+  const openNote = useCallback(
+    (path: VaultPath, cursor: number | null = null) => {
+      // Attachments open in their own app; only notes open in the editor.
+      if (!isMarkdown(path)) return void vaultClient.openFile(path).catch(fail)
+      setActive({ path, cursor })
+      setView('editor')
+    },
+    [fail]
+  )
 
   const createFromTemplate = useCallback(
     async (templatePath: VaultPath, title: string, folder: VaultPath) => {

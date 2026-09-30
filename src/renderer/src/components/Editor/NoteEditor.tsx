@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { resolveAttachment } from '@shared/attachments'
 import { isInside } from '@shared/paths'
 import { errorMessage, vaultClient } from '../../services/vaultClient'
 import { useVault } from '../../state/VaultContext'
@@ -34,7 +35,12 @@ export function NoteEditor({ path, cursor }: { path: string; cursor: number | nu
       resolve: (target) => latest.current.resolver(target, path),
       openLink: (target) => void latest.current.openLink(target, path),
       openExternal: (url) => vaultClient.openExternal(url).catch((e) => latest.current.showNotice(errorMessage(e))),
-      noteTitles: () => latest.current.noteTitles
+      noteTitles: () => latest.current.noteTitles,
+      resolveFile: (url) => resolveAttachment(path, url),
+      loadFile: (file) => vaultClient.readBinary(file),
+      openFile: (file) => void vaultClient.openFile(file).catch((e) => latest.current.showNotice(errorMessage(e))),
+      addAttachment: async (fileName, data) => (await vaultClient.addAttachment(path, fileName, data)).markdown,
+      notify: (message) => latest.current.showNotice(message)
     }
 
     vaultClient

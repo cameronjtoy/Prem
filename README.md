@@ -7,6 +7,7 @@ A desktop knowledge hub in the style of Obsidian, where technical and business t
 - **Wikilinks** such as `[[Note name]]`, `[[Note|alias]]` and `[[Note#Heading]]`. Links autocomplete after `[[`. A link to a note that doesn't exist yet appears faded, and clicking it creates the note.
 - **Equations** with KaTeX: `$inline$` and `$$ block $$`.
 - **Runbook-friendly markdown**: clickable checkboxes, syntax-highlighted code blocks and rendered tables.
+- **Attachments**: drag files into a note, or paste a screenshot. They're saved in an `attachments/` folder next to the note and linked with ordinary markdown, so they still work in other editors. Images and CSV/TSV files preview in the note; other files show as links. Clicking opens a file in its default app. Only known data formats (images, PDFs, spreadsheets, sequence and structure files, and so on) are opened directly; anything else, such as scripts, is shown in its folder instead so it can't run by accident. Attachments can be up to 100 MB.
 - **Backlinks panel** listing every note that links to the current one, with the surrounding text.
 - **Graph view** of how notes connect.
 - **Templates**: the `templates/` folder in a vault holds Runbook, Reference and Meeting templates, which are created the first time a vault is opened.

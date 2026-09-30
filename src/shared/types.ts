@@ -85,6 +85,12 @@ export interface TemplateInfo {
   path: VaultPath
 }
 
+export interface AddedAttachment {
+  path: VaultPath
+  /** Markdown to insert in the note: an embed for images and tables, a link for other files. */
+  markdown: string
+}
+
 export interface CreatedNote {
   path: VaultPath
   /** Offset where the cursor should be placed, from a {{cursor}} marker. */

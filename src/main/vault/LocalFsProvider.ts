@@ -79,7 +79,7 @@ export class LocalFsProvider implements VaultProvider {
         if (d.isDirectory()) {
           entries.push({ path: toVaultPath(this.root, abs), kind: 'folder' })
           await walk(abs)
-        } else if (d.isFile() && isMarkdown(d.name)) {
+        } else if (d.isFile()) {
           entries.push({ path: toVaultPath(this.root, abs), kind: 'file' })
         }
       }
@@ -99,7 +99,7 @@ export class LocalFsProvider implements VaultProvider {
   }
 
   async readAllMarkdown(): Promise<FileRecord[]> {
-    const files = (await this.list()).filter((e) => e.kind === 'file')
+    const files = (await this.list()).filter((e) => e.kind === 'file' && isMarkdown(e.path))
     const records: FileRecord[] = []
     for (let i = 0; i < files.length; i += 32) {
       const batch = await Promise.allSettled(files.slice(i, i + 32).map((f) => this.read(f.path)))
@@ -109,7 +109,30 @@ export class LocalFsProvider implements VaultProvider {
   }
 
   async write(relPath: VaultPath, content: string, options: WriteOptions = {}): Promise<WriteResult> {
-    if (!isMarkdown(relPath)) throw new VaultError('INVALID_PATH', 'Only .md files can be written')
+    if (!isMarkdown(relPath)) throw new VaultError('INVALID_PATH', 'Only .md files can be written as notes')
+    return this.writeFile(relPath, content, options)
+  }
+
+  async readBinary(relPath: VaultPath): Promise<Uint8Array> {
+    const abs = await this.abs(relPath)
+    try {
+      return new Uint8Array(await fs.readFile(abs))
+    } catch (err) {
+      wrapFsError(err, relPath)
+    }
+  }
+
+  async writeBinary(relPath: VaultPath, data: Uint8Array, options: WriteOptions = {}): Promise<WriteResult> {
+    if (isMarkdown(relPath)) throw new VaultError('INVALID_PATH', 'Notes must be saved as text')
+    return this.writeFile(relPath, data, options)
+  }
+
+  /** The file's location on disk, for handing it to the operating system. Checked like any other access. */
+  absolutePath(relPath: VaultPath): Promise<string> {
+    return this.abs(relPath)
+  }
+
+  private async writeFile(relPath: VaultPath, content: string | Uint8Array, options: WriteOptions): Promise<WriteResult> {
     const abs = await this.abs(relPath)
     const current = await fs.stat(abs).catch(() => null)
     if (options.createOnly && current) throw new VaultError('EXISTS', `Already exists: ${relPath}`)
@@ -120,7 +143,7 @@ export class LocalFsProvider implements VaultProvider {
     await fs.mkdir(path.dirname(abs), { recursive: true })
     const tmp = path.join(path.dirname(abs), `.${path.basename(abs)}.${randomBytes(4).toString('hex')}.tmp`)
     try {
-      await fs.writeFile(tmp, content, 'utf8')
+      await fs.writeFile(tmp, content)
       await fs.rename(tmp, abs)
     } catch (err) {
       await fs.rm(tmp, { force: true })
@@ -190,7 +213,6 @@ export class LocalFsProvider implements VaultProvider {
     }
 
     const onEvent = async (type: VaultChange['type'], kind: EntryKind, abs: string): Promise<void> => {
-      if (kind === 'file' && !isMarkdown(abs)) return
       const rel = toVaultPath(this.root, abs)
       if (!rel) return
       if (type === 'modified') {

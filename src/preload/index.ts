@@ -18,7 +18,12 @@ const api: Api = {
     mkdir: (path) => ipcRenderer.invoke(Channels.mkdir, path),
     rename: (from, to) => ipcRenderer.invoke(Channels.rename, from, to),
     remove: (path) => ipcRenderer.invoke(Channels.remove, path),
+    readBinary: (path) => ipcRenderer.invoke(Channels.readBinary, path),
     onChanged: (listener) => subscribe(Channels.vaultChanged, listener)
+  },
+  attachments: {
+    add: (notePath, fileName, data) => ipcRenderer.invoke(Channels.addAttachment, notePath, fileName, data),
+    open: (path) => ipcRenderer.invoke(Channels.openFile, path)
   },
   templates: {
     list: () => ipcRenderer.invoke(Channels.listTemplates),
