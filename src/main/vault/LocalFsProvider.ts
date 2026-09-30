@@ -4,7 +4,8 @@ import * as fs from 'node:fs/promises'
 import path from 'node:path'
 import { watch, type FSWatcher } from 'chokidar'
 import { VaultError } from '@shared/errors'
-import { isMarkdown } from '@shared/paths'
+import type { HistoryEntry } from '@shared/history'
+import { isInside, isMarkdown, normalizeVaultPath } from '@shared/paths'
 import type {
   EntryKind,
   FileRecord,
@@ -14,6 +15,7 @@ import type {
   WriteOptions,
   WriteResult
 } from '@shared/types'
+import { NoteHistory } from './NoteHistory'
 import { assertRealPathInside, resolveInsideVault, toVaultPath } from './safePath'
 import type { VaultProvider } from './VaultProvider'
 
@@ -39,6 +41,13 @@ export interface LocalFsOptions {
   trash?: (abs: string) => Promise<void>
 }
 
+/** Hidden files and folders (`.prem`, `.trash`, `.git`, …) are Prem's own or another tool's, never notes. */
+function assertNotHidden(relPath: string): void {
+  if (normalizeVaultPath(relPath).split('/').some((part) => part.startsWith('.'))) {
+    throw new VaultError('INVALID_PATH', `Hidden files and folders can't be opened in Prem: ${relPath}`)
+  }
+}
+
 /** A vault stored as a folder of markdown files on the local disk. */
 export class LocalFsProvider implements VaultProvider {
   readonly name: string
@@ -46,6 +55,7 @@ export class LocalFsProvider implements VaultProvider {
   /** Versions produced by our own writes, so the watcher can ignore their echo. */
   private selfWrites = new Map<VaultPath, string>()
   private readonly trash: (abs: string) => Promise<void>
+  private readonly notes: NoteHistory
 
   /** `root` must be a real (symlink-resolved) absolute path. */
   constructor(
@@ -54,6 +64,7 @@ export class LocalFsProvider implements VaultProvider {
   ) {
     this.name = path.basename(root)
     this.trash = options.trash ?? ((abs) => this.moveToVaultTrash(abs))
+    this.notes = new NoteHistory(root)
   }
 
   private async moveToVaultTrash(abs: string): Promise<void> {
@@ -64,6 +75,7 @@ export class LocalFsProvider implements VaultProvider {
   }
 
   private async abs(relPath: string): Promise<string> {
+    assertNotHidden(relPath)
     const abs = resolveInsideVault(this.root, relPath)
     await assertRealPathInside(this.root, abs)
     return abs
@@ -110,7 +122,27 @@ export class LocalFsProvider implements VaultProvider {
 
   async write(relPath: VaultPath, content: string, options: WriteOptions = {}): Promise<WriteResult> {
     if (!isMarkdown(relPath)) throw new VaultError('INVALID_PATH', 'Only .md files can be written as notes')
-    return this.writeFile(relPath, content, options)
+    const notePath = normalizeVaultPath(relPath)
+    const abs = await this.abs(relPath)
+    await this.notes.recordBaseline(notePath, () => fs.readFile(abs, 'utf8').catch(() => null))
+    const result = await this.writeFile(relPath, content, options)
+    await this.notes.record(notePath, content, options.author ?? '', 'save')
+    return result
+  }
+
+  history(relPath: VaultPath): Promise<HistoryEntry[]> {
+    assertNotHidden(relPath)
+    return this.notes.list(normalizeVaultPath(relPath))
+  }
+
+  readVersion(relPath: VaultPath, id: string): Promise<string> {
+    assertNotHidden(relPath)
+    return this.notes.read(normalizeVaultPath(relPath), id)
+  }
+
+  /** Checks a note's history hasn't been altered. Used by tests and, later, by signing. */
+  verifyHistory(relPath: VaultPath) {
+    return this.notes.verify(normalizeVaultPath(relPath))
   }
 
   async readBinary(relPath: VaultPath): Promise<Uint8Array> {
@@ -166,7 +198,7 @@ export class LocalFsProvider implements VaultProvider {
     }
   }
 
-  async rename(from: VaultPath, to: VaultPath): Promise<void> {
+  async rename(from: VaultPath, to: VaultPath, author = ''): Promise<void> {
     const [fromAbs, toAbs] = await Promise.all([this.abs(from), this.abs(to)])
     if (fromAbs === toAbs) return
     // Allow case-only renames on case-insensitive disks, where the target "exists" as the source.
@@ -178,13 +210,22 @@ export class LocalFsProvider implements VaultProvider {
     } catch (err) {
       wrapFsError(err, from)
     }
+    // History follows the note, or every note in a moved folder.
+    const src = normalizeVaultPath(from)
+    const dest = normalizeVaultPath(to)
+    const moved = isMarkdown(src) ? [src] : await this.notes.notesUnder(src)
+    for (const note of moved) await this.notes.recordRenamed(note, dest + note.slice(src.length), author)
   }
 
-  async remove(relPath: VaultPath): Promise<void> {
+  async remove(relPath: VaultPath, author = ''): Promise<void> {
     if (!relPath) throw new VaultError('INVALID_PATH', 'Cannot delete the vault root')
     const abs = await this.abs(relPath)
     if (!(await this.existsAbs(abs))) throw new VaultError('NOT_FOUND', `Not found: ${relPath}`)
+    const target = normalizeVaultPath(relPath)
+    const notes = isMarkdown(target) ? [target] : (await this.notes.notesUnder(target)).filter((p) => isInside(p, target))
     await this.trash(abs)
+    // The history itself is kept: a deleted note's past versions stay readable and restorable.
+    for (const note of notes) await this.notes.recordDeleted(note, author)
   }
 
   async exists(relPath: VaultPath): Promise<boolean> {
@@ -222,6 +263,7 @@ export class LocalFsProvider implements VaultProvider {
           if (stat && versionOf(stat) === own) return
         }
       }
+      if (kind === 'file' && isMarkdown(rel)) await this.recordOutsideChange(type, rel, abs)
       push({ type, path: rel, kind } as VaultChange)
     }
 
@@ -243,6 +285,19 @@ export class LocalFsProvider implements VaultProvider {
       if (timer) clearTimeout(timer)
       void watcher.close()
       if (this.watcher === watcher) this.watcher = null
+    }
+  }
+
+  /**
+   * Notes changed by another editor, a sync tool or a restore from backup are recorded too, with no author.
+   * An echo of Prem's own save has the same content as the latest version, so it adds nothing.
+   */
+  private async recordOutsideChange(type: VaultChange['type'], rel: VaultPath, abs: string): Promise<void> {
+    try {
+      if (type === 'deleted') await this.notes.recordDeleted(rel, '')
+      else await this.notes.record(rel, await fs.readFile(abs, 'utf8'), '', 'external')
+    } catch (err) {
+      console.error('[history] could not record a change to', rel, err)
     }
   }
 

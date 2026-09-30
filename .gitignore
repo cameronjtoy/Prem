@@ -6,3 +6,6 @@ dist/
 .vite/
 coverage/
 prem-server.json
+# Note history kept by Prem inside the example vaults
+sample-vault/.prem/
+prem-vault/.prem/

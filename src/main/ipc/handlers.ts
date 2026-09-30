@@ -67,8 +67,10 @@ export function registerIpc(vaults: VaultManager, getWindow: () => BrowserWindow
     vaults.write(str(path, 'path'), str(content, 'content'), writeOptions(options))
   )
   handle(Channels.mkdir, (path) => vaults.current.mkdir(str(path, 'path')))
-  handle(Channels.rename, (from, to) => vaults.current.rename(str(from, 'from'), str(to, 'to')))
-  handle(Channels.remove, (path) => vaults.current.remove(str(path, 'path')))
+  handle(Channels.rename, (from, to) => vaults.rename(str(from, 'from'), str(to, 'to')))
+  handle(Channels.remove, (path) => vaults.remove(str(path, 'path')))
+  handle(Channels.history, (path) => vaults.history(str(path, 'path')))
+  handle(Channels.readVersion, (path, id) => vaults.readVersion(str(path, 'path'), str(id, 'id')))
 
   handle(Channels.readBinary, (path) => vaults.readBinary(str(path, 'path')))
   handle(Channels.addAttachment, (notePath, fileName, data) => {
