@@ -9,7 +9,10 @@ const KIND_LABEL: Record<HistoryEntry['kind'], string> = {
   save: 'Saved',
   external: 'Changed outside Prem',
   renamed: 'Renamed',
-  deleted: 'Deleted'
+  deleted: 'Deleted',
+  signed: 'Signed',
+  witnessed: 'Witnessed',
+  amended: 'Amended'
 }
 
 function when(iso: string): string {

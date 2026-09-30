@@ -16,6 +16,8 @@ export interface SessionCallbacks {
   onStatus(status: SaveStatus): void
   onConflict(conflict: Conflict | null): void
   onError(message: string | null): void
+  /** The first save after starting an amendment went through, so the note is no longer locked. */
+  onAmended?(): void
 }
 
 const AUTOSAVE_MS = 600
@@ -29,6 +31,8 @@ export class NoteSession {
   private saving: Promise<void> | null = null
   private conflict: Conflict | null = null
   private discarded = false
+  /** Set while amending a signed note: sent with the next save, which records the amendment. */
+  private amendReason: string | null = null
 
   constructor(
     readonly path: string,
@@ -93,7 +97,12 @@ export class NoteSession {
   private async write(content: string, expectedVersion: string): Promise<void> {
     this.ui.onStatus('saving')
     try {
-      const { version } = await vaultClient.write(this.path, content, { expectedVersion })
+      const amending = this.amendReason
+      const { version } = await vaultClient.write(this.path, content, { expectedVersion, amendReason: amending ?? undefined })
+      if (amending && this.amendReason === amending) {
+        this.amendReason = null
+        this.ui.onAmended?.()
+      }
       this.version = version
       this.saved = content
       this.setConflict(null)
@@ -132,6 +141,11 @@ export class NoteSession {
       return
     }
     this.setConflict({ content: disk.content, version: disk.version })
+  }
+
+  /** Starts amending a signed note: the next save carries the reason and is recorded as an amendment. */
+  amend(reason: string): void {
+    this.amendReason = reason
   }
 
   reloadFromDisk(): void {
@@ -173,7 +187,9 @@ export class NoteSession {
     if (this.timer) clearTimeout(this.timer)
     const content = this.content
     if (!this.discarded && !this.conflict && content !== this.saved) {
-      vaultClient.write(this.path, content, { expectedVersion: this.version }).catch(console.error)
+      vaultClient
+        .write(this.path, content, { expectedVersion: this.version, amendReason: this.amendReason ?? undefined })
+        .catch(console.error)
     }
     this.discarded = true
     this.view.destroy()

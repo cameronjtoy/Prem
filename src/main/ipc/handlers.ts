@@ -13,10 +13,12 @@ function str(value: unknown, name: string): string {
 function writeOptions(value: unknown): WriteOptions {
   if (value == null) return {}
   if (typeof value !== 'object') throw new VaultError('INVALID_ARGUMENT', 'options must be an object')
-  const { expectedVersion, createOnly } = value as Record<string, unknown>
+  // `author` is deliberately not taken from the renderer; VaultManager sets it.
+  const { expectedVersion, createOnly, amendReason } = value as Record<string, unknown>
   return {
     expectedVersion: typeof expectedVersion === 'string' ? expectedVersion : undefined,
-    createOnly: createOnly === true
+    createOnly: createOnly === true,
+    amendReason: typeof amendReason === 'string' ? amendReason : undefined
   }
 }
 
@@ -71,6 +73,11 @@ export function registerIpc(vaults: VaultManager, getWindow: () => BrowserWindow
   handle(Channels.remove, (path) => vaults.remove(str(path, 'path')))
   handle(Channels.history, (path) => vaults.history(str(path, 'path')))
   handle(Channels.readVersion, (path, id) => vaults.readVersion(str(path, 'path'), str(id, 'id')))
+  handle(Channels.recordStatus, (path) => vaults.recordStatus(str(path, 'path')))
+  handle(Channels.sign, (path, statement) =>
+    vaults.sign(str(path, 'path'), statement === undefined ? undefined : str(statement, 'statement'))
+  )
+  handle(Channels.witness, (path) => vaults.witness(str(path, 'path')))
 
   handle(Channels.readBinary, (path) => vaults.readBinary(str(path, 'path')))
   handle(Channels.addAttachment, (notePath, fileName, data) => {

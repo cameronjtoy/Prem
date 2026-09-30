@@ -29,6 +29,11 @@ const api: Api = {
     list: (path) => ipcRenderer.invoke(Channels.history, path),
     read: (path, id) => ipcRenderer.invoke(Channels.readVersion, path, id)
   },
+  record: {
+    status: (path) => ipcRenderer.invoke(Channels.recordStatus, path),
+    sign: (path, statement) => ipcRenderer.invoke(Channels.sign, path, statement),
+    witness: (path) => ipcRenderer.invoke(Channels.witness, path)
+  },
   templates: {
     list: () => ipcRenderer.invoke(Channels.listTemplates),
     create: (templatePath, title, folder) =>

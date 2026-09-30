@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto'
 import { VaultError, type VaultErrorCode } from '@shared/errors'
 import type { HistoryEntry } from '@shared/history'
+import type { RecordCheck } from '@shared/signatures'
 import { isInside } from '@shared/paths'
 import { CLIENT_HEADER, Routes, STATUS_BY_CODE, type ServerInfo } from '@shared/remote'
 import type {
@@ -210,6 +211,18 @@ export class RemoteProvider implements VaultProvider {
     url.searchParams.set('id', id)
     const res = await this.send('GET', url, { headers: this.headers(false), timeout: REQUEST_TIMEOUT_MS })
     return (await this.parse<{ content: string }>(res)).content
+  }
+
+  recordStatus(path: VaultPath): Promise<RecordCheck> {
+    return this.request<RecordCheck>('GET', Routes.status, { path })
+  }
+
+  sign(path: VaultPath, _author: string, statement?: string): Promise<RecordCheck> {
+    return this.request<RecordCheck>('POST', Routes.sign, { path, body: { statement: statement ?? '' } })
+  }
+
+  witness(path: VaultPath, _author?: string): Promise<RecordCheck> {
+    return this.request<RecordCheck>('POST', Routes.witness, { path, body: {} })
   }
 
   async exists(path: VaultPath): Promise<boolean> {

@@ -15,7 +15,8 @@ import type {
   WriteOptions,
   WriteResult
 } from '@shared/types'
-import { NoteHistory } from './NoteHistory'
+import type { RecordCheck } from '@shared/signatures'
+import { contentHash, NoteHistory } from './NoteHistory'
 import { assertRealPathInside, resolveInsideVault, toVaultPath } from './safePath'
 import type { VaultProvider } from './VaultProvider'
 
@@ -124,10 +125,59 @@ export class LocalFsProvider implements VaultProvider {
     if (!isMarkdown(relPath)) throw new VaultError('INVALID_PATH', 'Only .md files can be written as notes')
     const notePath = normalizeVaultPath(relPath)
     const abs = await this.abs(relPath)
-    await this.notes.recordBaseline(notePath, () => fs.readFile(abs, 'utf8').catch(() => null))
+    await this.catchUp(notePath, abs)
+    const reason = options.amendReason?.trim()
+    const { locked } = await this.notes.status(notePath)
+    if (locked && !reason) {
+      throw new VaultError('LOCKED', `${notePath} is signed. To change it, amend it and give a reason.`)
+    }
     const result = await this.writeFile(relPath, content, options)
-    await this.notes.record(notePath, content, options.author ?? '', 'save')
+    await this.notes.record(notePath, content, options.author ?? '', locked ? 'amended' : 'save', locked ? reason : undefined)
     return result
+  }
+
+  private catchUp(notePath: VaultPath, abs: string): Promise<void> {
+    return this.notes.catchUp(notePath, () => fs.readFile(abs, 'utf8').catch(() => null))
+  }
+
+  /**
+   * Refuses to delete signed notes; `target` may be a note or a folder containing some. Moving and
+   * renaming are allowed: the signature and history follow the note.
+   */
+  private async assertUnlocked(target: VaultPath, action: string): Promise<void> {
+    const notes = isMarkdown(target) ? [target] : await this.notes.notesUnder(target)
+    for (const note of notes) {
+      if ((await this.notes.status(note)).locked) {
+        throw new VaultError('LOCKED', `Can't ${action} ${target}: ${note} is signed`)
+      }
+    }
+  }
+
+  /** Signs the note as it is on disk now. Signing locks it until it's amended. */
+  async sign(relPath: VaultPath, author: string, statement?: string): Promise<RecordCheck> {
+    if (!isMarkdown(relPath)) throw new VaultError('INVALID_PATH', 'Only notes can be signed')
+    const notePath = normalizeVaultPath(relPath)
+    const abs = await this.abs(relPath)
+    const content = await fs.readFile(abs, 'utf8').catch(() => null)
+    if (content === null) throw new VaultError('NOT_FOUND', `Not found: ${relPath}`)
+    await this.catchUp(notePath, abs)
+    await this.notes.sign(notePath, author, contentHash(content), statement?.trim())
+    return this.recordStatus(relPath)
+  }
+
+  async witness(relPath: VaultPath, author: string): Promise<RecordCheck> {
+    const notePath = normalizeVaultPath(relPath)
+    await this.catchUp(notePath, await this.abs(relPath))
+    await this.notes.witness(notePath, author)
+    return this.recordStatus(relPath)
+  }
+
+  /** A note's signing status, after checking the file still matches its history and the history is intact. */
+  async recordStatus(relPath: VaultPath): Promise<RecordCheck> {
+    const notePath = normalizeVaultPath(relPath)
+    await this.catchUp(notePath, await this.abs(relPath))
+    const [status, chain] = await Promise.all([this.notes.status(notePath), this.notes.verify(notePath)])
+    return { ...status, chainOk: chain.ok }
   }
 
   history(relPath: VaultPath): Promise<HistoryEntry[]> {
@@ -222,6 +272,7 @@ export class LocalFsProvider implements VaultProvider {
     const abs = await this.abs(relPath)
     if (!(await this.existsAbs(abs))) throw new VaultError('NOT_FOUND', `Not found: ${relPath}`)
     const target = normalizeVaultPath(relPath)
+    await this.assertUnlocked(target, 'delete')
     const notes = isMarkdown(target) ? [target] : (await this.notes.notesUnder(target)).filter((p) => isInside(p, target))
     await this.trash(abs)
     // The history itself is kept: a deleted note's past versions stay readable and restorable.

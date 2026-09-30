@@ -1,4 +1,5 @@
 import type { HistoryEntry } from '@shared/history'
+import type { RecordCheck } from '@shared/signatures'
 import type {
   FileRecord,
   VaultChange,
@@ -29,6 +30,10 @@ export interface VaultProvider {
   /** Every recorded version of a note, oldest first. */
   history(path: VaultPath): Promise<HistoryEntry[]>
   readVersion(path: VaultPath, id: string): Promise<string>
+  /** Signing: `author` is ignored by remote providers, where the server signs as whoever you're signed in as. */
+  sign(path: VaultPath, author: string, statement?: string): Promise<RecordCheck>
+  witness(path: VaultPath, author: string): Promise<RecordCheck>
+  recordStatus(path: VaultPath): Promise<RecordCheck>
   exists(path: VaultPath): Promise<boolean>
   watch(listener: (changes: VaultChange[]) => void): () => void
   dispose(): Promise<void>

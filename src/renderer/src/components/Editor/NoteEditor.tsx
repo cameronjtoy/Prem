@@ -3,6 +3,7 @@ import { EditorView } from '@codemirror/view'
 import { resolveAttachment } from '@shared/attachments'
 import { isInside } from '@shared/paths'
 import { addDeviation, completeRun } from '@shared/runs'
+import { EMPTY_STATUS, type RecordCheck } from '@shared/signatures'
 import { errorMessage, vaultClient } from '../../services/vaultClient'
 import { useVault } from '../../state/VaultContext'
 import { useWorkspace } from '../../state/WorkspaceContext'
@@ -10,6 +11,7 @@ import { HistoryIcon } from '../icons'
 import { createExtensions, refreshLinks, type EditorHost } from './extensions'
 import { HistoryPanel } from './HistoryPanel'
 import { NoteSession, type Conflict, type SaveStatus } from './NoteSession'
+import { RecordBar } from './RecordBar'
 import { readMeta, RunBar, type NoteMeta } from './RunBar'
 
 const STATUS_LABEL: Record<SaveStatus, string> = {
@@ -31,13 +33,37 @@ export function NoteEditor({ path, cursor }: { path: string; cursor: number | nu
   const [meta, setMeta] = useState<NoteMeta>(() => readMeta(''))
   const [showHistory, setShowHistory] = useState(false)
   const currentText = useCallback(() => sessionRef.current?.view.state.doc.toString() ?? '', [])
-  const readOnly = !canWrite(path)
+  const [record, setRecord] = useState<RecordCheck | null>(null)
+  const [amending, setAmending] = useState<string | null>(null)
+  const amendingRef = useRef(amending)
+  amendingRef.current = amending
+  const canEdit = canWrite(path)
+  // A signed note is read-only until someone with write access starts an amendment.
+  const readOnly = !canEdit || (!!record?.locked && !amending)
+  const recordLoaded = record !== null
+
+  const refreshRecord = useCallback(
+    () =>
+      vaultClient
+        .recordStatus(path)
+        .then(setRecord)
+        .catch(() => setRecord((r) => r ?? { ...EMPTY_STATUS, chainOk: true })),
+    [path]
+  )
+
+  useEffect(() => {
+    setRecord(null)
+    setAmending(null)
+    void refreshRecord()
+  }, [refreshRecord])
 
   // The editor is created once per note; these refs give its callbacks the latest values.
   const latest = useRef({ resolver, noteTitles, openLink, showNotice })
   latest.current = { resolver, noteTitles, openLink, showNotice }
 
   useEffect(() => {
+    // Wait for the signing status, so a signed note opens read-only instead of flickering editable.
+    if (!recordLoaded) return
     let cancelled = false
     const host: EditorHost = {
       resolve: (target) => latest.current.resolver(target, path),
@@ -63,10 +89,19 @@ export function NoteEditor({ path, cursor }: { path: string; cursor: number | nu
             createExtensions(host, () => void s.save(), readOnly),
             EditorView.updateListener.of((u) => u.docChanged && setMeta(readMeta(u.state.doc.toString())))
           ],
-          { onStatus: setStatus, onConflict: setConflict, onError: setError },
+          {
+            onStatus: setStatus,
+            onConflict: setConflict,
+            onError: setError,
+            onAmended: () => {
+              setAmending(null)
+              void refreshRecord()
+            }
+          },
           cursor
         )
         sessionRef.current = session
+        if (amendingRef.current) session.amend(amendingRef.current)
         setMeta(readMeta(file.content))
         registerEditor({ path, flush: () => session.save(), discard: () => session.discard() })
         setLoading(false)
@@ -82,16 +117,18 @@ export function NoteEditor({ path, cursor }: { path: string; cursor: number | nu
       registerEditor(null)
     }
     // `cursor` is deliberately left out: it only matters when the note is first opened.
-  }, [path, registerEditor, readOnly])
+  }, [path, registerEditor, readOnly, recordLoaded, refreshRecord])
 
   useEffect(
     () =>
       subscribe((changes) => {
         if (changes.some((c) => c.type !== 'deleted' && isInside(path, c.path))) {
           void sessionRef.current?.handleExternalChange()
+          // Someone may have signed or witnessed it.
+          void refreshRecord()
         }
       }),
-    [path, subscribe]
+    [path, subscribe, refreshRecord]
   )
 
   useEffect(() => {
@@ -141,13 +178,41 @@ export function NoteEditor({ path, cursor }: { path: string; cursor: number | nu
         )}
         {!loading &&
           (readOnly ? (
-            <span className="save-status" title="You can read this note but not edit it">
-              Read only
+            <span
+              className="save-status"
+              title={canEdit ? 'Signed records are locked. Use Amend to change it.' : 'You can read this note but not edit it'}
+            >
+              {canEdit ? 'Locked' : 'Read only'}
             </span>
           ) : (
             <span className={`save-status ${status}`}>{STATUS_LABEL[status]}</span>
           ))}
       </div>
+      {!loading && (
+        <RecordBar
+          path={path}
+          type={meta.type}
+          status={record}
+          amending={amending}
+          canEdit={canEdit}
+          onSign={async (statement) => {
+            try {
+              await sessionRef.current?.save()
+              setRecord(await vaultClient.sign(path, statement || undefined))
+            } catch (err) {
+              showNotice(`Couldn't sign: ${errorMessage(err)}`)
+            }
+          }}
+          onWitness={async () => {
+            try {
+              setRecord(await vaultClient.witness(path))
+            } catch (err) {
+              showNotice(`Couldn't witness: ${errorMessage(err)}`)
+            }
+          }}
+          onAmend={setAmending}
+        />
+      )}
       {!loading && (
         <RunBar
           path={path}
