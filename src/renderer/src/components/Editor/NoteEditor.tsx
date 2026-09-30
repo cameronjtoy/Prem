@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { EditorView } from '@codemirror/view'
 import { resolveAttachment } from '@shared/attachments'
 import { isInside } from '@shared/paths'
@@ -6,7 +6,9 @@ import { addDeviation, completeRun } from '@shared/runs'
 import { errorMessage, vaultClient } from '../../services/vaultClient'
 import { useVault } from '../../state/VaultContext'
 import { useWorkspace } from '../../state/WorkspaceContext'
+import { HistoryIcon } from '../icons'
 import { createExtensions, refreshLinks, type EditorHost } from './extensions'
+import { HistoryPanel } from './HistoryPanel'
 import { NoteSession, type Conflict, type SaveStatus } from './NoteSession'
 import { readMeta, RunBar, type NoteMeta } from './RunBar'
 
@@ -27,6 +29,8 @@ export function NoteEditor({ path, cursor }: { path: string; cursor: number | nu
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [meta, setMeta] = useState<NoteMeta>(() => readMeta(''))
+  const [showHistory, setShowHistory] = useState(false)
+  const currentText = useCallback(() => sessionRef.current?.view.state.doc.toString() ?? '', [])
   const readOnly = !canWrite(path)
 
   // The editor is created once per note; these refs give its callbacks the latest values.
@@ -130,6 +134,11 @@ export function NoteEditor({ path, cursor }: { path: string; cursor: number | nu
             </span>
           ))}
         </div>
+        {!loading && (
+          <button className="icon-button" title="History: every saved version of this note" onClick={() => setShowHistory(true)}>
+            <HistoryIcon />
+          </button>
+        )}
         {!loading &&
           (readOnly ? (
             <span className="save-status" title="You can read this note but not edit it">
@@ -157,6 +166,18 @@ export function NoteEditor({ path, cursor }: { path: string; cursor: number | nu
       )}
       {error && <div className="banner error">{error}</div>}
       <div className="editor-host" ref={hostRef} />
+      {showHistory && (
+        <HistoryPanel
+          path={path}
+          current={currentText}
+          readOnly={readOnly}
+          onRestore={(content) => {
+            setShowHistory(false)
+            rewrite(() => ({ text: content, cursor: 0 }))
+          }}
+          onClose={() => setShowHistory(false)}
+        />
+      )}
     </div>
   )
 }

@@ -1,4 +1,5 @@
 import type { IpcResult } from './errors'
+import type { HistoryEntry } from './history'
 import type { SearchHit } from './search'
 import type {
   AddedAttachment,
@@ -24,6 +25,8 @@ export const Channels = {
   rename: 'vault:rename',
   remove: 'vault:delete',
   readBinary: 'vault:readBinary',
+  history: 'history:list',
+  readVersion: 'history:read',
   addAttachment: 'attachments:add',
   openFile: 'attachments:open',
   listTemplates: 'templates:list',
@@ -57,6 +60,10 @@ export interface Api {
     add(notePath: string, fileName: string, data: Uint8Array): R<AddedAttachment>
     /** Opens a file in its default app, or shows it in its folder if it isn't a known data format. */
     open(path: string): R<void>
+  }
+  history: {
+    list(path: string): R<HistoryEntry[]>
+    read(path: string, id: string): R<string>
   }
   templates: {
     list(): R<TemplateInfo[]>

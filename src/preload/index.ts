@@ -25,6 +25,10 @@ const api: Api = {
     add: (notePath, fileName, data) => ipcRenderer.invoke(Channels.addAttachment, notePath, fileName, data),
     open: (path) => ipcRenderer.invoke(Channels.openFile, path)
   },
+  history: {
+    list: (path) => ipcRenderer.invoke(Channels.history, path),
+    read: (path, id) => ipcRenderer.invoke(Channels.readVersion, path, id)
+  },
   templates: {
     list: () => ipcRenderer.invoke(Channels.listTemplates),
     create: (templatePath, title, folder) =>

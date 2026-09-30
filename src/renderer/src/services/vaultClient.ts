@@ -20,6 +20,8 @@ export const vaultClient = {
   rename: (from: string, to: string) => unwrap(window.api.vault.rename(from, to)),
   remove: (path: string) => unwrap(window.api.vault.remove(path)),
   readBinary: (path: string) => unwrap(window.api.vault.readBinary(path)),
+  history: (path: string) => unwrap(window.api.history.list(path)),
+  readVersion: (path: string, id: string) => unwrap(window.api.history.read(path, id)),
   addAttachment: (notePath: string, fileName: string, data: Uint8Array) =>
     unwrap(window.api.attachments.add(notePath, fileName, data)),
   openFile: (path: string) => unwrap(window.api.attachments.open(path)),
