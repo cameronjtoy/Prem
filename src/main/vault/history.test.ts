@@ -115,3 +115,21 @@ describe('notes that existed before history', () => {
     expect((await vault.history('New.md')).map((e) => e.kind)).toEqual(['save'])
   })
 })
+
+describe('telling own saves apart from outside edits', () => {
+  it("doesn't report Prem's own save as a change, even when the watcher is slow to notice it", async () => {
+    await vault.write('N.md', 'first', { author: 'alice' })
+    const seen: string[] = []
+    const stop = vault.watch((changes) => seen.push(...changes.map((c) => `${c.type}:${c.path}`)))
+    await new Promise((r) => setTimeout(r, 300))
+    await vault.write('N.md', 'second', { author: 'alice' })
+    // Simulate a slow machine: the short-lived record of our own write has already expired.
+    ;(vault as unknown as { selfWrites: Map<string, string> }).selfWrites.clear()
+    await new Promise((r) => setTimeout(r, 1200))
+    await writeFile(path.join(root, 'N.md'), 'edited elsewhere')
+    for (let i = 0; i < 40 && !seen.length; i++) await new Promise((r) => setTimeout(r, 100))
+    stop()
+    expect(seen).toEqual(['modified:N.md'])
+    expect((await vault.history('N.md')).map((e) => e.kind)).toEqual(['save', 'save', 'external'])
+  })
+})
