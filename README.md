@@ -8,6 +8,7 @@ A desktop knowledge hub in the style of Obsidian, where technical and business t
 - **Equations** with KaTeX: `$inline$` and `$$ block $$`.
 - **Runbook-friendly markdown**: clickable checkboxes, syntax-highlighted code blocks and rendered tables.
 - **Attachments**: drag files into a note, or paste a screenshot. They're saved in an `attachments/` folder next to the note and linked with ordinary markdown, so they still work in other editors. Images and CSV/TSV files preview in the note; other files show as links. Clicking opens a file in its default app. Only known data formats (images, PDFs, spreadsheets, sequence and structure files, and so on) are opened directly; anything else, such as scripts, is shown in its folder instead so it can't run by accident. Attachments can be up to 100 MB.
+- **Search** (⌘K): finds notes containing every word you type (use "quotes" for a phrase), across titles, folders and text. Title matches come first, each result shows the matching lines, and Enter opens the note at the match. Templates are left out. On a team vault, search only covers notes you can read.
 - **History**: every save of every note is kept, with who made it and when, including edits made in other apps. The History button on a note lists versions grouped into editing sessions, shows what changed since any of them, and restores one as a normal, undoable edit. History lives in a hidden `.prem` folder in the vault, so it's backed up with the vault. Each note's history is a hash-chained, append-only log, so any later change to a past entry can be detected. On a team vault, the server records who saved each version from their token.
 - **Signing**: experiments, runs, daily entries and protocols have a bar to **sign** them. Signing records who signed, when, and an optional statement in the note's tamper-evident history, and **locks** the note: it can't be edited or deleted (it can still be moved). Someone else, such as the PI, can **witness** the signature. To change a signed note, **amend** it with a reason; the signed version stays in History and the note shows as amended until it's signed again. Prem flags a signed note whose file was changed outside the app, even while the app was closed. Signatures record identity from your team-server login (or your computer's user name for a local vault); they aren't cryptographic signatures yet.
 - **Backlinks panel** listing every note that links to the current one, with the surrounding text.
@@ -39,6 +40,7 @@ Then choose **Open a folder as a vault** and pick `sample-vault/`, or any other 
 ### Shortcuts
 | Shortcut | Action |
 | --- | --- |
+| ⌘K | Search all notes |
 | ⌘T | Today's notebook entry |
 | ⌘N | New note |
 | ⌘⇧N | New note from template |
