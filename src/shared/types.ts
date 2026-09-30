@@ -16,6 +16,8 @@ export interface VaultInfo {
   root: string
   /** Who the team server knows you as. Only set for team vaults. */
   user?: string
+  /** Your name as it appears on notebook entries and runs. */
+  author?: string
   /** Your per-folder permissions on a team vault. Local vaults are fully writable. */
   access?: Record<string, AccessLevel>
 }

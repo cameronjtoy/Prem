@@ -1,5 +1,8 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
+import { VaultError } from '@shared/errors'
+import { notebookFolder } from '@shared/notebook'
 import { basename, dirname, isInside, joinPath, sanitizeFileName } from '@shared/paths'
+import { createRun, runPath } from '@shared/runs'
 import { formatDate } from '@shared/templates'
 import type { VaultPath } from '@shared/types'
 import { errorMessage, vaultClient } from '../services/vaultClient'
@@ -33,6 +36,8 @@ interface WorkspaceState {
   createFromTemplate(templatePath: VaultPath, title: string, folder: VaultPath): Promise<void>
   /** Opens today's notebook entry, creating it from the daily template the first time. */
   openToday(): Promise<void>
+  /** Starts a run of a protocol in your notebook and opens it. */
+  startRun(protocolPath: VaultPath): Promise<void>
   startRename(path: VaultPath | null): void
   rename(path: VaultPath, newName: string): Promise<void>
   remove(path: VaultPath): Promise<void>
@@ -112,6 +117,32 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
       fail(err)
     }
   }, [refresh, openNote, fail])
+
+  const startRun = useCallback(
+    async (protocolPath: VaultPath) => {
+      try {
+        // Save pending edits to the protocol first, so the run copies what's on screen.
+        await editor.current?.flush()
+        const now = new Date()
+        const protocol = await vaultClient.read(protocolPath)
+        const content = createRun(protocolPath, protocol.content, { now, operator: info?.author ?? '' })
+        const base = runPath(notebookFolder(info?.user), protocolPath, now)
+        for (let n = 0; ; n++) {
+          const path = n === 0 ? base : base.replace(/\.md$/, ` ${n}.md`)
+          try {
+            await vaultClient.write(path, content, { createOnly: true })
+            await refresh()
+            return openNote(path)
+          } catch (err) {
+            if (!(err instanceof VaultError && err.code === 'EXISTS') || n >= 20) throw err
+          }
+        }
+      } catch (err) {
+        fail(err)
+      }
+    },
+    [info, refresh, openNote, fail]
+  )
 
   const openLink = useCallback(
     async (target: string, fromPath?: VaultPath) => {
@@ -214,6 +245,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
       createFolder,
       createFromTemplate,
       openToday,
+      startRun,
       startRename: setRenamingPath,
       rename,
       remove,
@@ -234,6 +266,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
       createFolder,
       createFromTemplate,
       openToday,
+      startRun,
       rename,
       remove,
       registerEditor,

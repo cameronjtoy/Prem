@@ -63,7 +63,7 @@ export class VaultManager {
     this.user = undefined
     this.author = localUserName()
     await saveSettings({ lastVault: root, lastServer: undefined })
-    return { name: provider.name, root }
+    return { name: provider.name, root, author: this.author }
   }
 
   /** Opens a vault hosted by a team server. The server seeds templates and enforces who can see what. */
@@ -73,7 +73,7 @@ export class VaultManager {
     this.user = provider.user
     this.author = provider.user
     await rememberServer(provider.root, token)
-    return { name: provider.name, root: provider.root, user: provider.user, access: provider.access }
+    return { name: provider.name, root: provider.root, user: provider.user, author: provider.user, access: provider.access }
   }
 
   private async attach(provider: VaultProvider): Promise<void> {
