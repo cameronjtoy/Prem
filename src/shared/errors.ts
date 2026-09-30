@@ -8,6 +8,7 @@ export type VaultErrorCode =
   | 'UNAUTHORIZED'
   | 'FORBIDDEN'
   | 'UNAVAILABLE'
+  | 'LOCKED'
   | 'UNKNOWN'
 
 export class VaultError extends Error {

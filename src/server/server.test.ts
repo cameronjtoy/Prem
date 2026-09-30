@@ -262,3 +262,34 @@ describe('history on the team server', () => {
     await expectCode(bob.readBinary('.prem/history/Finance/Budget.md.jsonl'), 'INVALID_PATH')
   })
 })
+
+describe('signing on the team server', () => {
+  it('signs as the token holder, needs write access, and blocks edits from everyone after', async () => {
+    const bob = await RemoteProvider.connect(server.url, tokens.bob)
+    const alice = await RemoteProvider.connect(server.url, tokens.alice)
+    const bot = await RemoteProvider.connect(server.url, tokens.bot)
+    await bob.write('Runbooks/Signed run.md', 'OD600 0.51', { createOnly: true })
+    await expectCode(bot.sign('Runbooks/Signed run.md', 'bob'), 'FORBIDDEN')
+    const signed = await bob.sign('Runbooks/Signed run.md', 'pretending-to-be-alice', 'Checked')
+    expect(signed.signature?.by).toBe('bob')
+    await expectCode(bob.write('Runbooks/Signed run.md', 'OD600 0.99'), 'LOCKED')
+    await expectCode(alice.write('Runbooks/Signed run.md', 'OD600 0.99'), 'LOCKED')
+    await expectCode(alice.remove('Runbooks/Signed run.md'), 'LOCKED')
+  })
+
+  it('lets a reader witness, but not the signer', async () => {
+    const bob = await RemoteProvider.connect(server.url, tokens.bob)
+    const bot = await RemoteProvider.connect(server.url, tokens.bot)
+    await expectCode(bob.witness('Runbooks/Signed run.md', 'bob'), 'INVALID_ARGUMENT')
+    const status = await bot.witness('Runbooks/Signed run.md', 'ignored')
+    expect(status.witnesses.map((w) => w.by)).toEqual(['support-bot'])
+  })
+
+  it('accepts an amendment with a reason, attributed to the token holder', async () => {
+    const bob = await RemoteProvider.connect(server.url, tokens.bob)
+    await bob.write('Runbooks/Signed run.md', 'OD600 0.52', { amendReason: 'Re-read the plate' })
+    const status = await bob.recordStatus('Runbooks/Signed run.md')
+    expect(status).toMatchObject({ state: 'amended', locked: false })
+    expect(status.amendment).toMatchObject({ by: 'bob', reason: 'Re-read the plate' })
+  })
+})

@@ -12,6 +12,7 @@ import {
 } from '@shared/attachments'
 import { VaultError } from '@shared/errors'
 import type { HistoryEntry } from '@shared/history'
+import type { RecordCheck } from '@shared/signatures'
 import { LinkIndex } from '@shared/linkIndex'
 import { dailyNotePath, parseDay } from '@shared/notebook'
 import {
@@ -142,6 +143,18 @@ export class VaultManager {
 
   readVersion(path: VaultPath, id: string): Promise<string> {
     return this.current.readVersion(path, id)
+  }
+
+  recordStatus(path: VaultPath): Promise<RecordCheck> {
+    return this.current.recordStatus(path)
+  }
+
+  sign(path: VaultPath, statement?: string): Promise<RecordCheck> {
+    return this.current.sign(path, this.author, statement)
+  }
+
+  witness(path: VaultPath): Promise<RecordCheck> {
+    return this.current.witness(path, this.author)
   }
 
   async listTemplates(): Promise<TemplateInfo[]> {

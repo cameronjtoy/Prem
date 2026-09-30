@@ -22,6 +22,9 @@ export const vaultClient = {
   readBinary: (path: string) => unwrap(window.api.vault.readBinary(path)),
   history: (path: string) => unwrap(window.api.history.list(path)),
   readVersion: (path: string, id: string) => unwrap(window.api.history.read(path, id)),
+  recordStatus: (path: string) => unwrap(window.api.record.status(path)),
+  sign: (path: string, statement?: string) => unwrap(window.api.record.sign(path, statement)),
+  witness: (path: string) => unwrap(window.api.record.witness(path)),
   addAttachment: (notePath: string, fileName: string, data: Uint8Array) =>
     unwrap(window.api.attachments.add(notePath, fileName, data)),
   openFile: (path: string) => unwrap(window.api.attachments.open(path)),

@@ -10,6 +10,9 @@ export const Routes = {
   blob: '/api/blob',
   history: '/api/history',
   version: '/api/history/version',
+  status: '/api/record',
+  sign: '/api/record/sign',
+  witness: '/api/record/witness',
   files: '/api/files',
   exists: '/api/exists',
   folder: '/api/folder',
@@ -40,5 +43,6 @@ export const STATUS_BY_CODE: Record<VaultErrorCode, number> = {
   CONFLICT: 409,
   NO_VAULT: 503,
   UNAVAILABLE: 503,
+  LOCKED: 423,
   UNKNOWN: 500
 }

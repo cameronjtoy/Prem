@@ -178,6 +178,30 @@ export async function startServer(config: ServerConfig, log: Logger = console): 
         if (!access.canRead(path)) forbid(user, 'read', path)
         return sendJson(res, 200, { content: await provider.readVersion(path, str(url.searchParams.get('id'), 'id')) })
       }
+      case `GET ${Routes.status}`: {
+        const path = queryPath(url)
+        if (!access.canRead(path)) forbid(user, 'read', path)
+        return sendJson(res, 200, await provider.recordStatus(path))
+      }
+      case `POST ${Routes.sign}`: {
+        const path = queryPath(url)
+        // You sign records you're responsible for, so it takes write access; witnessing only needs read.
+        if (!access.canWrite(path)) forbid(user, 'sign', path)
+        const body = await readJson(req)
+        const statement = typeof body.statement === 'string' ? body.statement : undefined
+        const status = await locks.run(path.toLowerCase(), () => provider.sign(path, user.name, statement))
+        broadcast([{ type: 'modified', path, kind: 'file' }])
+        log.info(`${user.name} signed ${path}`)
+        return sendJson(res, 200, status)
+      }
+      case `POST ${Routes.witness}`: {
+        const path = queryPath(url)
+        if (!access.canRead(path)) forbid(user, 'witness', path)
+        const status = await locks.run(path.toLowerCase(), () => provider.witness(path, user.name))
+        broadcast([{ type: 'modified', path, kind: 'file' }])
+        log.info(`${user.name} witnessed ${path}`)
+        return sendJson(res, 200, status)
+      }
       case `GET ${Routes.exists}`: {
         const path = queryPath(url)
         if (!access.canSee(path, 'folder')) forbid(user, 'read', path)
@@ -192,7 +216,8 @@ export async function startServer(config: ServerConfig, log: Logger = console): 
           expectedVersion: typeof body.expectedVersion === 'string' ? body.expectedVersion : undefined,
           createOnly: body.createOnly === true,
           // Attribution comes from the token, never from the request body.
-          author: user.name
+          author: user.name,
+          amendReason: typeof body.amendReason === 'string' ? body.amendReason : undefined
         }
         const result = await locks.run(path.toLowerCase(), async () => {
           const existed = await provider.exists(path)

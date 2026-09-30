@@ -4,6 +4,7 @@ import path from 'node:path'
 import { gunzipSync, gzipSync } from 'node:zlib'
 import { VaultError } from '@shared/errors'
 import { PREM_FOLDER, type HistoryEntry } from '@shared/history'
+import { applyEntry, EMPTY_STATUS, recordStatus, type RecordStatus } from '@shared/signatures'
 import type { VaultPath } from '@shared/types'
 import { resolveInsideVault } from './safePath'
 
@@ -11,7 +12,14 @@ const sha256 = (data: string | Buffer): string => createHash('sha256').update(da
 
 /** The id covers every other field, in a fixed order, so the same entry always hashes the same way. */
 function entryId(e: Omit<HistoryEntry, 'id'>): string {
-  return sha256(JSON.stringify([e.n, e.time, e.author, e.kind, e.hash, e.size, e.from ?? null, e.prev]))
+  // `reason` is only included when present, so entries written before it existed keep their ids.
+  const fields: unknown[] = [e.n, e.time, e.author, e.kind, e.hash, e.size, e.from ?? null, e.prev]
+  if (e.reason !== undefined) fields.push(e.reason)
+  return sha256(JSON.stringify(fields))
+}
+
+export function contentHash(content: string): string {
+  return sha256(content)
 }
 
 export interface ChainCheck {
@@ -31,6 +39,7 @@ export class NoteHistory {
   /** Appends to one log run one after another, so entries never interleave or skip a number. */
   private queues = new Map<string, Promise<unknown>>()
   private lastEntries = new Map<string, HistoryEntry | null>()
+  private statuses = new Map<string, RecordStatus>()
 
   constructor(root: string) {
     this.logsDir = path.join(root, PREM_FOLDER, 'history')
@@ -79,7 +88,10 @@ export class NoteHistory {
     const file = this.logFile(notePath)
     await fs.mkdir(path.dirname(file), { recursive: true })
     await fs.appendFile(file, JSON.stringify(entry) + '\n', 'utf8')
-    this.lastEntries.set(notePath.toLowerCase(), entry)
+    const key = notePath.toLowerCase()
+    this.lastEntries.set(key, entry)
+    const cached = this.statuses.get(key)
+    if (cached) this.statuses.set(key, applyEntry(cached, entry))
     return entry
   }
 
@@ -98,24 +110,71 @@ export class NoteHistory {
   }
 
   /** Records a version. Nothing is added if the content is the same as the latest version, e.g. an echo of our own save. */
-  record(notePath: VaultPath, content: string, author: string, kind: 'save' | 'external'): Promise<HistoryEntry | null> {
+  record(
+    notePath: VaultPath,
+    content: string,
+    author: string,
+    kind: 'save' | 'external' | 'amended',
+    reason?: string
+  ): Promise<HistoryEntry | null> {
     return this.serial(notePath.toLowerCase(), async () => {
       const hash = await this.storeObject(content)
       const prev = await this.last(notePath)
       if (prev && prev.hash === hash && prev.kind !== 'deleted') return null
-      return this.append(notePath, { author, kind, hash, size: Buffer.byteLength(content, 'utf8') })
+      return this.append(notePath, { author, kind, hash, size: Buffer.byteLength(content, 'utf8'), reason })
+    })
+  }
+
+  /** A note's signing status, worked out from its log once and then kept up to date as entries are added. */
+  async status(notePath: VaultPath): Promise<RecordStatus> {
+    const key = notePath.toLowerCase()
+    const cached = this.statuses.get(key)
+    if (cached) return cached
+    const status = (await this.list(notePath)).length ? recordStatus(await this.list(notePath)) : EMPTY_STATUS
+    this.statuses.set(key, status)
+    return status
+  }
+
+  /**
+   * Signs the note's latest version. `currentHash` is the content on disk now; signing is refused if
+   * it isn't the latest recorded version, so what's signed is exactly what the signer is looking at.
+   */
+  sign(notePath: VaultPath, author: string, currentHash: string, statement?: string): Promise<HistoryEntry> {
+    return this.serial(notePath.toLowerCase(), async () => {
+      const prev = await this.last(notePath)
+      const status = await this.status(notePath)
+      if (!prev || prev.kind === 'deleted') throw new VaultError('NOT_FOUND', `${notePath} has nothing to sign yet`)
+      if (prev.hash !== currentHash) throw new VaultError('CONFLICT', `${notePath} has changes that aren't recorded yet; save and try again`)
+      if (status.locked) throw new VaultError('LOCKED', `${notePath} is already signed`)
+      return this.append(notePath, { author, kind: 'signed', hash: prev.hash, size: prev.size, reason: statement || undefined })
+    })
+  }
+
+  /** Countersigns a signed note. The signer can't witness their own signature, and nobody witnesses twice. */
+  witness(notePath: VaultPath, author: string): Promise<HistoryEntry> {
+    return this.serial(notePath.toLowerCase(), async () => {
+      const status = await this.status(notePath)
+      if (!status.locked || !status.signature) throw new VaultError('INVALID_ARGUMENT', `${notePath} isn't signed yet`)
+      if (status.changedOutside) throw new VaultError('CONFLICT', `${notePath} was changed outside Prem after it was signed`)
+      if (!author) throw new VaultError('INVALID_ARGUMENT', 'Witnessing needs a named person')
+      if (status.signature.by === author) throw new VaultError('INVALID_ARGUMENT', "You can't witness your own signature")
+      if (status.witnesses.some((w) => w.by === author)) throw new VaultError('EXISTS', `${author} has already witnessed ${notePath}`)
+      const prev = (await this.last(notePath))!
+      return this.append(notePath, { author, kind: 'witnessed', hash: prev.hash, size: prev.size })
     })
   }
 
   /**
-   * Before the first save to a note that has no history yet (one that existed before Prem kept
-   * history, or was added by copying files in), records what it contained, so the original isn't lost.
+   * Records what's on disk if it isn't the latest recorded version: a note that existed before Prem
+   * kept history, or one edited while Prem wasn't running. Called before saving, signing and checking
+   * a note, so no version is ever skipped and a signed note changed behind Prem's back is caught.
    */
-  recordBaseline(notePath: VaultPath, readCurrent: () => Promise<string | null>): Promise<void> {
+  catchUp(notePath: VaultPath, readCurrent: () => Promise<string | null>): Promise<void> {
     return this.serial(notePath.toLowerCase(), async () => {
-      if (await this.last(notePath)) return
       const content = await readCurrent()
       if (content === null) return
+      const prev = await this.last(notePath)
+      if (prev && prev.kind !== 'deleted' && prev.hash === sha256(content)) return
       const hash = await this.storeObject(content)
       await this.append(notePath, { author: '', kind: 'external', hash, size: Buffer.byteLength(content, 'utf8') })
     })
@@ -140,8 +199,10 @@ export class NoteHistory {
       if ((err as NodeJS.ErrnoException).code === 'ENOENT') return
       throw err
     }
-    this.lastEntries.delete(from.toLowerCase())
-    this.lastEntries.delete(to.toLowerCase())
+    for (const key of [from.toLowerCase(), to.toLowerCase()]) {
+      this.lastEntries.delete(key)
+      this.statuses.delete(key)
+    }
     await this.serial(to.toLowerCase(), async () => {
       const prev = await this.last(to)
       if (prev) await this.append(to, { author, kind: 'renamed', hash: prev.hash, size: prev.size, from })

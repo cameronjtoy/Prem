@@ -3,7 +3,7 @@ import type { VaultPath } from './types'
 /** Hidden folder in each vault that holds note history. Dot folders are never listed or watched. */
 export const PREM_FOLDER = '.prem'
 
-export type HistoryKind = 'save' | 'external' | 'renamed' | 'deleted'
+export type HistoryKind = 'save' | 'external' | 'renamed' | 'deleted' | 'signed' | 'witnessed' | 'amended'
 
 /**
  * One line of a note's append-only history log. Each entry's `id` is a hash of its other fields,
@@ -23,6 +23,8 @@ export interface HistoryEntry {
   size: number
   /** For renames: where the note was before. */
   from?: VaultPath
+  /** For amendments, why a signed note was changed. For signatures, an optional statement. */
+  reason?: string
   prev: string
   id: string
 }
