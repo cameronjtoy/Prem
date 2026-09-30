@@ -1,7 +1,13 @@
 import { WidgetType, type EditorView } from '@codemirror/view'
 import katex from 'katex'
+import { parseFrontmatter } from '@shared/frontmatter'
+import { toggleRunTask } from '@shared/runs'
+import { formatDate } from '@shared/templates'
 import { splitLinkText } from '@shared/wikilinks'
 import { hostFacet } from './host'
+
+/** Frontmatter is at the top of a note; this is plenty to read it without copying the whole document. */
+const FRONTMATTER_SCAN = 4000
 
 function renderMath(el: HTMLElement, tex: string, displayMode: boolean): void {
   try {
@@ -86,6 +92,15 @@ export class CheckboxWidget extends WidgetType {
       if (view.state.readOnly) return
       const pos = view.posAtDOM(box)
       if (!/^\[[ xX]\]$/.test(view.state.sliceDoc(pos, pos + 3))) return
+      const { fields } = parseFrontmatter(view.state.sliceDoc(0, FRONTMATTER_SCAN))
+      if (fields.type === 'run') {
+        // In a protocol run, ticking a step records when it was done.
+        const line = view.state.doc.lineAt(pos)
+        const today = formatDate(new Date(), 'YYYY-MM-DD')
+        const insert = toggleRunTask(line.text, !this.checked, new Date(), fields.started?.slice(0, 10) || today)
+        view.dispatch({ changes: { from: line.from, to: line.to, insert } })
+        return
+      }
       view.dispatch({ changes: { from: pos + 1, to: pos + 2, insert: this.checked ? ' ' : 'x' } })
     })
     return box
