@@ -191,6 +191,89 @@
   background: var(--code-bg);
 }
 
+/* Protocol and run bar */
+
+.run-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 8px 20px 0;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg-side);
+  font-size: 13px;
+}
+
+.run-bar.complete {
+  opacity: 0.85;
+}
+
+.run-kind {
+  font-weight: 600;
+  color: var(--text-strong);
+  white-space: nowrap;
+}
+
+.run-detail {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: var(--text-muted);
+}
+
+.run-link {
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--accent);
+  font: inherit;
+  cursor: pointer;
+}
+
+.run-progress {
+  position: relative;
+  width: 110px;
+  height: 18px;
+  border-radius: 9px;
+  background: var(--bg-hover);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.run-progress-bar {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: var(--accent-soft);
+}
+
+.run-progress-label {
+  position: relative;
+  display: block;
+  text-align: center;
+  font-size: 11px;
+  line-height: 18px;
+  color: var(--text);
+}
+
+.run-bar button:not(.run-link) {
+  padding: 4px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 12px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.run-bar button.run-primary {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: #fff;
+
 /* Attachments */
 
 .cm-attachment {
