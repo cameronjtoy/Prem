@@ -3,6 +3,7 @@
   "productName": "Prem",
   "version": "0.1.0",
   "private": true,
+  "license": "Apache-2.0",
   "description": "A desktop knowledge hub for notes, equations and runbooks, in the style of Obsidian.",
   "main": "./out/main/index.js",
   "type": "commonjs",

@@ -92,3 +92,9 @@ src/
 
 ## Troubleshooting
 If `npm run dev` fails with `Cannot read properties of undefined (reading 'whenReady')`, your shell has `ELECTRON_RUN_AS_NODE` set. Some editors' integrated terminals and extensions set it. Run `unset ELECTRON_RUN_AS_NODE` and try again.
+
+## Contributing
+Contributions are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for setup and how changes are made, and [SECURITY.md](SECURITY.md) to report a vulnerability privately.
+
+## License
+Prem is open source under the [Apache License 2.0](LICENSE).
