@@ -22,6 +22,7 @@ import {
   sanitizeFileName,
   TEMPLATES_FOLDER
 } from '@shared/paths'
+import { SearchIndex, type SearchHit } from '@shared/search'
 import { renderTemplate } from '@shared/templates'
 import type {
   AddedAttachment,
@@ -51,6 +52,8 @@ const INDEX_BROADCAST_MS = 150
 export class VaultManager {
   private provider: VaultProvider | null = null
   private index = new LinkIndex()
+  /** Built from the same notes as the link index, so on a team vault it only ever holds notes you can read. */
+  private search = new SearchIndex()
   private unwatch: (() => void) | null = null
   private broadcastTimer: NodeJS.Timeout | null = null
   /** Who's writing: the team server's name for you, or your login name for a local vault. */
@@ -88,10 +91,14 @@ export class VaultManager {
   }
 
   private async attach(provider: VaultProvider): Promise<void> {
+    const files = await provider.readAllMarkdown()
     const index = new LinkIndex()
-    index.build(await provider.readAllMarkdown())
+    index.build(files)
+    const search = new SearchIndex()
+    search.build(files)
     await this.close()
     this.index = index
+    this.search = search
     this.provider = provider
     this.unwatch = provider.watch((changes) => void this.handleChanges(changes))
   }
@@ -103,6 +110,10 @@ export class VaultManager {
     this.provider = null
   }
 
+  find(query: string): SearchHit[] {
+    return this.provider ? this.search.search(query) : []
+  }
+
   snapshot(): LinkIndexSnapshot | null {
     return this.provider ? this.index.snapshot() : null
   }
@@ -112,6 +123,7 @@ export class VaultManager {
     const result = await this.current.write(path, content, { ...options, author: this.author })
     // Our own writes are filtered out of the watcher, so update the index directly.
     this.index.upsert(path, content)
+    this.search.upsert(path, content)
     this.scheduleBroadcast()
     return result
   }
@@ -240,17 +252,24 @@ export class VaultManager {
     this.events.onChanged(changes)
     for (const change of changes) {
       if (change.kind === 'folder') {
-        if (change.type === 'deleted') this.index.removeFolder(change.path)
+        if (change.type === 'deleted') {
+          this.index.removeFolder(change.path)
+          this.search.removeFolder(change.path)
+        }
         continue
       }
       if (!isMarkdown(change.path)) continue
       if (change.type === 'deleted') {
         this.index.remove(change.path)
+        this.search.remove(change.path)
       } else {
         try {
-          this.index.upsert(change.path, (await provider.read(change.path)).content)
+          const { content } = await provider.read(change.path)
+          this.index.upsert(change.path, content)
+          this.search.upsert(change.path, content)
         } catch {
           this.index.remove(change.path)
+          this.search.remove(change.path)
         }
       }
     }

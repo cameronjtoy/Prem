@@ -87,6 +87,7 @@ export function registerIpc(vaults: VaultManager, getWindow: () => BrowserWindow
   handle(Channels.openDaily, (day) => vaults.openDaily(str(day, 'day')))
 
   handle(Channels.getIndex, () => vaults.snapshot())
+  handle(Channels.search, (query) => vaults.find(str(query, 'query')))
 
   handle(Channels.openExternal, async (url) => {
     const target = new URL(str(url, 'url'))
