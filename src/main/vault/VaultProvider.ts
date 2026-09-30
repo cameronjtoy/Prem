@@ -18,6 +18,9 @@ export interface VaultProvider {
   read(path: VaultPath): Promise<FileRecord>
   readAllMarkdown(): Promise<FileRecord[]>
   write(path: VaultPath, content: string, options?: WriteOptions): Promise<WriteResult>
+  /** Attachments: any file except notes, read and written as raw bytes. */
+  readBinary(path: VaultPath): Promise<Uint8Array>
+  writeBinary(path: VaultPath, data: Uint8Array, options?: WriteOptions): Promise<WriteResult>
   mkdir(path: VaultPath): Promise<void>
   rename(from: VaultPath, to: VaultPath): Promise<void>
   remove(path: VaultPath): Promise<void>

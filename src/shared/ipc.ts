@@ -1,5 +1,6 @@
 import type { IpcResult } from './errors'
 import type {
+  AddedAttachment,
   CreatedNote,
   FileRecord,
   LinkIndexSnapshot,
@@ -21,6 +22,9 @@ export const Channels = {
   mkdir: 'vault:mkdir',
   rename: 'vault:rename',
   remove: 'vault:delete',
+  readBinary: 'vault:readBinary',
+  addAttachment: 'attachments:add',
+  openFile: 'attachments:open',
   listTemplates: 'templates:list',
   createFromTemplate: 'templates:create',
   openDaily: 'notebook:openDaily',
@@ -44,7 +48,13 @@ export interface Api {
     mkdir(path: string): R<void>
     rename(from: string, to: string): R<void>
     remove(path: string): R<void>
+    readBinary(path: string): R<Uint8Array>
     onChanged(listener: (changes: VaultChange[]) => void): () => void
+  }
+  attachments: {
+    add(notePath: string, fileName: string, data: Uint8Array): R<AddedAttachment>
+    /** Opens a file in its default app, or shows it in its folder if it isn't a known data format. */
+    open(path: string): R<void>
   }
   templates: {
     list(): R<TemplateInfo[]>

@@ -20,7 +20,7 @@ function contentSecurityPolicy(): Plugin {
         "default-src 'self'",
         `script-src ${script}`,
         "style-src 'self' 'unsafe-inline'",
-        "img-src 'self' data:",
+        "img-src 'self' data: blob:",
         "font-src 'self' data:",
         `connect-src ${connect}`
       ].join('; ')

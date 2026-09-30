@@ -10,6 +10,7 @@ import {
 import type { SyntaxNodeRef } from '@lezer/common'
 import { splitLinkText } from '@shared/wikilinks'
 import { hostFacet, refreshLinks } from './host'
+import { AttachmentWidget, attachmentInput } from './attachments'
 import { CheckboxWidget, MathWidget, TableWidget, WikiLinkWidget } from './widgets'
 
 const hide = Decoration.replace({})
@@ -99,12 +100,26 @@ function buildInline(view: EditorView): DecorationSet {
       case 'HorizontalRule':
         if (!isActive(node.from)) addLines(node.from, node.to, 'cm-md-hr')
         return
+      case 'Image': {
+        const url = node.node.getChild('URL')
+        const path = url ? host.resolveFile(state.sliceDoc(url.from, url.to)) : null
+        if (!path) return false
+        if (isActive(node.from)) decos.push(mark('cm-attachment-source').range(node.from, node.to))
+        else {
+          const marks = node.node.getChildren('LinkMark')
+          const alt = marks.length >= 2 ? state.sliceDoc(marks[0].to, marks[1].from) : ''
+          decos.push(Decoration.replace({ widget: new AttachmentWidget(path, alt) }).range(node.from, node.to))
+        }
+        return false
+      }
       case 'Link': {
         const marks = node.node.getChildren('LinkMark')
         if (marks.length < 2) return false
         const textFrom = marks[0].to
         const textTo = marks[1].from
-        if (textTo > textFrom) decos.push(mark('cm-md-link').range(textFrom, textTo))
+        const url = node.node.getChild('URL')
+        const isFile = !!url && host.resolveFile(state.sliceDoc(url.from, url.to)) !== null
+        if (textTo > textFrom) decos.push(mark(isFile ? 'cm-md-link cm-file-link' : 'cm-md-link').range(textFrom, textTo))
         if (!isActive(node.from)) {
           decos.push(hide.range(node.from, textFrom))
           decos.push(hide.range(textTo, node.to))
@@ -261,7 +276,9 @@ const linkClicks = EditorView.domEventHandlers({
     const url = linkUrlAt(view, pos)
     if (!url) return false
     event.preventDefault()
-    if (/^(https?:|mailto:)/i.test(url)) host.openExternal(url)
+    const file = host.resolveFile(url)
+    if (file) host.openFile(file)
+    else if (/^(https?:|mailto:)/i.test(url)) host.openExternal(url)
     else {
       let decoded = url
       try {
@@ -275,4 +292,4 @@ const linkClicks = EditorView.domEventHandlers({
   }
 })
 
-export const livePreview: Extension = [inlinePreview, blockPreview, linkClicks]
+export const livePreview: Extension = [inlinePreview, blockPreview, linkClicks, attachmentInput]
