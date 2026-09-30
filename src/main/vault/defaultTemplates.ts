@@ -1,9 +1,44 @@
+/** The template used by the Today button. A vault can override it with its own `templates/Daily entry.md`. */
+export const DAILY_TEMPLATE = 'Daily entry.md'
+
 export const DEFAULT_TEMPLATES: Record<string, string> = {
-  'Runbook.md': `---
-type: runbook
-owner:
+  'Experiment.md': `---
+type: experiment
+author: {{author}}
+date: {{date}}
+project:
+status: in progress
+tags: [experiment]
+---
+
+# {{title}}
+
+## Aim
+{{cursor}}
+
+## Hypothesis
+
+## Samples and materials
+- [[ ]]
+
+## Method
+Protocol: [[ ]]
+
+Changes from the protocol:
+
+## Results
+
+## Conclusions
+
+## Next steps
+- [ ] 
+`,
+  'Protocol.md': `---
+type: protocol
+version: 1
+author: {{author}}
 last-reviewed: {{date}}
-tags: [runbook]
+tags: [protocol]
 ---
 
 # {{title}}
@@ -11,35 +46,71 @@ tags: [runbook]
 ## Purpose
 {{cursor}}
 
-## When to use
-- Symptom or trigger that means this runbook applies
+## Safety
+- PPE:
+- Hazards:
 
-## Prerequisites
-- [ ] Access to the relevant system
-- [ ] Someone to escalate to is available
+## Materials
+| Reagent or equipment | Amount | Notes |
+| --- | --- | --- |
+|  |  |  |
 
 ## Steps
 1. [ ] First step
-   \`\`\`bash
-   # command to run
-   \`\`\`
 2. [ ] Second step
 3. [ ] Third step
 
-## Verification
-- How to confirm the fix worked
+## Expected results
 
-## Rollback
-1. [ ] How to undo the steps above
-
-## Escalation
-| Role | Name | Contact |
+## Troubleshooting
+| Problem | Likely cause | Fix |
 | --- | --- | --- |
-| Primary |  |  |
-| Backup |  |  |
+|  |  |  |
 
-## Related
-- [[ ]]
+## References
+`,
+  'Sample.md': `---
+type: sample
+id: {{title}}
+sample-type:
+source:
+location:
+created: {{date}}
+created-by: {{author}}
+tags: [sample]
+---
+
+# {{title}}
+
+## Description
+{{cursor}}
+
+## Storage
+- Location:
+- Amount:
+- Concentration:
+
+## Notes
+Experiments and protocol runs that link to this sample are listed under Backlinks.
+`,
+  'Lab meeting.md': `---
+type: meeting
+date: {{date}}
+---
+
+# {{title}}
+
+**Attendees:**
+
+## Updates
+- {{cursor}}
+
+## Discussion
+
+## Decisions
+
+## Action items
+- [ ] Who — what — by when
 `,
   'Reference.md': `---
 type: reference
@@ -54,32 +125,29 @@ last-reviewed: {{date}}
 ## Details
 
 ## Formulas
-Inline math looks like $a^2 + b^2 = c^2$. Display math goes in a block:
+Inline math looks like $C_1 V_1 = C_2 V_2$. Display math goes in a block:
 
 $$
-\\text{Gross margin} = \\frac{\\text{Revenue} - \\text{COGS}}{\\text{Revenue}}
+\\text{Molarity} = \\frac{\\text{moles of solute}}{\\text{litres of solution}}
 $$
 
 ## Related
 - [[ ]]
 `,
-  'Meeting.md': `---
-type: meeting
+  [DAILY_TEMPLATE]: `---
+type: daily
 date: {{date}}
+author: {{author}}
 ---
 
 # {{title}}
 
-**Attendees:**
-
-## Agenda
-- {{cursor}}
+## Plan
+- [ ] {{cursor}}
 
 ## Notes
 
-## Decisions
-
-## Action items
-- [ ] Owner — action — due date
+## Experiments
+- [[ ]]
 `
 }

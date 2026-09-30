@@ -25,6 +25,9 @@ const api: Api = {
     create: (templatePath, title, folder) =>
       ipcRenderer.invoke(Channels.createFromTemplate, templatePath, title, folder)
   },
+  notebook: {
+    openDaily: (day) => ipcRenderer.invoke(Channels.openDaily, day)
+  },
   index: {
     get: () => ipcRenderer.invoke(Channels.getIndex),
     onUpdated: (listener) => subscribe(Channels.indexUpdated, listener)

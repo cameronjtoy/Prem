@@ -12,12 +12,12 @@ export function formatDate(date: Date, format: string): string {
 }
 
 /**
- * Fills {{title}}, {{date}}, {{time}}, {{date:FORMAT}} and {{cursor}} placeholders.
+ * Fills {{title}}, {{date}}, {{time}}, {{date:FORMAT}}, {{author}} and {{cursor}} placeholders.
  * Unknown placeholders are left as they are. No code is ever evaluated.
  */
 export function renderTemplate(
   source: string,
-  vars: { title: string; now?: Date }
+  vars: { title: string; now?: Date; author?: string }
 ): { content: string; cursor: number | null } {
   const now = vars.now ?? new Date()
   const filled = source.replace(/\{\{\s*([a-zA-Z]+)(?::([^}]*))?\s*\}\}/g, (match, name: string, arg?: string) => {
@@ -28,6 +28,8 @@ export function renderTemplate(
         return formatDate(now, arg?.trim() || 'YYYY-MM-DD')
       case 'time':
         return formatDate(now, arg?.trim() || 'HH:mm')
+      case 'author':
+        return vars.author ?? ''
       default:
         return match
     }

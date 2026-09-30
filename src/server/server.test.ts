@@ -106,7 +106,8 @@ describe('team server', () => {
 
   it('seeds the default templates', async () => {
     const alice = await RemoteProvider.connect(server.url, tokens.alice)
-    expect(await alice.exists('templates/Runbook.md')).toBe(true)
+    expect(await alice.exists('templates/Experiment.md')).toBe(true)
+    expect(await alice.exists('templates/Protocol.md')).toBe(true)
   })
 
   it('only lists and returns what a user can read', async () => {
