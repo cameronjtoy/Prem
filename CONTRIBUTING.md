@@ -1,0 +1,51 @@
+# Contributing to Prem
+
+Thanks for helping build Prem, an open-source lab notebook that runs on your own machines. Bug reports, feature ideas and pull requests are all welcome.
+
+## Getting set up
+You need Node.js 20 or newer and git.
+
+```bash
+git clone https://github.com/cameronjtoy/Prem.git
+cd Prem
+npm ci
+npm run dev
+```
+
+Open `sample-vault/` from the welcome screen to try things out. To work on the team server, see [Hosting a team vault](README.md#hosting-a-team-vault).
+
+## Before you open a pull request
+Run the same checks CI runs:
+
+```bash
+npm run typecheck
+npm test
+npm run build
+npm run server:build
+```
+
+Also try your change in the app itself. Tests cover the shared logic, but most bugs show up in the editor.
+
+## How changes are made
+- Work on a branch and open a pull request against `main`. `main` is protected, and every change goes through a pull request with passing CI.
+- Keep each pull request to one change, and say in the description what changed, why, and how you tested it.
+- Add or update tests for logic in `src/shared/` and `src/server/`. Keep that code free of Electron and React so it stays easy to test.
+- Match the style of the code around your change: naming, comment density and structure. Comments explain *why*, not *what*.
+- Write commit messages that say what changed and why, in plain sentences.
+
+## Where things live
+See [Architecture](README.md#architecture) in the README. In short: `src/shared` is plain TypeScript used everywhere, `src/main` is the Electron main process and the vault layer, `src/renderer` is the React app, and `src/server` is the team server.
+
+## Notebook data is sensitive
+Lab notebooks hold research data. Changes that touch storage, the team server, permissions or signing need extra care:
+- Never write outside the vault.
+- Never lose a user's edits.
+- Never let a user see or change something their permissions don't allow.
+
+If you're unsure, ask in the pull request.
+
+## Reporting security issues
+Please don't open a public issue for security problems. See [SECURITY.md](SECURITY.md).
+
+## License
+By contributing, you agree that your contributions are licensed under the [Apache License 2.0](LICENSE).
