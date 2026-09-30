@@ -1,4 +1,5 @@
 import type { IpcResult } from './errors'
+import type { SearchHit } from './search'
 import type {
   AddedAttachment,
   CreatedNote,
@@ -29,6 +30,7 @@ export const Channels = {
   createFromTemplate: 'templates:create',
   openDaily: 'notebook:openDaily',
   getIndex: 'index:get',
+  search: 'search:query',
   openExternal: 'app:openExternal',
   vaultChanged: 'vault:changed',
   indexUpdated: 'index:updated'
@@ -64,6 +66,7 @@ export interface Api {
     /** Opens or creates the daily entry for a YYYY-MM-DD day. */
     openDaily(day: string): R<CreatedNote>
   }
+  search(query: string): R<SearchHit[]>
   index: {
     get(): R<LinkIndexSnapshot | null>
     onUpdated(listener: (snapshot: LinkIndexSnapshot) => void): () => void

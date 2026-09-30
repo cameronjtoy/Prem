@@ -76,3 +76,10 @@ export const TodayIcon = (p: IconProps) => (
     <rect x="8" y="13" width="3" height="3" rx="0.5" />
   </svg>
 )
+
+export const SearchIcon = (p: IconProps) => (
+  <svg {...base(p)}>
+    <circle cx="11" cy="11" r="7" />
+    <path d="m20 20-4-4" />
+  </svg>
+)

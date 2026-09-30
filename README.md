@@ -8,6 +8,7 @@ A desktop knowledge hub in the style of Obsidian, where technical and business t
 - **Equations** with KaTeX: `$inline$` and `$$ block $$`.
 - **Runbook-friendly markdown**: clickable checkboxes, syntax-highlighted code blocks and rendered tables.
 - **Attachments**: drag files into a note, or paste a screenshot. They're saved in an `attachments/` folder next to the note and linked with ordinary markdown, so they still work in other editors. Images and CSV/TSV files preview in the note; other files show as links. Clicking opens a file in its default app. Only known data formats (images, PDFs, spreadsheets, sequence and structure files, and so on) are opened directly; anything else, such as scripts, is shown in its folder instead so it can't run by accident. Attachments can be up to 100 MB.
+- **Search** (⌘K): finds notes containing every word you type (use "quotes" for a phrase), across titles, folders and text. Title matches come first, each result shows the matching lines, and Enter opens the note at the match. Templates are left out. On a team vault, search only covers notes you can read.
 - **Backlinks panel** listing every note that links to the current one, with the surrounding text.
 - **Graph view** of how notes connect.
 - **Lab notebook templates**: the `templates/` folder in a new vault gets Experiment, Protocol, Sample, Lab meeting and Reference templates. Templates can use `{{title}}`, `{{date}}`, `{{time}}`, `{{author}}` and `{{cursor}}`.
@@ -37,6 +38,7 @@ Then choose **Open a folder as a vault** and pick `sample-vault/`, or any other 
 ### Shortcuts
 | Shortcut | Action |
 | --- | --- |
+| ⌘K | Search all notes |
 | ⌘T | Today's notebook entry |
 | ⌘N | New note |
 | ⌘⇧N | New note from template |

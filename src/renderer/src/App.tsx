@@ -1,11 +1,12 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { Group, Panel, Separator } from 'react-resizable-panels'
 import { notebookFolder } from '@shared/notebook'
 import { BacklinksPanel } from './components/Backlinks/BacklinksPanel'
 import { NoteEditor } from './components/Editor/NoteEditor'
 import { FileTree } from './components/FileTree/FileTree'
 import { GraphView } from './components/Graph/GraphView'
-import { EditIcon, GraphIcon, TemplateIcon, TodayIcon, VaultIcon } from './components/icons'
+import { EditIcon, GraphIcon, SearchIcon, TemplateIcon, TodayIcon, VaultIcon } from './components/icons'
+import { SearchPalette } from './components/SearchPalette'
 import { TemplatePicker } from './components/TemplatePicker'
 import { WelcomeScreen } from './components/WelcomeScreen'
 import { LinkIndexProvider } from './state/LinkIndexContext'
@@ -29,6 +30,7 @@ function Shell() {
   const ws = useWorkspace()
   const canCreate = canWrite(ws.currentFolder())
   const canKeepNotebook = canWrite(notebookFolder(info?.user))
+  const [searching, setSearching] = useState(false)
 
   useEffect(() => {
     if (!info) return
@@ -42,6 +44,7 @@ function Shell() {
       } else if (key === 'n') {
         if (canCreate) void ws.createNote(ws.currentFolder())
       }
+      else if (key === 'k' && !e.shiftKey) setSearching((open) => !open)
       else if (key === 't' && !e.shiftKey) {
         if (canKeepNotebook) void ws.openToday()
       } else if (key === 'g' && !e.shiftKey) ws.setView(ws.view === 'graph' ? 'editor' : 'graph')
@@ -88,6 +91,9 @@ function Shell() {
                 </button>
               </div>
               <div className="toolbar-spacer" />
+              <button className="text-button" onClick={() => setSearching(true)} title="Search all notes (⌘K)">
+                <SearchIcon /> Search
+              </button>
               {canKeepNotebook && (
                 <button className="text-button" onClick={() => void ws.openToday()} title="Today's notebook entry (⌘T)">
                   <TodayIcon /> Today
@@ -125,6 +131,7 @@ function Shell() {
         </Panel>
       </Group>
       {ws.templatePickerFolder !== null && <TemplatePicker folder={ws.templatePickerFolder} />}
+      {searching && <SearchPalette onClose={() => setSearching(false)} />}
     </div>
   )
 }
@@ -151,7 +158,7 @@ function EmptyState() {
           New from template
         </button>
       </div>
-      <p className="hint">⌘T today · ⌘N new note · ⌘⇧N from template · ⌘G graph · ⌘S save</p>
+      <p className="hint">⌘K search · ⌘T today · ⌘N new note · ⌘⇧N from template · ⌘G graph · ⌘S save</p>
     </div>
   )
 }

@@ -33,6 +33,7 @@ const api: Api = {
   notebook: {
     openDaily: (day) => ipcRenderer.invoke(Channels.openDaily, day)
   },
+  search: (query) => ipcRenderer.invoke(Channels.search, query),
   index: {
     get: () => ipcRenderer.invoke(Channels.getIndex),
     onUpdated: (listener) => subscribe(Channels.indexUpdated, listener)
