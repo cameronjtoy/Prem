@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { basename, dirname, isInside, joinPath, sanitizeFileName } from '@shared/paths'
+import { formatDate } from '@shared/templates'
 import type { VaultPath } from '@shared/types'
 import { errorMessage, vaultClient } from '../services/vaultClient'
 import { useVault } from './VaultContext'
@@ -30,6 +31,8 @@ interface WorkspaceState {
   createNote(folder: VaultPath): Promise<void>
   createFolder(parent: VaultPath): Promise<void>
   createFromTemplate(templatePath: VaultPath, title: string, folder: VaultPath): Promise<void>
+  /** Opens today's notebook entry, creating it from the daily template the first time. */
+  openToday(): Promise<void>
   startRename(path: VaultPath | null): void
   rename(path: VaultPath, newName: string): Promise<void>
   remove(path: VaultPath): Promise<void>
@@ -99,6 +102,16 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
     },
     [refresh, openNote, fail]
   )
+
+  const openToday = useCallback(async () => {
+    try {
+      const { path, cursor } = await vaultClient.openDaily(formatDate(new Date(), 'YYYY-MM-DD'))
+      await refresh()
+      openNote(path, cursor)
+    } catch (err) {
+      fail(err)
+    }
+  }, [refresh, openNote, fail])
 
   const openLink = useCallback(
     async (target: string, fromPath?: VaultPath) => {
@@ -200,6 +213,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
       createNote,
       createFolder,
       createFromTemplate,
+      openToday,
       startRename: setRenamingPath,
       rename,
       remove,
@@ -219,6 +233,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
       createNote,
       createFolder,
       createFromTemplate,
+      openToday,
       rename,
       remove,
       registerEditor,
