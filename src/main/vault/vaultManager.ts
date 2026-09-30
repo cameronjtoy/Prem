@@ -1,7 +1,18 @@
-import { realpath, stat } from 'node:fs/promises'
+import { mkdtemp, realpath, stat, writeFile } from 'node:fs/promises'
+import { tmpdir, userInfo } from 'node:os'
+import { join } from 'node:path'
 import { shell } from 'electron'
+import {
+  attachmentFileName,
+  attachmentFolder,
+  attachmentMarkdown,
+  isSafeToOpen,
+  MAX_ATTACHMENT_BYTES,
+  numberedName
+} from '@shared/attachments'
 import { VaultError } from '@shared/errors'
 import { LinkIndex } from '@shared/linkIndex'
+import { dailyNotePath, parseDay } from '@shared/notebook'
 import {
   basename,
   isMarkdown,
@@ -12,6 +23,7 @@ import {
 } from '@shared/paths'
 import { renderTemplate } from '@shared/templates'
 import type {
+  AddedAttachment,
   CreatedNote,
   LinkIndexSnapshot,
   TemplateInfo,
@@ -22,7 +34,7 @@ import type {
   WriteResult
 } from '@shared/types'
 import { rememberServer, saveSettings } from '../settings'
-import { DEFAULT_TEMPLATES } from './defaultTemplates'
+import { DAILY_TEMPLATE, DEFAULT_TEMPLATES } from './defaultTemplates'
 import { LocalFsProvider } from './LocalFsProvider'
 import { RemoteProvider } from './RemoteProvider'
 import type { VaultProvider } from './VaultProvider'
@@ -40,6 +52,10 @@ export class VaultManager {
   private index = new LinkIndex()
   private unwatch: (() => void) | null = null
   private broadcastTimer: NodeJS.Timeout | null = null
+  /** Who's writing: the team server's name for you, or your login name for a local vault. */
+  private author = ''
+  /** Set for team vaults, where each person's notebook lives in its own folder. */
+  private user: string | undefined
 
   constructor(private readonly events: VaultEvents) {}
 
@@ -54,6 +70,8 @@ export class VaultManager {
     const provider = new LocalFsProvider(root, { trash: (abs) => shell.trashItem(abs) })
     await this.seedTemplates(provider)
     await this.attach(provider)
+    this.user = undefined
+    this.author = localUserName()
     await saveSettings({ lastVault: root, lastServer: undefined })
     return { name: provider.name, root }
   }
@@ -62,6 +80,8 @@ export class VaultManager {
   async connect(url: string, token: string): Promise<VaultInfo> {
     const provider = await RemoteProvider.connect(url, token)
     await this.attach(provider)
+    this.user = provider.user
+    this.author = provider.user
     await rememberServer(provider.root, token)
     return { name: provider.name, root: provider.root, user: provider.user, access: provider.access }
   }
@@ -110,7 +130,7 @@ export class VaultManager {
       const name = n === 0 ? baseName : `${baseName} ${n}`
       const path = joinPath(folder, `${name}.md`)
       if (await provider.exists(path)) continue
-      const { content, cursor } = renderTemplate(source, { title: name })
+      const { content, cursor } = renderTemplate(source, { title: name, author: this.author })
       try {
         await this.write(path, content, { createOnly: true })
         return { path, cursor }
@@ -119,6 +139,73 @@ export class VaultManager {
       }
     }
     throw new VaultError('EXISTS', `Could not find a free name for "${baseName}"`)
+  }
+
+  /** Copies a file into the note's attachments folder under a free name, and returns the markdown that shows it. */
+  async addAttachment(notePath: VaultPath, fileName: string, data: Uint8Array): Promise<AddedAttachment> {
+    if (data.byteLength > MAX_ATTACHMENT_BYTES) {
+      throw new VaultError('INVALID_ARGUMENT', `"${fileName}" is larger than ${MAX_ATTACHMENT_BYTES / 1024 / 1024} MB`)
+    }
+    const provider = this.current
+    const folder = attachmentFolder(notePath)
+    const name = attachmentFileName(fileName)
+    for (let n = 0; n < 1000; n++) {
+      const path = joinPath(folder, numberedName(name, n))
+      try {
+        await provider.writeBinary(path, data, { createOnly: true })
+        return { path, markdown: attachmentMarkdown(notePath, path) }
+      } catch (err) {
+        if (!(err instanceof VaultError && err.code === 'EXISTS')) throw err
+      }
+    }
+    throw new VaultError('EXISTS', `Could not find a free name for "${name}"`)
+  }
+
+  readBinary(path: VaultPath): Promise<Uint8Array> {
+    return this.current.readBinary(path)
+  }
+
+  /**
+   * Opens an attachment in its default app. Only known data formats are opened; anything else,
+   * such as a script or installer, is shown in its folder instead so it can't run by accident.
+   */
+  async openFile(path: VaultPath): Promise<void> {
+    const provider = this.current
+    let file: string
+    if (provider instanceof LocalFsProvider) {
+      file = await provider.absolutePath(path)
+    } else {
+      // Team vault: download a copy. Edits to it aren't sent back; attach the changed file again instead.
+      const dir = await mkdtemp(join(tmpdir(), 'prem-'))
+      file = join(dir, basename(path))
+      await writeFile(file, await provider.readBinary(path))
+    }
+    if (!isSafeToOpen(path)) return shell.showItemInFolder(file)
+    const error = await shell.openPath(file)
+    if (error) throw new VaultError('UNKNOWN', `Couldn't open ${basename(path)}: ${error}`)
+  }
+
+  /** Opens the daily entry for `day` (YYYY-MM-DD, in the user's own time zone), creating it on first use. */
+  async openDaily(day: string): Promise<CreatedNote> {
+    const provider = this.current
+    const path = dailyNotePath(day, this.user)
+    if (await provider.exists(path)) return { path, cursor: null }
+
+    const custom = `${TEMPLATES_FOLDER}/${DAILY_TEMPLATE}`
+    const source = (await provider.exists(custom)) ? (await provider.read(custom)).content : DEFAULT_TEMPLATES[DAILY_TEMPLATE]
+    // The entry is dated for the day asked for; {{time}} still means the time it was created.
+    const now = new Date()
+    const when = parseDay(day)
+    when.setHours(now.getHours(), now.getMinutes())
+    const { content, cursor } = renderTemplate(source, { title: day, now: when, author: this.author })
+    try {
+      await this.write(path, content, { createOnly: true })
+      return { path, cursor }
+    } catch (err) {
+      // Created a moment ago, e.g. by the same person on another machine.
+      if (err instanceof VaultError && err.code === 'EXISTS') return { path, cursor: null }
+      throw err
+    }
   }
 
   private async seedTemplates(provider: VaultProvider): Promise<void> {
@@ -159,5 +246,13 @@ export class VaultManager {
       const snapshot = this.snapshot()
       if (snapshot) this.events.onIndexUpdated(snapshot)
     }, INDEX_BROADCAST_MS)
+  }
+}
+
+function localUserName(): string {
+  try {
+    return userInfo().username
+  } catch {
+    return ''
   }
 }

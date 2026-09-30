@@ -3,6 +3,7 @@ import { createServer, type IncomingMessage, type ServerResponse } from 'node:ht
 import { realpath, stat } from 'node:fs/promises'
 import type { AddressInfo } from 'node:net'
 import { isVaultError, VaultError } from '@shared/errors'
+import { MAX_ATTACHMENT_BYTES } from '@shared/attachments'
 import { joinPath, normalizeVaultPath, TEMPLATES_FOLDER } from '@shared/paths'
 import { CLIENT_HEADER, Routes, STATUS_BY_CODE, type ServerInfo } from '@shared/remote'
 import type { VaultChange, VaultPath, WriteOptions } from '@shared/types'
@@ -55,16 +56,23 @@ function sendJson(res: ServerResponse, status: number, body: unknown): void {
   res.end(data)
 }
 
-async function readJson(req: IncomingMessage): Promise<Record<string, unknown>> {
+async function readBody(req: IncomingMessage, limit: number): Promise<Buffer> {
+  const declared = Number(req.headers['content-length'])
+  if (declared > limit) throw new VaultError('INVALID_ARGUMENT', 'Request body is too large')
   const chunks: Buffer[] = []
   let size = 0
   for await (const chunk of req as AsyncIterable<Buffer>) {
     size += chunk.length
-    if (size > MAX_BODY_BYTES) throw new VaultError('INVALID_ARGUMENT', 'Request body is too large')
+    if (size > limit) throw new VaultError('INVALID_ARGUMENT', 'Request body is too large')
     chunks.push(chunk)
   }
+  return Buffer.concat(chunks)
+}
+
+async function readJson(req: IncomingMessage): Promise<Record<string, unknown>> {
+  const body = await readBody(req, MAX_BODY_BYTES)
   try {
-    const value = JSON.parse(Buffer.concat(chunks).toString('utf8')) as unknown
+    const value = JSON.parse(body.toString('utf8')) as unknown
     if (typeof value === 'object' && value !== null) return value as Record<string, unknown>
   } catch {
     // fall through
@@ -186,6 +194,27 @@ export async function startServer(config: ServerConfig, log: Logger = console): 
             throw err
           }
         })
+        log.info(`${user.name} saved ${path}`)
+        return sendJson(res, 200, result)
+      }
+      case `GET ${Routes.blob}`: {
+        const path = queryPath(url)
+        if (!access.canRead(path)) forbid(user, 'read', path)
+        const data = await provider.readBinary(path)
+        res.writeHead(200, {
+          'content-type': 'application/octet-stream',
+          'content-length': data.byteLength,
+          'cache-control': 'no-store',
+          'x-content-type-options': 'nosniff'
+        })
+        return void res.end(data)
+      }
+      case `PUT ${Routes.blob}`: {
+        const path = queryPath(url)
+        if (!access.canWrite(path)) forbid(user, 'add files to', path)
+        const data = await readBody(req, MAX_ATTACHMENT_BYTES)
+        const createOnly = url.searchParams.get('createOnly') === '1'
+        const result = await locks.run(path.toLowerCase(), () => provider.writeBinary(path, data, { createOnly }))
         log.info(`${user.name} saved ${path}`)
         return sendJson(res, 200, result)
       }

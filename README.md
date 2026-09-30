@@ -7,9 +7,11 @@ A desktop knowledge hub in the style of Obsidian, where technical and business t
 - **Wikilinks** such as `[[Note name]]`, `[[Note|alias]]` and `[[Note#Heading]]`. Links autocomplete after `[[`. A link to a note that doesn't exist yet appears faded, and clicking it creates the note.
 - **Equations** with KaTeX: `$inline$` and `$$ block $$`.
 - **Runbook-friendly markdown**: clickable checkboxes, syntax-highlighted code blocks and rendered tables.
+- **Attachments**: drag files into a note, or paste a screenshot. They're saved in an `attachments/` folder next to the note and linked with ordinary markdown, so they still work in other editors. Images and CSV/TSV files preview in the note; other files show as links. Clicking opens a file in its default app. Only known data formats (images, PDFs, spreadsheets, sequence and structure files, and so on) are opened directly; anything else, such as scripts, is shown in its folder instead so it can't run by accident. Attachments can be up to 100 MB.
 - **Backlinks panel** listing every note that links to the current one, with the surrounding text.
 - **Graph view** of how notes connect.
-- **Templates**: the `templates/` folder in a vault holds Runbook, Reference and Meeting templates, which are created the first time a vault is opened.
+- **Lab notebook templates**: the `templates/` folder in a new vault gets Experiment, Protocol, Sample, Lab meeting and Reference templates. Templates can use `{{title}}`, `{{date}}`, `{{time}}`, `{{author}}` and `{{cursor}}`.
+- **Today** (⌘T) opens today's notebook entry, creating it from `templates/Daily entry.md` the first time. Entries are filed by year: `Notebook/2026/2026-09-30.md` in a local vault, or `Notebooks/<your name>/2026/…` in a team vault so each person's notebook can have its own permissions.
 - **External edits** made while the app is open are picked up automatically. If the note you're editing also has unsaved changes, the app asks which version to keep.
 - **Team vaults**: run the Prem server to host one vault for a whole team, with a token per person or bot and per-folder permissions. See [Hosting a team vault](#hosting-a-team-vault).
 
@@ -34,6 +36,7 @@ Then choose **Open a folder as a vault** and pick `sample-vault/`, or any other 
 ### Shortcuts
 | Shortcut | Action |
 | --- | --- |
+| ⌘T | Today's notebook entry |
 | ⌘N | New note |
 | ⌘⇧N | New note from template |
 | ⌘G | Toggle graph view |

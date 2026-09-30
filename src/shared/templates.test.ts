@@ -20,6 +20,11 @@ describe('renderTemplate', () => {
     expect(cursor).toBe(3)
   })
 
+  it('fills the author, or leaves it blank when unknown', () => {
+    expect(renderTemplate('by {{author}}', { title: 'x', now, author: 'alice' }).content).toBe('by alice')
+    expect(renderTemplate('by {{author}}', { title: 'x', now }).content).toBe('by ')
+  })
+
   it('leaves unknown placeholders alone', () => {
     expect(renderTemplate('{{owner}}', { title: 'x', now }).content).toBe('{{owner}}')
   })

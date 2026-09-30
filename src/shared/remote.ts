@@ -7,6 +7,7 @@ export const Routes = {
   info: '/api/info',
   entries: '/api/entries',
   file: '/api/file',
+  blob: '/api/blob',
   files: '/api/files',
   exists: '/api/exists',
   folder: '/api/folder',

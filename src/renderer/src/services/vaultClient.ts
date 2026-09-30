@@ -19,10 +19,15 @@ export const vaultClient = {
   mkdir: (path: string) => unwrap(window.api.vault.mkdir(path)),
   rename: (from: string, to: string) => unwrap(window.api.vault.rename(from, to)),
   remove: (path: string) => unwrap(window.api.vault.remove(path)),
+  readBinary: (path: string) => unwrap(window.api.vault.readBinary(path)),
+  addAttachment: (notePath: string, fileName: string, data: Uint8Array) =>
+    unwrap(window.api.attachments.add(notePath, fileName, data)),
+  openFile: (path: string) => unwrap(window.api.attachments.open(path)),
   onChanged: window.api.vault.onChanged,
   listTemplates: () => unwrap(window.api.templates.list()),
   createFromTemplate: (templatePath: string, title: string, folder: string) =>
     unwrap(window.api.templates.create(templatePath, title, folder)),
+  openDaily: (day: string) => unwrap(window.api.notebook.openDaily(day)),
   getIndex: () => unwrap(window.api.index.get()),
   onIndexUpdated: window.api.index.onUpdated,
   openExternal: (url: string) => unwrap(window.api.app.openExternal(url))

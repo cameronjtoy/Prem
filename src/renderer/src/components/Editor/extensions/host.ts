@@ -6,6 +6,13 @@ export interface EditorHost {
   openLink(target: string): void
   openExternal(url: string): void
   noteTitles(): string[]
+  /** Vault path of a relative link to an attachment, or null if it's a web link or a note. */
+  resolveFile(url: string): string | null
+  loadFile(path: string): Promise<Uint8Array>
+  openFile(path: string): void
+  /** Stores a file as an attachment of this note and returns the markdown that shows it. */
+  addAttachment(fileName: string, data: Uint8Array): Promise<string>
+  notify(message: string): void
 }
 
 export const hostFacet = Facet.define<EditorHost, EditorHost>({

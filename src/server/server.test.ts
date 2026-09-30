@@ -106,7 +106,8 @@ describe('team server', () => {
 
   it('seeds the default templates', async () => {
     const alice = await RemoteProvider.connect(server.url, tokens.alice)
-    expect(await alice.exists('templates/Runbook.md')).toBe(true)
+    expect(await alice.exists('templates/Experiment.md')).toBe(true)
+    expect(await alice.exists('templates/Protocol.md')).toBe(true)
   })
 
   it('only lists and returns what a user can read', async () => {
@@ -184,5 +185,53 @@ describe('concurrent saves', () => {
     expect(results.filter((r) => r.status === 'fulfilled')).toHaveLength(1)
     const rejected = results.find((r) => r.status === 'rejected') as PromiseRejectedResult
     expect(isVaultError(rejected.reason, 'CONFLICT')).toBe(true)
+  })
+})
+
+describe('attachments', () => {
+  const png = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0, 1, 2, 255])
+
+  it('stores and returns files byte for byte', async () => {
+    const bob = await RemoteProvider.connect(server.url, tokens.bob)
+    await bob.writeBinary('Runbooks/attachments/gel.png', png, { createOnly: true })
+    expect([...(await bob.readBinary('Runbooks/attachments/gel.png'))]).toEqual([...png])
+    expect(await readFile(path.join(base, 'Runbooks', 'attachments', 'gel.png'))).toEqual(Buffer.from(png))
+    await expectCode(bob.writeBinary('Runbooks/attachments/gel.png', png, { createOnly: true }), 'EXISTS')
+  })
+
+  it('lists attachments but keeps them out of the notes', async () => {
+    const bot = await RemoteProvider.connect(server.url, tokens.bot)
+    expect((await bot.list()).map((e) => e.path)).toContain('Runbooks/attachments/gel.png')
+    expect((await bot.readAllMarkdown()).map((f) => f.path)).not.toContain('Runbooks/attachments/gel.png')
+  })
+
+  it('applies folder permissions to attachments', async () => {
+    const bot = await RemoteProvider.connect(server.url, tokens.bot)
+    const bob = await RemoteProvider.connect(server.url, tokens.bob)
+    await expectCode(bot.writeBinary('Runbooks/attachments/x.png', png), 'FORBIDDEN')
+    await expectCode(bob.writeBinary('Welcome-attachments/x.png', png), 'FORBIDDEN')
+    const alice = await RemoteProvider.connect(server.url, tokens.alice)
+    await alice.writeBinary('Finance/attachments/secret.csv', new TextEncoder().encode('a,b'))
+    await expectCode(bob.readBinary('Finance/attachments/secret.csv'), 'FORBIDDEN')
+  })
+
+  it("won't store a note as an attachment, or an oversized file", async () => {
+    const alice = await RemoteProvider.connect(server.url, tokens.alice)
+    await expectCode(alice.writeBinary('Sneaky.md', png), 'INVALID_PATH')
+    const res = await fetch(`${server.url}/api/blob?path=big.bin`, {
+      method: 'PUT',
+      headers: { authorization: `Bearer ${tokens.alice}`, 'content-length': String(200 * 1024 * 1024) },
+      body: 'x'
+    }).catch(() => null)
+    expect(res === null || res.status === 400).toBe(true)
+  })
+
+  it('tells other people when an attachment is added', async () => {
+    const alice = await RemoteProvider.connect(server.url, tokens.alice)
+    const bob = await RemoteProvider.connect(server.url, tokens.bob)
+    const bobSees = nextChange(bob, 'Runbooks/attachments/plate.csv')
+    await new Promise((r) => setTimeout(r, 200))
+    await alice.writeBinary('Runbooks/attachments/plate.csv', new TextEncoder().encode('well,od\nA1,0.5\n'))
+    expect(await bobSees).toEqual({ type: 'created', path: 'Runbooks/attachments/plate.csv', kind: 'file' })
   })
 })

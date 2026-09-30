@@ -1,10 +1,11 @@
 import { useEffect } from 'react'
 import { Group, Panel, Separator } from 'react-resizable-panels'
+import { notebookFolder } from '@shared/notebook'
 import { BacklinksPanel } from './components/Backlinks/BacklinksPanel'
 import { NoteEditor } from './components/Editor/NoteEditor'
 import { FileTree } from './components/FileTree/FileTree'
 import { GraphView } from './components/Graph/GraphView'
-import { EditIcon, GraphIcon, TemplateIcon, VaultIcon } from './components/icons'
+import { EditIcon, GraphIcon, TemplateIcon, TodayIcon, VaultIcon } from './components/icons'
 import { TemplatePicker } from './components/TemplatePicker'
 import { WelcomeScreen } from './components/WelcomeScreen'
 import { LinkIndexProvider } from './state/LinkIndexContext'
@@ -27,6 +28,7 @@ function Shell() {
   const { info, openVault, canWrite } = useVault()
   const ws = useWorkspace()
   const canCreate = canWrite(ws.currentFolder())
+  const canKeepNotebook = canWrite(notebookFolder(info?.user))
 
   useEffect(() => {
     if (!info) return
@@ -40,7 +42,9 @@ function Shell() {
       } else if (key === 'n') {
         if (canCreate) void ws.createNote(ws.currentFolder())
       }
-      else if (key === 'g' && !e.shiftKey) ws.setView(ws.view === 'graph' ? 'editor' : 'graph')
+      else if (key === 't' && !e.shiftKey) {
+        if (canKeepNotebook) void ws.openToday()
+      } else if (key === 'g' && !e.shiftKey) ws.setView(ws.view === 'graph' ? 'editor' : 'graph')
       else if (key === 'o' && !e.shiftKey) void openVault()
       else handled = false
       if (handled) {
@@ -50,7 +54,7 @@ function Shell() {
     }
     window.addEventListener('keydown', onKey, true)
     return () => window.removeEventListener('keydown', onKey, true)
-  }, [info, ws, openVault, canCreate])
+  }, [info, ws, openVault, canCreate, canKeepNotebook])
 
   if (!info) return <WelcomeScreen />
 
@@ -84,6 +88,11 @@ function Shell() {
                 </button>
               </div>
               <div className="toolbar-spacer" />
+              {canKeepNotebook && (
+                <button className="text-button" onClick={() => void ws.openToday()} title="Today's notebook entry (⌘T)">
+                  <TodayIcon /> Today
+                </button>
+              )}
               {canCreate && (
                 <button className="text-button" onClick={() => ws.showTemplatePicker(ws.currentFolder())}>
                   <TemplateIcon /> New from template
@@ -142,7 +151,7 @@ function EmptyState() {
           New from template
         </button>
       </div>
-      <p className="hint">⌘N new note · ⌘⇧N from template · ⌘G graph · ⌘S save</p>
+      <p className="hint">⌘T today · ⌘N new note · ⌘⇧N from template · ⌘G graph · ⌘S save</p>
     </div>
   )
 }

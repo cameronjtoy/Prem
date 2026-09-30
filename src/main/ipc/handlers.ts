@@ -70,10 +70,19 @@ export function registerIpc(vaults: VaultManager, getWindow: () => BrowserWindow
   handle(Channels.rename, (from, to) => vaults.current.rename(str(from, 'from'), str(to, 'to')))
   handle(Channels.remove, (path) => vaults.current.remove(str(path, 'path')))
 
+  handle(Channels.readBinary, (path) => vaults.readBinary(str(path, 'path')))
+  handle(Channels.addAttachment, (notePath, fileName, data) => {
+    if (!(data instanceof Uint8Array)) throw new VaultError('INVALID_ARGUMENT', 'data must be bytes')
+    return vaults.addAttachment(str(notePath, 'notePath'), str(fileName, 'fileName'), data)
+  })
+  handle(Channels.openFile, (path) => vaults.openFile(str(path, 'path')))
+
   handle(Channels.listTemplates, () => vaults.listTemplates())
   handle(Channels.createFromTemplate, (templatePath, title, folder) =>
     vaults.createFromTemplate(str(templatePath, 'templatePath'), str(title, 'title'), str(folder, 'folder'))
   )
+
+  handle(Channels.openDaily, (day) => vaults.openDaily(str(day, 'day')))
 
   handle(Channels.getIndex, () => vaults.snapshot())
 

@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
-import { basename, dirname, isInside, joinPath, sanitizeFileName } from '@shared/paths'
+import { basename, dirname, isInside, isMarkdown, joinPath, sanitizeFileName } from '@shared/paths'
+import { formatDate } from '@shared/templates'
 import type { VaultPath } from '@shared/types'
 import { errorMessage, vaultClient } from '../services/vaultClient'
 import { useVault } from './VaultContext'
@@ -30,6 +31,8 @@ interface WorkspaceState {
   createNote(folder: VaultPath): Promise<void>
   createFolder(parent: VaultPath): Promise<void>
   createFromTemplate(templatePath: VaultPath, title: string, folder: VaultPath): Promise<void>
+  /** Opens today's notebook entry, creating it from the daily template the first time. */
+  openToday(): Promise<void>
   startRename(path: VaultPath | null): void
   rename(path: VaultPath, newName: string): Promise<void>
   remove(path: VaultPath): Promise<void>
@@ -82,10 +85,15 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
 
   const fail = useCallback((err: unknown) => setNotice(errorMessage(err)), [])
 
-  const openNote = useCallback((path: VaultPath, cursor: number | null = null) => {
-    setActive({ path, cursor })
-    setView('editor')
-  }, [])
+  const openNote = useCallback(
+    (path: VaultPath, cursor: number | null = null) => {
+      // Attachments open in their own app; only notes open in the editor.
+      if (!isMarkdown(path)) return void vaultClient.openFile(path).catch(fail)
+      setActive({ path, cursor })
+      setView('editor')
+    },
+    [fail]
+  )
 
   const createFromTemplate = useCallback(
     async (templatePath: VaultPath, title: string, folder: VaultPath) => {
@@ -99,6 +107,16 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
     },
     [refresh, openNote, fail]
   )
+
+  const openToday = useCallback(async () => {
+    try {
+      const { path, cursor } = await vaultClient.openDaily(formatDate(new Date(), 'YYYY-MM-DD'))
+      await refresh()
+      openNote(path, cursor)
+    } catch (err) {
+      fail(err)
+    }
+  }, [refresh, openNote, fail])
 
   const openLink = useCallback(
     async (target: string, fromPath?: VaultPath) => {
@@ -200,6 +218,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
       createNote,
       createFolder,
       createFromTemplate,
+      openToday,
       startRename: setRenamingPath,
       rename,
       remove,
@@ -219,6 +238,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
       createNote,
       createFolder,
       createFromTemplate,
+      openToday,
       rename,
       remove,
       registerEditor,
