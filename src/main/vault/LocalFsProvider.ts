@@ -263,7 +263,12 @@ export class LocalFsProvider implements VaultProvider {
           if (stat && versionOf(stat) === own) return
         }
       }
-      if (kind === 'file' && isMarkdown(rel)) await this.recordOutsideChange(type, rel, abs)
+      if (kind === 'file' && isMarkdown(rel)) {
+        const changed = await this.recordOutsideChange(type, rel, abs)
+        // A note whose content matches its latest recorded version is Prem's own save, however late the
+        // watcher reports it, so there's nothing new to announce. This backs up the timed selfWrites check.
+        if (type === 'modified' && !changed) return
+      }
       push({ type, path: rel, kind } as VaultChange)
     }
 
@@ -292,12 +297,17 @@ export class LocalFsProvider implements VaultProvider {
    * Notes changed by another editor, a sync tool or a restore from backup are recorded too, with no author.
    * An echo of Prem's own save has the same content as the latest version, so it adds nothing.
    */
-  private async recordOutsideChange(type: VaultChange['type'], rel: VaultPath, abs: string): Promise<void> {
+  /** Returns false only when the file is exactly its latest recorded version, i.e. nothing changed. */
+  private async recordOutsideChange(type: VaultChange['type'], rel: VaultPath, abs: string): Promise<boolean> {
     try {
-      if (type === 'deleted') await this.notes.recordDeleted(rel, '')
-      else await this.notes.record(rel, await fs.readFile(abs, 'utf8'), '', 'external')
+      if (type === 'deleted') {
+        await this.notes.recordDeleted(rel, '')
+        return true
+      }
+      return (await this.notes.record(rel, await fs.readFile(abs, 'utf8'), '', 'external')) !== null
     } catch (err) {
       console.error('[history] could not record a change to', rel, err)
+      return true
     }
   }
 
