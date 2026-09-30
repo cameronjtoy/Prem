@@ -33,6 +33,8 @@ export interface WriteOptions {
   expectedVersion?: string
   /** Reject the write with an EXISTS error if the file is already there. */
   createOnly?: boolean
+  /** Who's saving, for the note's history. Set by whoever authenticated the user, never taken from a client. */
+  author?: string
 }
 
 export interface WriteResult {

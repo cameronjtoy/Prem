@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto'
 import { VaultError, type VaultErrorCode } from '@shared/errors'
+import type { HistoryEntry } from '@shared/history'
 import { isInside } from '@shared/paths'
 import { CLIENT_HEADER, Routes, STATUS_BY_CODE, type ServerInfo } from '@shared/remote'
 import type {
@@ -198,6 +199,17 @@ export class RemoteProvider implements VaultProvider {
 
   async remove(path: VaultPath): Promise<void> {
     await this.request('DELETE', Routes.file, { path })
+  }
+
+  history(path: VaultPath): Promise<HistoryEntry[]> {
+    return this.request<HistoryEntry[]>('GET', Routes.history, { path })
+  }
+
+  async readVersion(path: VaultPath, id: string): Promise<string> {
+    const url = this.url(Routes.version, path)
+    url.searchParams.set('id', id)
+    const res = await this.send('GET', url, { headers: this.headers(false), timeout: REQUEST_TIMEOUT_MS })
+    return (await this.parse<{ content: string }>(res)).content
   }
 
   async exists(path: VaultPath): Promise<boolean> {

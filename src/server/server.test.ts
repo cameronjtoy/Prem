@@ -235,3 +235,30 @@ describe('attachments', () => {
     expect(await bobSees).toEqual({ type: 'created', path: 'Runbooks/attachments/plate.csv', kind: 'file' })
   })
 })
+
+describe('history on the team server', () => {
+  it('records who saved each version from their token, not from the request', async () => {
+    const bob = await RemoteProvider.connect(server.url, tokens.bob)
+    await bob.write('Runbooks/History.md', 'one', { createOnly: true })
+    await bob.write('Runbooks/History.md', 'two', { author: 'someone-else' } as never)
+    const entries = await bob.history('Runbooks/History.md')
+    expect(entries.map((e) => e.author)).toEqual(['bob', 'bob'])
+    expect(await bob.readVersion('Runbooks/History.md', entries[0].id)).toBe('one')
+  })
+
+  it('only shows history to people who can read the note', async () => {
+    const alice = await RemoteProvider.connect(server.url, tokens.alice)
+    const bob = await RemoteProvider.connect(server.url, tokens.bob)
+    await alice.write('Finance/Budget.md', 'secret', { createOnly: true })
+    await expectCode(bob.history('Finance/Budget.md'), 'FORBIDDEN')
+    const [first] = await alice.history('Finance/Budget.md')
+    await expectCode(bob.readVersion('Finance/Budget.md', first.id), 'FORBIDDEN')
+  })
+
+  it('blocks hidden paths, so trash and history files are never served directly', async () => {
+    const bob = await RemoteProvider.connect(server.url, tokens.bob)
+    await expectCode(bob.read('.prem/history/Finance/Budget.md.jsonl'), 'INVALID_PATH')
+    await expectCode(bob.readBinary('.trash/whatever'), 'INVALID_PATH')
+    await expectCode(bob.readBinary('.prem/history/Finance/Budget.md.jsonl'), 'INVALID_PATH')
+  })
+})

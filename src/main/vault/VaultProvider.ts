@@ -1,3 +1,4 @@
+import type { HistoryEntry } from '@shared/history'
 import type {
   FileRecord,
   VaultChange,
@@ -22,8 +23,12 @@ export interface VaultProvider {
   readBinary(path: VaultPath): Promise<Uint8Array>
   writeBinary(path: VaultPath, data: Uint8Array, options?: WriteOptions): Promise<WriteResult>
   mkdir(path: VaultPath): Promise<void>
-  rename(from: VaultPath, to: VaultPath): Promise<void>
-  remove(path: VaultPath): Promise<void>
+  /** `author` is recorded in the note's history. Remote providers ignore it: the server knows who you are. */
+  rename(from: VaultPath, to: VaultPath, author?: string): Promise<void>
+  remove(path: VaultPath, author?: string): Promise<void>
+  /** Every recorded version of a note, oldest first. */
+  history(path: VaultPath): Promise<HistoryEntry[]>
+  readVersion(path: VaultPath, id: string): Promise<string>
   exists(path: VaultPath): Promise<boolean>
   watch(listener: (changes: VaultChange[]) => void): () => void
   dispose(): Promise<void>

@@ -168,6 +168,16 @@ export async function startServer(config: ServerConfig, log: Logger = console): 
         if (!access.canRead(path)) forbid(user, 'read', path)
         return sendJson(res, 200, await provider.read(path))
       }
+      case `GET ${Routes.history}`: {
+        const path = queryPath(url)
+        if (!access.canRead(path)) forbid(user, 'read', path)
+        return sendJson(res, 200, await provider.history(path))
+      }
+      case `GET ${Routes.version}`: {
+        const path = queryPath(url)
+        if (!access.canRead(path)) forbid(user, 'read', path)
+        return sendJson(res, 200, { content: await provider.readVersion(path, str(url.searchParams.get('id'), 'id')) })
+      }
       case `GET ${Routes.exists}`: {
         const path = queryPath(url)
         if (!access.canSee(path, 'folder')) forbid(user, 'read', path)
@@ -180,7 +190,9 @@ export async function startServer(config: ServerConfig, log: Logger = console): 
         const content = str(body.content, 'content')
         const options: WriteOptions = {
           expectedVersion: typeof body.expectedVersion === 'string' ? body.expectedVersion : undefined,
-          createOnly: body.createOnly === true
+          createOnly: body.createOnly === true,
+          // Attribution comes from the token, never from the request body.
+          author: user.name
         }
         const result = await locks.run(path.toLowerCase(), async () => {
           const existed = await provider.exists(path)
@@ -231,14 +243,14 @@ export async function startServer(config: ServerConfig, log: Logger = console): 
         const to = normalizeVaultPath(str(body.to, 'to'))
         if (!access.canWriteTree(from)) forbid(user, 'move', from)
         if (!access.canWriteTree(to)) forbid(user, 'move things to', to)
-        await provider.rename(from, to)
+        await provider.rename(from, to, user.name)
         log.info(`${user.name} moved ${from} to ${to}`)
         return sendJson(res, 200, null)
       }
       case `DELETE ${Routes.file}`: {
         const path = queryPath(url)
         if (!access.canWriteTree(path)) forbid(user, 'delete', path)
-        await provider.remove(path)
+        await provider.remove(path, user.name)
         log.info(`${user.name} deleted ${path}`)
         return sendJson(res, 200, null)
       }

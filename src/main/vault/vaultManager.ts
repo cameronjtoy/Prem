@@ -11,6 +11,7 @@ import {
   numberedName
 } from '@shared/attachments'
 import { VaultError } from '@shared/errors'
+import type { HistoryEntry } from '@shared/history'
 import { LinkIndex } from '@shared/linkIndex'
 import { dailyNotePath, parseDay } from '@shared/notebook'
 import {
@@ -107,11 +108,28 @@ export class VaultManager {
   }
 
   async write(path: VaultPath, content: string, options?: WriteOptions): Promise<WriteResult> {
-    const result = await this.current.write(path, content, options)
+    // Local vaults record the author themselves; a team server ignores this and uses who you signed in as.
+    const result = await this.current.write(path, content, { ...options, author: this.author })
     // Our own writes are filtered out of the watcher, so update the index directly.
     this.index.upsert(path, content)
     this.scheduleBroadcast()
     return result
+  }
+
+  rename(from: VaultPath, to: VaultPath): Promise<void> {
+    return this.current.rename(from, to, this.author)
+  }
+
+  remove(path: VaultPath): Promise<void> {
+    return this.current.remove(path, this.author)
+  }
+
+  history(path: VaultPath): Promise<HistoryEntry[]> {
+    return this.current.history(path)
+  }
+
+  readVersion(path: VaultPath, id: string): Promise<string> {
+    return this.current.readVersion(path, id)
   }
 
   async listTemplates(): Promise<TemplateInfo[]> {
