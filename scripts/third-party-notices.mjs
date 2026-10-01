@@ -16,6 +16,7 @@ const root = path.resolve(import.meta.dirname, '..')
 const RUNTIME_ROOTS = [
   'chokidar',
   'katex',
+  'marked',
   'react',
   'react-dom',
   'react-force-graph-2d',

@@ -1,7 +1,7 @@
 import { mkdtemp, realpath, stat, writeFile } from 'node:fs/promises'
 import { tmpdir, userInfo } from 'node:os'
 import { join } from 'node:path'
-import { shell } from 'electron'
+import { app, shell } from 'electron'
 import {
   attachmentFileName,
   attachmentFolder,
@@ -29,6 +29,8 @@ import type {
   WriteOptions,
   WriteResult
 } from '@shared/vault/types'
+import { loadImages, loadPrintable, notesToPrint, printToPdf } from '../export/pdf'
+import { printableHtml, type PrintableNote } from '../export/printable'
 import { rememberServer, saveSettings } from '../settings'
 import { DAILY_TEMPLATE, DEFAULT_TEMPLATES } from './defaultTemplates'
 import { LocalFsProvider } from './LocalFsProvider'
@@ -154,6 +156,28 @@ export class VaultManager {
 
   witness(path: VaultPath): Promise<RecordCheck> {
     return this.current.witness(path, this.author)
+  }
+
+  /**
+   * Prints a note, or every note in a folder, to a PDF with its metadata, signatures, witnesses,
+   * amendments and the result of checking its history. `file` is where to save it.
+   */
+  async exportPdf(path: VaultPath, file: string): Promise<{ notes: number }> {
+    const provider = this.current
+    const paths = await notesToPrint(provider, path)
+    const notes: PrintableNote[] = []
+    for (const p of paths) notes.push(await loadPrintable(provider, p))
+    const images = await loadImages(provider, notes)
+    const html = printableHtml(notes, {
+      vaultName: provider.name,
+      exportedBy: this.author,
+      exportedAt: new Date(),
+      appVersion: app.getVersion(),
+      embedImage: (p) => images.get(p) ?? null
+    })
+    const footer = notes.length === 1 ? notes[0].path : `${path || provider.name} · ${notes.length} entries`
+    await printToPdf(html, file, footer)
+    return { notes: notes.length }
   }
 
   async listTemplates(): Promise<TemplateInfo[]> {

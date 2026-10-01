@@ -48,7 +48,9 @@ function Shell() {
         if (canKeepNotebook) void ws.openToday()
       } else if (key === 'g' && !e.shiftKey) ws.setView(ws.view === 'graph' ? 'editor' : 'graph')
       else if (key === 'o' && !e.shiftKey) void openVault()
-      else handled = false
+      else if (key === 'p' && !e.shiftKey) {
+        if (ws.active) void ws.exportPdf(ws.active.path)
+      } else handled = false
       if (handled) {
         e.preventDefault()
         e.stopPropagation()
@@ -108,7 +110,7 @@ function Shell() {
               </button>
             </div>
             {ws.notice && (
-              <div className="banner error">
+              <div className={`banner ${ws.noticeKind}`}>
                 <span>{ws.notice}</span>
                 <button onClick={() => ws.showNotice(null)}>Dismiss</button>
               </div>
