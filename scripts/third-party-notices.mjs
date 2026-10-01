@@ -16,6 +16,8 @@ const root = path.resolve(import.meta.dirname, '..')
 const RUNTIME_ROOTS = [
   'chokidar',
   'dompurify',
+  '@fontsource-variable/inter',
+  '@fontsource-variable/jetbrains-mono',
   'katex',
   'marked',
   'react',
