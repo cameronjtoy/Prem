@@ -21,7 +21,10 @@ Everything below will ship as **0.1.0**, the first pilot release.
 - **Team server**: one vault for a lab, with a token per person, per-folder `none`/`read`/`write` permissions, live updates and conflict protection. Notes you can't edit open read-only.
 - **Installers**: macOS (`.dmg`, Apple silicon and Intel), Windows (`.exe`) and Linux (AppImage and `.deb`), built for each tagged release with checksums. Not signed yet; see `docs/install.md`.
 - **Server packages**: the team server as a Docker image on GitHub Container Registry and as a single file for Node.js.
-- **Project**: Apache-2.0 license, CI, Prettier and oxlint, contributor guide, security policy, code of conduct, issue and pull request templates, Dependabot and CodeQL, `docs/ARCHITECTURE.md`, a release workflow, `THIRD_PARTY_NOTICES.md` in every installer, a website on GitHub Pages, and a lab sample vault in `examples/sample-vault/`.
+- **Project**: Apache-2.0 license, CI, Prettier and oxlint, end-to-end tests of the app and team server in CI, contributor guide, security policy, code of conduct, issue and pull request templates, Dependabot and CodeQL, `docs/ARCHITECTURE.md`, a release workflow, `THIRD_PARTY_NOTICES.md` in every installer, a website on GitHub Pages, and a lab sample vault in `examples/sample-vault/`.
+
+### Fixed
+- Clicking a template quickly could create the note from the previously highlighted template instead.
 
 ### Security
 - The team server rejects paths with hidden segments (`.prem`, `.trash`, `.git`), so deleted notes and history files can't be fetched directly.
