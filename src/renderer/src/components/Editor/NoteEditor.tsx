@@ -117,6 +117,7 @@ export function NoteEditor({ path, cursor }: { path: string; cursor: number | nu
       registerEditor(null)
     }
     // `cursor` is deliberately left out: it only matters when the note is first opened.
+    // oxlint-disable-next-line react-hooks/exhaustive-deps
   }, [path, registerEditor, readOnly, recordLoaded, refreshRecord])
 
   useEffect(
@@ -140,15 +141,15 @@ export function NoteEditor({ path, cursor }: { path: string; cursor: number | nu
     const view = sessionRef.current?.view
     if (!view) return
     const before = view.state.doc.toString()
-    const { text, cursor } = fn(before)
+    const { text, cursor: anchor } = fn(before)
     let from = 0
     while (from < before.length && from < text.length && before[from] === text[from]) from++
     let end = 0
     while (end < before.length - from && end < text.length - from && before[before.length - 1 - end] === text[text.length - 1 - end]) end++
     view.dispatch({
       changes: { from, to: before.length - end, insert: text.slice(from, text.length - end) },
-      selection: cursor === undefined ? undefined : { anchor: cursor },
-      scrollIntoView: cursor !== undefined
+      selection: anchor === undefined ? undefined : { anchor },
+      scrollIntoView: anchor !== undefined
     })
     view.focus()
   }

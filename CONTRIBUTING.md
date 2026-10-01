@@ -18,11 +18,17 @@ Open `sample-vault/` from the welcome screen to try things out. To work on the t
 Run the same checks CI runs:
 
 ```bash
+npm run format:check   # or `npm run format` to fix
+npm run lint
 npm run typecheck
 npm test
 npm run build
 npm run server:build
 ```
+
+Formatting is [Prettier](https://prettier.io) and linting is [oxlint](https://oxc.rs); both read their settings from the repo (`.prettierrc.json`, `.oxlintrc.json`), and `.editorconfig` keeps editors consistent. Most editors can format on save with the Prettier extension. Use the Node version in `.nvmrc` (`nvm use`).
+
+We use oxlint rather than ESLint because the project is on TypeScript 7, which the ESLint TypeScript plugin doesn't support yet. A few React rules are turned off in `.oxlintrc.json` because they flag patterns this code uses on purpose, such as keeping the latest callback in a ref so the editor isn't recreated on every render; `react-hooks/exhaustive-deps` stays on.
 
 Also try your change in the app itself. Tests cover the shared logic, but most bugs show up in the editor.
 

@@ -47,7 +47,7 @@ export class LinkIndex {
 
   removeFolder(folder: VaultPath): void {
     let changed = false
-    for (const p of [...this.notes.keys()]) {
+    for (const p of this.notes.keys()) {
       if (isInside(p, folder)) changed = this.notes.delete(p) || changed
     }
     if (changed) this.touch(true)

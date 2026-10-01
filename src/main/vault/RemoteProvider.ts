@@ -278,8 +278,8 @@ export class RemoteProvider implements VaultProvider {
   private track(changes: VaultChange[]): void {
     for (const c of changes) {
       if (c.type === 'deleted') {
-        for (const p of [...this.versions.keys()]) if (isInside(p, c.path)) this.versions.delete(p)
-        if (this.known) for (const p of [...this.known.keys()]) if (isInside(p, c.path)) this.known.delete(p)
+        for (const p of this.versions.keys()) if (isInside(p, c.path)) this.versions.delete(p)
+        if (this.known) for (const p of this.known.keys()) if (isInside(p, c.path)) this.known.delete(p)
       } else {
         this.versions.delete(c.path)
         this.known?.set(c.path, c.kind)

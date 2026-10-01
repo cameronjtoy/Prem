@@ -22,11 +22,11 @@ async function expectCode(pending: Promise<unknown>, code: string): Promise<void
   expect(isVaultError(err) ? err.code : err).toBe(code)
 }
 
-/** Resolves with the first change the provider reports for `path`, ignoring late events from earlier tests. */
-function nextChange(provider: RemoteProvider, path: string): Promise<VaultChange> {
+/** Resolves with the first change the provider reports for `notePath`, ignoring late events from earlier tests. */
+function nextChange(provider: RemoteProvider, notePath: string): Promise<VaultChange> {
   return new Promise((resolve) => {
     const stop = provider.watch((changes) => {
-      const match = changes.find((c) => c.path === path)
+      const match = changes.find((c) => c.path === notePath)
       if (!match) return
       stop()
       resolve(match)
