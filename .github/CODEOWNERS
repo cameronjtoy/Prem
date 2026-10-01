@@ -1,0 +1,10 @@
+# Pull requests that touch these paths request a review from the listed owners.
+# Storage, permissions, history and signing guard lab records, so they always get a second look.
+
+*                       @cameronjtoy
+/src/main/vault/        @cameronjtoy
+/src/server/            @cameronjtoy
+/src/shared/vault/      @cameronjtoy
+/src/shared/records/    @cameronjtoy
+/.github/               @cameronjtoy
+/SECURITY.md            @cameronjtoy
