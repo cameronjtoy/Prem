@@ -12,7 +12,7 @@ npm ci
 npm run dev
 ```
 
-Open `sample-vault/` from the welcome screen to try things out. To work on the team server, see [Hosting a team vault](README.md#hosting-a-team-vault).
+Open `examples/sample-vault/` from the welcome screen to try things out. To work on the team server, see [Hosting a team vault](README.md#hosting-a-team-vault).
 
 ## Before you open a pull request
 Run the same checks CI runs:
@@ -40,7 +40,7 @@ Also try your change in the app itself. Tests cover the shared logic, but most b
 - Write commit messages that say what changed and why, in plain sentences.
 
 ## Where things live
-See [Architecture](README.md#architecture) in the README. In short: `src/shared` is plain TypeScript used everywhere, `src/main` is the Electron main process and the vault layer, `src/renderer` is the React app, and `src/server` is the team server.
+See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md). In short: `src/shared` is plain TypeScript used everywhere, `src/main` is the Electron main process and the vault layer, `src/renderer` is the React app, and `src/server` is the team server.
 
 ## Notebook data is sensitive
 Lab notebooks hold research data. Changes that touch storage, the team server, permissions or signing need extra care:

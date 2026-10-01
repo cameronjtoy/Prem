@@ -1,9 +1,9 @@
 import { randomUUID } from 'node:crypto'
-import { VaultError, type VaultErrorCode } from '@shared/errors'
-import type { HistoryEntry } from '@shared/history'
-import type { RecordCheck } from '@shared/signatures'
-import { isInside } from '@shared/paths'
-import { CLIENT_HEADER, Routes, STATUS_BY_CODE, type ServerInfo } from '@shared/remote'
+import { VaultError, type VaultErrorCode } from '@shared/vault/errors'
+import type { HistoryEntry } from '@shared/records/history'
+import type { RecordCheck } from '@shared/records/signatures'
+import { isInside } from '@shared/vault/paths'
+import { CLIENT_HEADER, Routes, STATUS_BY_CODE, type ServerInfo } from '@shared/vault/remote'
 import type {
   EntryKind,
   FileRecord,
@@ -12,7 +12,7 @@ import type {
   VaultPath,
   WriteOptions,
   WriteResult
-} from '@shared/types'
+} from '@shared/vault/types'
 import type { VaultProvider } from './VaultProvider'
 
 const REQUEST_TIMEOUT_MS = 30_000

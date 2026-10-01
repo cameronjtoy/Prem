@@ -1,5 +1,5 @@
-import { basename, dirname } from '@shared/paths'
-import type { EntryKind, VaultEntry, VaultPath } from '@shared/types'
+import { basename, dirname } from '@shared/vault/paths'
+import type { EntryKind, VaultEntry, VaultPath } from '@shared/vault/types'
 
 export interface TreeNode {
   path: VaultPath

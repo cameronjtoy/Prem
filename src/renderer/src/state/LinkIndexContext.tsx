@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
-import type { LinkIndexSnapshot } from '@shared/types'
+import type { LinkIndexSnapshot } from '@shared/vault/types'
 import { vaultClient } from '../services/vaultClient'
 import { useVault } from './VaultContext'
 

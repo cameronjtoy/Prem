@@ -1,5 +1,5 @@
-import { VaultError, type IpcResult } from '@shared/errors'
-import type { WriteOptions } from '@shared/types'
+import { VaultError, type IpcResult } from '@shared/vault/errors'
+import type { WriteOptions } from '@shared/vault/types'
 
 async function unwrap<T>(pending: Promise<IpcResult<T>>): Promise<T> {
   const result = await pending

@@ -3,5 +3,5 @@ node_modules
 package-lock.json
 # Notes and docs are written by hand; their line breaks are content, not style.
 *.md
-sample-vault
-prem-vault
+examples
+docs/runbooks

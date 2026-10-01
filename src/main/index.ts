@@ -1,8 +1,8 @@
 import path from 'node:path'
 import { app, BrowserWindow, shell } from 'electron'
-import { Channels } from '@shared/ipc'
+import { Channels } from '@shared/vault/ipc'
 import { registerIpc } from './ipc/handlers'
-import { VaultManager } from './vault/vaultManager'
+import { VaultManager } from './vault/VaultManager'
 
 let mainWindow: BrowserWindow | null = null
 

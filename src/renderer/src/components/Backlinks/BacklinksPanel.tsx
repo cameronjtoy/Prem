@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { noteTitle } from '@shared/paths'
+import { noteTitle } from '@shared/vault/paths'
 import { useLinkIndex } from '../../state/LinkIndexContext'
 import { useWorkspace } from '../../state/WorkspaceContext'
 

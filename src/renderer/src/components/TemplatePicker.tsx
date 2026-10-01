@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import type { TemplateInfo } from '@shared/types'
+import type { TemplateInfo } from '@shared/vault/types'
 import { errorMessage, vaultClient } from '../services/vaultClient'
 import { useWorkspace } from '../state/WorkspaceContext'
 

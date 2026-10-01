@@ -1,6 +1,6 @@
 import { EditorView, WidgetType } from '@codemirror/view'
-import { attachmentKind, extension, MAX_ATTACHMENT_BYTES } from '@shared/attachments'
-import { parseDelimited } from '@shared/csv'
+import { attachmentKind, extension, MAX_ATTACHMENT_BYTES } from '@shared/attachments/attachments'
+import { parseDelimited } from '@shared/attachments/csv'
 import { hostFacet, type EditorHost } from './host'
 
 const PREVIEW_ROWS = 25

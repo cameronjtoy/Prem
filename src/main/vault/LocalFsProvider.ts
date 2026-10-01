@@ -3,9 +3,9 @@ import { constants } from 'node:fs'
 import * as fs from 'node:fs/promises'
 import path from 'node:path'
 import { watch, type FSWatcher } from 'chokidar'
-import { VaultError } from '@shared/errors'
-import type { HistoryEntry } from '@shared/history'
-import { isInside, isMarkdown, normalizeVaultPath } from '@shared/paths'
+import { VaultError } from '@shared/vault/errors'
+import type { HistoryEntry } from '@shared/records/history'
+import { isInside, isMarkdown, normalizeVaultPath } from '@shared/vault/paths'
 import type {
   EntryKind,
   FileRecord,
@@ -14,8 +14,8 @@ import type {
   VaultPath,
   WriteOptions,
   WriteResult
-} from '@shared/types'
-import type { RecordCheck } from '@shared/signatures'
+} from '@shared/vault/types'
+import type { RecordCheck } from '@shared/records/signatures'
 import { contentHash, NoteHistory } from './NoteHistory'
 import { assertRealPathInside, resolveInsideVault, toVaultPath } from './safePath'
 import type { VaultProvider } from './VaultProvider'

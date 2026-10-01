@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react'
-import type { RecordCheck } from '@shared/signatures'
+import type { RecordCheck } from '@shared/records/signatures'
 import { useVault } from '../../state/VaultContext'
 
 /** Note types that are records someone signs off. Any note that's already been signed shows the bar too. */

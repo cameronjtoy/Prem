@@ -1,0 +1,22 @@
+{
+  "vault": "/var/lib/prem/vault",
+  "host": "127.0.0.1",
+  "port": 4747,
+  "users": [
+    {
+      "name": "alice",
+      "tokenHash": "sha256:replace-with-the-hash-printed-by-npm-run-server-token",
+      "access": { "": "write" }
+    },
+    {
+      "name": "finance-lead",
+      "tokenHash": "sha256:replace-with-the-hash-printed-by-npm-run-server-token",
+      "access": { "": "read", "Finance": "write" }
+    },
+    {
+      "name": "support-bot",
+      "tokenHash": "sha256:replace-with-the-hash-printed-by-npm-run-server-token",
+      "access": { "Runbooks": "read", "Reference": "read" }
+    }
+  ]
+}

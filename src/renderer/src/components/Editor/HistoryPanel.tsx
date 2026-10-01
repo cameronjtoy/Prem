@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
-import { diffLines, type DiffLine } from '@shared/diff'
-import { groupSessions, type HistoryEntry } from '@shared/history'
+import { diffLines, type DiffLine } from '@shared/records/diff'
+import { groupSessions, type HistoryEntry } from '@shared/records/history'
 import { errorMessage, vaultClient } from '../../services/vaultClient'
 
 const CONTEXT = 2

@@ -1,8 +1,8 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
-import { Access } from '@shared/access'
-import { isInside, isMarkdown, isTemplate, noteTitle } from '@shared/paths'
-import { createResolver, type Resolver } from '@shared/resolve'
-import type { VaultChange, VaultEntry, VaultInfo } from '@shared/types'
+import { Access } from '@shared/vault/access'
+import { isInside, isMarkdown, isTemplate, noteTitle } from '@shared/vault/paths'
+import { createResolver, type Resolver } from '@shared/notes/resolve'
+import type { VaultChange, VaultEntry, VaultInfo } from '@shared/vault/types'
 import { errorMessage, vaultClient } from '../services/vaultClient'
 
 type ChangeListener = (changes: VaultChange[]) => void

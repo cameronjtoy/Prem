@@ -1,6 +1,6 @@
-import { parseFrontmatter } from '@shared/frontmatter'
-import { notebookFolder } from '@shared/notebook'
-import { runProgress } from '@shared/runs'
+import { parseFrontmatter } from '@shared/notes/frontmatter'
+import { notebookFolder } from '@shared/notes/notebook'
+import { runProgress } from '@shared/records/runs'
 import { useVault } from '../../state/VaultContext'
 import { useWorkspace } from '../../state/WorkspaceContext'
 

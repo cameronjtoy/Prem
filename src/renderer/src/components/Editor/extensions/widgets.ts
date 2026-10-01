@@ -1,9 +1,9 @@
 import { WidgetType, type EditorView } from '@codemirror/view'
 import katex from 'katex'
-import { parseFrontmatter } from '@shared/frontmatter'
-import { toggleRunTask } from '@shared/runs'
-import { formatDate } from '@shared/templates'
-import { splitLinkText } from '@shared/wikilinks'
+import { parseFrontmatter } from '@shared/notes/frontmatter'
+import { toggleRunTask } from '@shared/records/runs'
+import { formatDate } from '@shared/notes/templates'
+import { splitLinkText } from '@shared/notes/wikilinks'
 import { hostFacet } from './host'
 
 /** Frontmatter is at the top of a note; this is plenty to read it without copying the whole document. */
