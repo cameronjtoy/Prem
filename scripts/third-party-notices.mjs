@@ -15,6 +15,7 @@ const root = path.resolve(import.meta.dirname, '..')
 // src/server; `npm run notices -- --check` in CI catches packages that are missing a license.
 const RUNTIME_ROOTS = [
   'chokidar',
+  'dompurify',
   'katex',
   'marked',
   'react',

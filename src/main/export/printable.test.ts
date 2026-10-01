@@ -55,6 +55,13 @@ describe('printableHtml', () => {
     expect(html).toContain('[image: lost]')
   })
 
+  it('prints embedded notebooks and tables as references to the attachment', () => {
+    const html = printableHtml([note('![growth.ipynb](attachments/growth.ipynb)')], options)
+    expect(html).toContain('<span class="attachment">growth.ipynb</span>')
+    expect(html).toContain('(attached: Notebook/attachments/growth.ipynb)')
+    expect(html).not.toContain('[image:')
+  })
+
   it('never loads anything from the network', () => {
     const html = printableHtml([note('![remote](https://example.com/x.png)')], options)
     expect(html).not.toContain('src="https://example.com')

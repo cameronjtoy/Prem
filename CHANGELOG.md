@@ -10,6 +10,7 @@ Everything below will ship as **0.1.0**, the first pilot release.
 - **Notebook**: daily entries (⌘T) filed by year; templates for Experiment, Protocol, Sample, Lab meeting, Reference and Daily entry, with `{{title}}`, `{{date}}`, `{{time}}`, `{{author}}` and `{{cursor}}`.
 - **Editor**: live-preview markdown (CodeMirror), KaTeX equations, tables, checkboxes, wikilinks with autocomplete, backlinks and a graph view.
 - **Attachments**: drop or paste files into an entry. Images and CSV/TSV preview inline; known data formats open in their default app and anything else is revealed in its folder. 100 MB limit.
+- **Notebook previews**: an attached Jupyter notebook (`.ipynb`) shows inline with its markdown and equations, highlighted code and the outputs saved in the file: text, tables, plots and errors. Nothing runs, notebook HTML is sanitized, and only images embedded in the file are shown. **Open** hands it to Jupyter or whichever app opens notebooks.
 - **Protocol runs**: Start run copies a protocol's materials and steps into a run note. Ticking a step records the time; Add deviation and Complete run.
 - **Links follow renames**: renaming or moving a note, attachment or folder rewrites `[[links]]` and relative links and embeds to it in every note you can edit, keeping each link's style, heading and alias. A moved note's own images keep working. Signed notes are never changed; Prem lists the ones that still use the old name.
 - **Search** (⌘K) across titles, folders and text, with quoted phrases. Results open at the match.
