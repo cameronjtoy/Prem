@@ -1,5 +1,7 @@
 # Contributing to Prem
 
+By taking part you agree to follow our [Code of Conduct](CODE_OF_CONDUCT.md).
+
 Thanks for helping build Prem, an open-source lab notebook that runs on your own machines. Bug reports, feature ideas and pull requests are all welcome.
 
 ## Getting set up

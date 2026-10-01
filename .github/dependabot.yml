@@ -1,0 +1,25 @@
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    groups:
+      # Editor packages are released together and must stay in step.
+      codemirror:
+        patterns: ['@codemirror/*', '@lezer/*']
+      build-tools:
+        patterns: ['vite', 'electron-vite', '@vitejs/*', 'vitest', 'typescript', 'prettier', 'oxlint']
+      react:
+        patterns: ['react', 'react-dom', '@types/react', '@types/react-dom']
+    ignore:
+      # Major Electron upgrades change Chromium and Node; do them deliberately, not from a bot.
+      - dependency-name: electron
+        update-types: ['version-update:semver-major']
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday

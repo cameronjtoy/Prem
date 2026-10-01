@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Questions and help
+    url: https://github.com/cameronjtoy/Prem/discussions
+    about: Ask how to do something, or get help setting up a lab server.
+  - name: Report a security problem
+    url: https://github.com/cameronjtoy/Prem/security/advisories/new
+    about: Report privately anything that could expose or alter records. Please don't open a public issue.

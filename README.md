@@ -87,7 +87,7 @@ npm run build          # production bundles into out/
 npm run server:build   # the team server as a single file, out/server/index.js
 ```
 
-Read [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for how the pieces fit: the storage seam that lets every feature work on a local folder and on the team server alike, how history and signing are stored, and where logic belongs. [CONTRIBUTING.md](CONTRIBUTING.md) covers setup and how changes are made; [SECURITY.md](SECURITY.md) explains how to report a vulnerability privately.
+Read [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for how the pieces fit: the storage seam that lets every feature work on a local folder and on the team server alike, how history and signing are stored, and where logic belongs. [CONTRIBUTING.md](CONTRIBUTING.md) covers setup and how changes are made; [SECURITY.md](SECURITY.md) explains how to report a vulnerability privately, and everyone taking part follows the [Code of Conduct](CODE_OF_CONDUCT.md). Notable changes are listed in [CHANGELOG.md](CHANGELOG.md).
 
 ### Troubleshooting
 If `npm run dev` fails with `Cannot read properties of undefined (reading 'whenReady')`, your shell has `ELECTRON_RUN_AS_NODE` set (some editors' terminals do this). Run `unset ELECTRON_RUN_AS_NODE` and try again.
