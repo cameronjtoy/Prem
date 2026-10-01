@@ -34,3 +34,4 @@ jobs:
       - run: npm run build
       - run: npm run server:build
       - run: npm run notices -- --check
+      - run: npm run site

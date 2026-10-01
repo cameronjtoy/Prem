@@ -1,0 +1,114 @@
+<!--
+title: Prem FAQ
+description: Where Prem keeps your data, how signing works and what it isn't, and how Prem compares with Benchling, eLabFTW and Obsidian.
+-->
+<section class="wrap page faq">
+  <h1>Questions</h1>
+
+  <h2>Your data</h2>
+
+  <h3>Where is my notebook stored?</h3>
+  <p>
+    In a folder you choose. Each entry is a markdown file, attachments sit beside it, and Prem's history lives in a
+    hidden <code>.prem</code> folder inside the notebook. On a lab server, the folder is on the server's disk. You can
+    open the files in any text editor, back them up like any other folder, or keep them in git.
+  </p>
+
+  <h3>Does Prem send anything to you?</h3>
+  <p>
+    No. There's no account, no analytics and no crash reporting. The app talks only to the lab server you connect it to.
+  </p>
+
+  <h3>Does it work offline?</h3>
+  <p>
+    A notebook on your own computer works entirely offline. A shared notebook needs to reach the lab server, which can
+    be on your lab's network rather than the internet.
+  </p>
+
+  <h3>What happens to my data if Prem stops being developed?</h3>
+  <p>
+    Nothing. The notebook is plain markdown and ordinary files, readable without Prem, and the source code is Apache-2.0
+    licensed, so anyone can keep building it.
+  </p>
+
+  <h2>Records and signing</h2>
+
+  <h3>How does signing work?</h3>
+  <p>
+    Signing records who signed, when, and an optional statement for the exact saved content, and locks the entry. A
+    colleague can then witness it. A locked entry can only be changed through an amendment with a reason; the signed
+    version stays in the history.
+  </p>
+
+  <h3>Can someone change a signed entry without anyone knowing?</h3>
+  <p>
+    Every version and every signature is stored in a hash chain, so changing or removing a past entry breaks the chain
+    and Prem reports it. Prem also notices when a signed entry's file was edited outside the app, even while Prem was
+    closed, and flags it.
+  </p>
+
+  <h3>Is Prem compliant with 21 CFR Part 11 or GLP?</h3>
+  <p>
+    No. Prem's signatures are recorded, tamper-evident attestations tied to a person's lab-server login. They aren't
+    cryptographic signatures yet, and Prem hasn't been validated for any regulation. It's aimed at academic and
+    early-stage research labs whose notebooks don't need to meet those rules.
+  </p>
+
+  <h2>Labs and teams</h2>
+
+  <h3>How does a whole lab share a notebook?</h3>
+  <p>
+    Someone runs the Prem server on a machine everyone can reach: a lab workstation, a small cloud server, or a
+    department VM. Each person gets a token, and folders can be set to no access, read-only or read-write per person.
+    Changes appear in everyone's window as they're saved, and two people editing the same entry can't overwrite each
+    other.
+  </p>
+
+  <h3>What does it cost?</h3>
+  <p>Nothing. Prem is free and open source. If you run a lab server, you pay for whatever machine it runs on.</p>
+
+  <h3>Which computers does it run on?</h3>
+  <p>
+    Recent versions of macOS (Apple silicon and Intel), Windows 10 and 11, and 64-bit Linux. The lab server runs
+    anywhere Docker or Node.js 20 or later runs.
+  </p>
+
+  <h2>Compared with other tools</h2>
+
+  <h3>How is Prem different from Benchling?</h3>
+  <p>
+    Benchling is a commercial cloud platform with molecular biology design tools, registries and enterprise workflows.
+    Prem is a notebook first, and it runs on your machines, with your data as files you own. It doesn't have sequence
+    design tools, and isn't trying to replace them.
+  </p>
+
+  <h3>And eLabFTW?</h3>
+  <p>
+    eLabFTW is a mature, open-source ELN that runs as a web application with a database, and it's a good choice if you
+    want that. Prem is a desktop app that also works with no server at all, keeps entries as plain files, and makes
+    protocol runs and signed records central.
+  </p>
+
+  <h3>Why not just use Obsidian?</h3>
+  <p>
+    Prem looks familiar to Obsidian users: markdown, links, backlinks, a graph. It adds what a lab notebook needs and a
+    general notes app doesn't: protocols and runs, a kept history of every save, signing and witnessing, and a shared
+    lab server with per-person permissions. Prem is also open source.
+  </p>
+
+  <h2>Analysis</h2>
+
+  <h3>Can I use Prem with Jupyter or Python?</h3>
+  <p>
+    Not directly yet. You can attach notebooks, scripts and data files to an entry today. Next on the roadmap is a
+    <code>prem</code> Python package that saves figures and results from Jupyter into an entry, followed by Python cells
+    that run inside entries, with outputs kept as part of the record.
+  </p>
+
+  <h2>Getting help</h2>
+  <p>
+    Ask in <a href="https://github.com/cameronjtoy/Prem/discussions">GitHub Discussions</a>, report bugs in
+    <a href="https://github.com/cameronjtoy/Prem/issues">Issues</a>, and report security problems privately as described
+    in the <a href="https://github.com/cameronjtoy/Prem/blob/main/SECURITY.md">security policy</a>.
+  </p>
+</section>

@@ -1,0 +1,58 @@
+<!--
+title: Download Prem
+description: Download the Prem lab notebook for macOS, Windows or Linux, and the lab server for Docker or Node.js.
+-->
+<section class="wrap page">
+  <h1>Download Prem</h1>
+  <p class="lede">Free and open source, for macOS, Windows and Linux.</p>
+
+  <div class="download-box" data-release>
+    <p class="muted">Looking up the latest release…</p>
+  </div>
+
+  <noscript>
+    <p>
+      Pick the installer for your computer on the
+      <a href="https://github.com/cameronjtoy/Prem/releases">releases page</a>.
+    </p>
+  </noscript>
+
+  <h2>The first time you open Prem</h2>
+  <p>
+    The installers aren't signed yet, so macOS and Windows warn the first time you open Prem. You only need to get past
+    this once.
+  </p>
+  <ul>
+    <li>
+      <strong>macOS:</strong> open Prem, choose Done, then go to System Settings → Privacy &amp; Security and choose
+      <em>Open Anyway</em>.
+    </li>
+    <li>
+      <strong>Windows:</strong> on "Windows protected your PC", choose <em>More info</em>, then <em>Run anyway</em>.
+    </li>
+    <li>
+      <strong>Linux:</strong> make the AppImage executable, or install the <code>.deb</code> with
+      <code>sudo apt install ./Prem-….deb</code>.
+    </li>
+  </ul>
+  <p>The <a href="docs/install.html">install guide</a> has the details, and how to check a download's checksum.</p>
+
+  <h2>The lab server</h2>
+  <p>
+    To share one notebook across a lab, run the Prem server on a machine everyone can reach. It's a single program with
+    no database: the notebook stays a folder you can back up.
+  </p>
+  <pre><code>docker run -d -p 4747:4747 -v /srv/prem:/data ghcr.io/cameronjtoy/prem-server</code></pre>
+  <p>
+    The <a href="docs/install.html#the-lab-server">install guide</a> covers the configuration file and creating a token
+    for each person.
+  </p>
+
+  <h2>From source</h2>
+  <pre><code>git clone https://github.com/cameronjtoy/Prem.git
+cd Prem
+npm install
+npm run dev</code></pre>
+</section>
+
+<script src="download.js"></script>

@@ -1,0 +1,151 @@
+<!--
+title: Prem: an open-source lab notebook
+description: An open-source electronic lab notebook that runs on your own machines. Protocols, runs, samples, attachments and signed records, stored as plain files you own.
+-->
+<section class="hero">
+  <div class="wrap hero-grid">
+    <div>
+      <p class="eyebrow">Open-source electronic lab notebook</p>
+      <h1>A lab notebook that stays on your own machines.</h1>
+      <p class="lede">
+        Experiments, protocols, runs and samples, kept as plain files your lab owns. Every save is kept, records can be
+        signed and witnessed, and the whole lab can share one notebook from a server you run.
+      </p>
+      <div class="actions">
+        <a class="button primary" href="download.html" data-download>Download Prem</a>
+        <a class="button" href="https://github.com/cameronjtoy/Prem">View the source</a>
+      </div>
+      <p class="small muted" data-download-note>Free for macOS, Windows and Linux.</p>
+    </div>
+    <figure class="shot hero-shot">
+      <img
+        src="assets/screenshots/experiment.png"
+        alt="An experiment entry with a reagent table, results and a gel image"
+        width="1280"
+        height="800"
+      />
+    </figure>
+  </div>
+</section>
+
+<section class="wrap features">
+  <div class="feature">
+    <h3>Your data stays with the lab</h3>
+    <p>
+      Notebooks are folders of markdown and attachments, on your computer or a server you run. No account with us, no
+      cloud, and nothing locked into a format only Prem can read.
+    </p>
+  </div>
+  <div class="feature">
+    <h3>Built for the bench</h3>
+    <p>
+      Protocols with checkable steps. Runs that record when each step was done and what deviated. Samples with IDs.
+      Gels, plate reads and traces attached to the entry they belong to.
+    </p>
+  </div>
+  <div class="feature">
+    <h3>Records you can stand behind</h3>
+    <p>
+      Every save is kept in a tamper-evident history. Sign an entry to lock it, have a colleague witness it, and change
+      it later only through an amendment with a reason.
+    </p>
+  </div>
+  <div class="feature">
+    <h3>One person or a whole lab</h3>
+    <p>
+      Start with a folder on your laptop. Add the lab server when you want shared protocols and per-person notebooks:
+      students write their own, the PI reads everything.
+    </p>
+  </div>
+</section>
+
+<section class="wrap showcase">
+  <div class="showcase-row">
+    <div>
+      <h2>Protocols become runs</h2>
+      <p>
+        Start a run from any protocol. Prem copies its materials and steps into your notebook, records the time as you
+        tick each step, and keeps a log of deviations. The protocol lists every time it was used.
+      </p>
+    </div>
+    <figure class="shot">
+      <img
+        src="assets/screenshots/run.png"
+        alt="A completed protocol run with timestamped steps and a deviation"
+        loading="lazy"
+        width="1280"
+        height="800"
+      />
+    </figure>
+  </div>
+  <div class="showcase-row reverse">
+    <div>
+      <h2>Sign, witness, amend</h2>
+      <p>
+        A signed entry is locked, on your machine and on the lab server. The history is a hash chain, so altering a past
+        version or signature is detected, and Prem flags signed entries edited outside the app.
+      </p>
+      <p class="small muted">
+        Signatures are recorded attestations, not cryptographic signatures yet. Prem is not certified for 21 CFR Part
+        11.
+      </p>
+    </div>
+    <figure class="shot">
+      <img
+        src="assets/screenshots/signed.png"
+        alt="A signed and locked experiment entry"
+        loading="lazy"
+        width="1280"
+        height="800"
+      />
+    </figure>
+  </div>
+  <div class="showcase-row">
+    <div>
+      <h2>Find anything</h2>
+      <p>
+        Search every entry, protocol and sample at once, and jump straight to the line that matched. Link entries with
+        <code>[[double brackets]]</code> and see what links back.
+      </p>
+    </div>
+    <figure class="shot">
+      <img
+        src="assets/screenshots/search.png"
+        alt="The search palette finding a reagent across entries"
+        loading="lazy"
+        width="1280"
+        height="800"
+      />
+    </figure>
+  </div>
+</section>
+
+<section class="wrap roadmap">
+  <h2>Where Prem is going</h2>
+  <div class="roadmap-grid">
+    <div>
+      <h3>Now: pilot</h3>
+      <p>
+        Installers for every platform, PDF export with signatures, a guided lab-server setup and notebook (.ipynb)
+        previews.
+      </p>
+    </div>
+    <div>
+      <h3>Next: lab workflows</h3>
+      <p>
+        Samples and projects moving through stages, with tasks, assignees and a board. Jupyter analyses that write
+        figures and results back into the entry.
+      </p>
+    </div>
+    <div>
+      <h3>Later: analysis in the notebook</h3>
+      <p>Python cells inside entries, run by a kernel Prem manages, with outputs saved as part of the signed record.</p>
+    </div>
+  </div>
+  <p>
+    Follow along or help shape it on
+    <a href="https://github.com/cameronjtoy/Prem/discussions">GitHub Discussions</a>.
+  </p>
+</section>
+
+<script src="download.js"></script>
