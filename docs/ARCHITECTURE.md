@@ -59,6 +59,7 @@ Signatures are **attestations tied to the authenticated user** (team-server toke
 - **Permissions**: per-folder `none` / `read` / `write` rules ([`shared/vault/access.ts`](../src/shared/vault/access.ts)); the deepest matching rule wins; unmatched paths are invisible. Listings, reads, search results and live events are all filtered by them.
 - **Attribution**: the author of every save, signature and witness comes from the token, never from the request body.
 - **Change stream**: `GET /api/events` is server-sent events, filtered per user; a client's own saves are not echoed back to it.
+- **Administration**: [`cli.ts`](../src/server/cli.ts) is the command line (`init`, `add`, `remove`, `token`, `list`, and serving). [`lab.ts`](../src/server/lab.ts) holds the roles and the permissions each gets, and edits the config as plain JSON so unknown fields survive. The running server watches its config and calls `updateUsers`, which swaps the people in place and closes the live stream of anyone whose token or permissions changed, so their app reconnects under the new rules.
 
 The server bundles to a single file (`out/server/index.js`) with only Node built-ins, so deploying it is copying one file.
 

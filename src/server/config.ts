@@ -22,6 +22,8 @@ export interface User {
   name: string
   access: Access
   rules: Record<string, AccessLevel>
+  /** Which token they signed in with, so a reload can tell when it was replaced. */
+  tokenHash: string
 }
 
 const HASH_PREFIX = 'sha256:'
@@ -80,8 +82,16 @@ export class UserDirectory {
   constructor(users: UserConfig[]) {
     this.users = users.map((u) => ({
       hash: Buffer.from(u.tokenHash.slice(HASH_PREFIX.length), 'hex'),
-      user: { name: u.name, access: new Access(u.access), rules: u.access }
+      user: { name: u.name, access: new Access(u.access), rules: u.access, tokenHash: u.tokenHash }
     }))
+  }
+
+  /** True if `user` is still on the server with the same token and the same permissions. */
+  stillValid(user: User): boolean {
+    const current = this.users.find((e) => e.user.name === user.name)?.user
+    return (
+      !!current && current.tokenHash === user.tokenHash && JSON.stringify(current.rules) === JSON.stringify(user.rules)
+    )
   }
 
   authenticate(token: string): User | null {

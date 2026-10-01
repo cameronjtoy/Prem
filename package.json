@@ -29,7 +29,6 @@
     "format:check": "prettier --check .",
     "server:build": "vite build --config vite.server.config.ts",
     "server": "npm run server:build && node out/server/index.js",
-    "server:token": "npm run server:build --silent && node out/server/index.js token",
     "notices": "node scripts/third-party-notices.mjs",
     "package": "npm run build && npm run notices && electron-builder",
     "package:dir": "npm run build && npm run notices && electron-builder --dir",
