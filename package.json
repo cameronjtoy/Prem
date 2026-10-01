@@ -1,10 +1,13 @@
 {
   "name": "prem",
   "productName": "Prem",
+  "desktopName": "prem.desktop",
   "version": "0.1.0",
   "private": true,
   "license": "Apache-2.0",
   "description": "An open-source lab notebook that runs on your own machines: protocols, runs, samples and signed records, in plain files.",
+  "author": "Prem contributors",
+  "homepage": "https://cameronjtoy.github.io/Prem/",
   "main": "./out/main/index.js",
   "type": "commonjs",
   "repository": {
@@ -21,12 +24,15 @@
     "preview": "electron-vite preview",
     "typecheck": "tsc --noEmit -p tsconfig.node.json --composite false && tsc --noEmit -p tsconfig.web.json --composite false",
     "test": "vitest run",
-    "lint": "oxlint src *.ts",
+    "lint": "oxlint src scripts build *.ts",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "server:build": "vite build --config vite.server.config.ts",
     "server": "npm run server:build && node out/server/index.js",
-    "server:token": "npm run server:build --silent && node out/server/index.js token"
+    "server:token": "npm run server:build --silent && node out/server/index.js token",
+    "notices": "node scripts/third-party-notices.mjs",
+    "package": "npm run build && npm run notices && electron-builder",
+    "package:dir": "npm run build && npm run notices && electron-builder --dir"
   },
   "devDependencies": {
     "@codemirror/autocomplete": "^6.20.3",
@@ -46,6 +52,7 @@
     "@vitejs/plugin-react": "^5.2.0",
     "chokidar": "^5.0.0",
     "electron": "^44.4.5",
+    "electron-builder": "^26.15.3",
     "electron-vite": "^5.0.0",
     "katex": "^0.18.9",
     "oxlint": "^1.86.0",

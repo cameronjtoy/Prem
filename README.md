@@ -16,7 +16,9 @@ Prem is in active development towards a first release. It is being piloted with 
 
 ## Getting started
 
-Installers for macOS, Windows and Linux are coming with v0.1 (see the roadmap). Until then, run from source:
+Download Prem for macOS, Windows or Linux from the [latest release](https://github.com/cameronjtoy/Prem/releases/latest). The installers aren't signed yet, so macOS and Windows warn the first time you open Prem; the [install guide](docs/install.md) shows how to get past that.
+
+To run from source instead:
 
 ```bash
 git clone https://github.com/cameronjtoy/Prem.git
@@ -62,6 +64,8 @@ Choose **Open a folder as a vault** and pick [`examples/sample-vault/`](examples
 - A single Node file with no database. The vault stays a folder you can back up or keep in git.
 - See [docs/runbooks](docs/runbooks/Deploying%20Prem.md) for deploying, adding people, backups and troubleshooting, and [docs/examples](docs/examples/prem-server.example.json) for the config format.
 
+Each release includes the server as a Docker image (`ghcr.io/cameronjtoy/prem-server`) and as a single JavaScript file for Node.js; see [the install guide](docs/install.md#the-lab-server). From source:
+
 ```bash
 npm run server:token -- alice      # create a token for a person or bot
 npm run server                     # build and start the server (reads prem-server.json)
@@ -85,6 +89,8 @@ npm run format         # prettier
 npm run typecheck      # main, preload, renderer and server
 npm run build          # production bundles into out/
 npm run server:build   # the team server as a single file, out/server/index.js
+npm run package        # installers for this computer, into dist/ (see electron-builder.yml)
+npm run package:dir    # an unpacked app in dist/, quicker for testing packaging
 ```
 
 Read [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for how the pieces fit: the storage seam that lets every feature work on a local folder and on the team server alike, how history and signing are stored, and where logic belongs. [CONTRIBUTING.md](CONTRIBUTING.md) covers setup and how changes are made; [SECURITY.md](SECURITY.md) explains how to report a vulnerability privately, and everyone taking part follows the [Code of Conduct](CODE_OF_CONDUCT.md). Notable changes are listed in [CHANGELOG.md](CHANGELOG.md).
