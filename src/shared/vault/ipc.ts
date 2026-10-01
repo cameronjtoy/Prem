@@ -7,6 +7,7 @@ import type {
   CreatedNote,
   FileRecord,
   LinkIndexSnapshot,
+  RenameResult,
   TemplateInfo,
   VaultChange,
   VaultEntry,
@@ -56,7 +57,8 @@ export interface Api {
     read(path: string): R<FileRecord>
     write(path: string, content: string, options?: WriteOptions): R<WriteResult>
     mkdir(path: string): R<void>
-    rename(from: string, to: string): R<void>
+    /** Moves a note, attachment or folder, and rewrites links to it in other notes. */
+    rename(from: string, to: string): R<RenameResult>
     remove(path: string): R<void>
     readBinary(path: string): R<Uint8Array>
     onChanged(listener: (changes: VaultChange[]) => void): () => void
