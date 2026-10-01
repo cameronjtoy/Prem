@@ -1,9 +1,9 @@
 import { dialog, ipcMain, shell, type BrowserWindow, type OpenDialogOptions } from 'electron'
-import { VaultError, type IpcResult } from '@shared/errors'
-import { Channels } from '@shared/ipc'
-import type { WriteOptions } from '@shared/types'
+import { VaultError, type IpcResult } from '@shared/vault/errors'
+import { Channels } from '@shared/vault/ipc'
+import type { WriteOptions } from '@shared/vault/types'
 import { loadSettings, recallToken } from '../settings'
-import type { VaultManager } from '../vault/vaultManager'
+import type { VaultManager } from '../vault/VaultManager'
 
 function str(value: unknown, name: string): string {
   if (typeof value !== 'string') throw new VaultError('INVALID_ARGUMENT', `${name} must be a string`)

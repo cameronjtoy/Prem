@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Group, Panel, Separator } from 'react-resizable-panels'
-import { notebookFolder } from '@shared/notebook'
+import { notebookFolder } from '@shared/notes/notebook'
 import { BacklinksPanel } from './components/Backlinks/BacklinksPanel'
 import { NoteEditor } from './components/Editor/NoteEditor'
 import { FileTree } from './components/FileTree/FileTree'

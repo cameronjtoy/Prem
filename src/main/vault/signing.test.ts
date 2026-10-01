@@ -2,8 +2,8 @@ import { mkdtemp, readFile, realpath, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
-import { isVaultError } from '@shared/errors'
-import { recordStatus } from '@shared/signatures'
+import { isVaultError } from '@shared/vault/errors'
+import { recordStatus } from '@shared/records/signatures'
 import { LocalFsProvider } from './LocalFsProvider'
 
 let root: string

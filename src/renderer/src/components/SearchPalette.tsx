@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
-import type { SearchHit } from '@shared/search'
+import type { SearchHit } from '@shared/search/search'
 import { errorMessage, vaultClient } from '../services/vaultClient'
 import { useWorkspace } from '../state/WorkspaceContext'
 

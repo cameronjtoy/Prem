@@ -1,7 +1,7 @@
 import { realpath } from 'node:fs/promises'
 import path from 'node:path'
-import { VaultError } from '@shared/errors'
-import { normalizeVaultPath } from '@shared/paths'
+import { VaultError } from '@shared/vault/errors'
+import { normalizeVaultPath } from '@shared/vault/paths'
 
 function isWithin(root: string, abs: string): boolean {
   const rel = path.relative(root, abs)

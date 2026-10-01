@@ -1,7 +1,7 @@
 import { EditorSelection, EditorState, type Extension } from '@codemirror/state'
 import { EditorView } from '@codemirror/view'
-import { isVaultError } from '@shared/errors'
-import type { FileRecord } from '@shared/types'
+import { isVaultError } from '@shared/vault/errors'
+import type { FileRecord } from '@shared/vault/types'
 import { errorMessage, vaultClient } from '../../services/vaultClient'
 import { fromDisk } from './extensions'
 

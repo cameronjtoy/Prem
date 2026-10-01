@@ -1,7 +1,7 @@
 import { createHash, randomBytes, timingSafeEqual } from 'node:crypto'
 import { readFile } from 'node:fs/promises'
 import path from 'node:path'
-import { Access, isAccessLevel, type AccessLevel } from '@shared/access'
+import { Access, isAccessLevel, type AccessLevel } from '@shared/vault/access'
 
 export interface UserConfig {
   name: string

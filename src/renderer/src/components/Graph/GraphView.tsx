@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import ForceGraph2D, { type ForceGraphMethods } from 'react-force-graph-2d'
-import type { GraphNode } from '@shared/types'
+import type { GraphNode } from '@shared/vault/types'
 import { useLinkIndex } from '../../state/LinkIndexContext'
 import { useWorkspace } from '../../state/WorkspaceContext'
 

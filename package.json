@@ -4,7 +4,7 @@
   "version": "0.1.0",
   "private": true,
   "license": "Apache-2.0",
-  "description": "A desktop knowledge hub for notes, equations and runbooks, in the style of Obsidian.",
+  "description": "An open-source lab notebook that runs on your own machines: protocols, runs, samples and signed records, in plain files.",
   "main": "./out/main/index.js",
   "type": "commonjs",
   "repository": {
