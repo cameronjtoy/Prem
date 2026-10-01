@@ -35,6 +35,8 @@ export interface WriteOptions {
   createOnly?: boolean
   /** Who's saving, for the note's history. Set by whoever authenticated the user, never taken from a client. */
   author?: string
+  /** Required to change a signed note: why it's being amended. The save is recorded as an amendment. */
+  amendReason?: string
 }
 
 export interface WriteResult {

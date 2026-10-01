@@ -1,6 +1,7 @@
 import type { IpcResult } from './errors'
 import type { HistoryEntry } from './history'
 import type { SearchHit } from './search'
+import type { RecordCheck } from './signatures'
 import type {
   AddedAttachment,
   CreatedNote,
@@ -27,6 +28,9 @@ export const Channels = {
   readBinary: 'vault:readBinary',
   history: 'history:list',
   readVersion: 'history:read',
+  recordStatus: 'record:status',
+  sign: 'record:sign',
+  witness: 'record:witness',
   addAttachment: 'attachments:add',
   openFile: 'attachments:open',
   listTemplates: 'templates:list',
@@ -64,6 +68,11 @@ export interface Api {
   history: {
     list(path: string): R<HistoryEntry[]>
     read(path: string, id: string): R<string>
+  }
+  record: {
+    status(path: string): R<RecordCheck>
+    sign(path: string, statement?: string): R<RecordCheck>
+    witness(path: string): R<RecordCheck>
   }
   templates: {
     list(): R<TemplateInfo[]>
