@@ -28,7 +28,9 @@ describe('attachments', () => {
   })
 
   it('resolves links relative to the note and refuses to leave the vault', () => {
-    expect(resolveAttachment('Notebook/Gel.md', 'attachments/gel%20image.png')).toBe('Notebook/attachments/gel image.png')
+    expect(resolveAttachment('Notebook/Gel.md', 'attachments/gel%20image.png')).toBe(
+      'Notebook/attachments/gel image.png'
+    )
     expect(resolveAttachment('Notebook/2026/Gel.md', '../shared/ladder.png')).toBe('Notebook/shared/ladder.png')
     expect(resolveAttachment('Gel.md', '../../etc/passwd')).toBeNull()
     expect(resolveAttachment('Gel.md', 'https://example.com/a.png')).toBeNull()

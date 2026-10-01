@@ -81,7 +81,10 @@ export class NoteHistory {
     return this.lastEntries.get(key) ?? null
   }
 
-  private async append(notePath: VaultPath, fields: Omit<HistoryEntry, 'n' | 'prev' | 'id' | 'time'>): Promise<HistoryEntry> {
+  private async append(
+    notePath: VaultPath,
+    fields: Omit<HistoryEntry, 'n' | 'prev' | 'id' | 'time'>
+  ): Promise<HistoryEntry> {
     const prev = await this.last(notePath)
     const base = { n: (prev?.n ?? 0) + 1, time: new Date().toISOString(), ...fields, prev: prev?.id ?? '' }
     const entry: HistoryEntry = { ...base, id: entryId(base) }
@@ -144,9 +147,16 @@ export class NoteHistory {
       const prev = await this.last(notePath)
       const status = await this.status(notePath)
       if (!prev || prev.kind === 'deleted') throw new VaultError('NOT_FOUND', `${notePath} has nothing to sign yet`)
-      if (prev.hash !== currentHash) throw new VaultError('CONFLICT', `${notePath} has changes that aren't recorded yet; save and try again`)
+      if (prev.hash !== currentHash)
+        throw new VaultError('CONFLICT', `${notePath} has changes that aren't recorded yet; save and try again`)
       if (status.locked) throw new VaultError('LOCKED', `${notePath} is already signed`)
-      return this.append(notePath, { author, kind: 'signed', hash: prev.hash, size: prev.size, reason: statement || undefined })
+      return this.append(notePath, {
+        author,
+        kind: 'signed',
+        hash: prev.hash,
+        size: prev.size,
+        reason: statement || undefined
+      })
     })
   }
 
@@ -155,10 +165,13 @@ export class NoteHistory {
     return this.serial(notePath.toLowerCase(), async () => {
       const status = await this.status(notePath)
       if (!status.locked || !status.signature) throw new VaultError('INVALID_ARGUMENT', `${notePath} isn't signed yet`)
-      if (status.changedOutside) throw new VaultError('CONFLICT', `${notePath} was changed outside Prem after it was signed`)
+      if (status.changedOutside)
+        throw new VaultError('CONFLICT', `${notePath} was changed outside Prem after it was signed`)
       if (!author) throw new VaultError('INVALID_ARGUMENT', 'Witnessing needs a named person')
-      if (status.signature.by === author) throw new VaultError('INVALID_ARGUMENT', "You can't witness your own signature")
-      if (status.witnesses.some((w) => w.by === author)) throw new VaultError('EXISTS', `${author} has already witnessed ${notePath}`)
+      if (status.signature.by === author)
+        throw new VaultError('INVALID_ARGUMENT', "You can't witness your own signature")
+      if (status.witnesses.some((w) => w.by === author))
+        throw new VaultError('EXISTS', `${author} has already witnessed ${notePath}`)
       const prev = (await this.last(notePath))!
       return this.append(notePath, { author, kind: 'witnessed', hash: prev.hash, size: prev.size })
     })
@@ -223,7 +236,8 @@ export class NoteHistory {
       for (const d of items) {
         const child = path.join(abs, d.name)
         if (d.isDirectory()) await walk(child)
-        else if (d.name.endsWith('.jsonl')) found.push(path.relative(this.logsDir, child).split(path.sep).join('/').slice(0, -6))
+        else if (d.name.endsWith('.jsonl'))
+          found.push(path.relative(this.logsDir, child).split(path.sep).join('/').slice(0, -6))
       }
     }
     await walk(dir)
@@ -236,7 +250,8 @@ export class NoteHistory {
     if (!entry || !entry.hash) throw new VaultError('NOT_FOUND', `No such version of ${notePath}`)
     const file = path.join(this.objectsDir, entry.hash.slice(0, 2), `${entry.hash}.gz`)
     const content = gunzipSync(await fs.readFile(file)).toString('utf8')
-    if (sha256(content) !== entry.hash) throw new VaultError('UNKNOWN', `The stored copy of this version of ${notePath} is damaged`)
+    if (sha256(content) !== entry.hash)
+      throw new VaultError('UNKNOWN', `The stored copy of this version of ${notePath} is damaged`)
     return content
   }
 

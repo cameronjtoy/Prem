@@ -24,10 +24,7 @@ function contentSecurityPolicy(): Plugin {
         "font-src 'self' data:",
         `connect-src ${connect}`
       ].join('; ')
-      return html.replace(
-        '<head>',
-        `<head>\n    <meta http-equiv="Content-Security-Policy" content="${csp}" />`
-      )
+      return html.replace('<head>', `<head>\n    <meta http-equiv="Content-Security-Policy" content="${csp}" />`)
     }
   }
 }

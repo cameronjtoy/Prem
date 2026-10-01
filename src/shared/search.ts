@@ -82,7 +82,13 @@ export class SearchIndex {
     if (!isMarkdown(path) || isInside(path, TEMPLATES_FOLDER)) return
     const title = noteTitle(path)
     const lower = content.toLowerCase()
-    this.docs.set(path, { path, title, content, lower, haystack: `${title.toLowerCase()}\n${path.toLowerCase()}\n${lower}` })
+    this.docs.set(path, {
+      path,
+      title,
+      content,
+      lower,
+      haystack: `${title.toLowerCase()}\n${path.toLowerCase()}\n${lower}`
+    })
   }
 
   remove(path: VaultPath): void {
@@ -131,7 +137,10 @@ export class SearchIndex {
       matches.push({
         line: doc.content.slice(0, lineStart).split('\n').length,
         text: (from > lineStart ? '…' : '') + text + (to < end ? '…' : ''),
-        ranges: rangesOf(text.toLowerCase(), terms).map(([s, e]) => [s + (from > lineStart ? 1 : 0), e + (from > lineStart ? 1 : 0)]),
+        ranges: rangesOf(text.toLowerCase(), terms).map(([s, e]) => [
+          s + (from > lineStart ? 1 : 0),
+          e + (from > lineStart ? 1 : 0)
+        ]),
         offset: at
       })
       if (matches.length >= MAX_MATCH_LINES) break

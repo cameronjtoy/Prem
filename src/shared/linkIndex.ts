@@ -1,14 +1,6 @@
 import { isInside, isMarkdown, noteTitle, TEMPLATES_FOLDER } from './paths'
 import { createResolver, type Resolver } from './resolve'
-import type {
-  Backlink,
-  GraphLink,
-  GraphNode,
-  LinkIndexSnapshot,
-  OutgoingLink,
-  ParsedLink,
-  VaultPath
-} from './types'
+import type { Backlink, GraphLink, GraphNode, LinkIndexSnapshot, OutgoingLink, ParsedLink, VaultPath } from './types'
 import { parseWikilinks } from './wikilinks'
 
 interface IndexedNote {

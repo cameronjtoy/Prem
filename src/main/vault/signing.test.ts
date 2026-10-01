@@ -20,7 +20,10 @@ afterEach(async () => {
 })
 
 async function code(pending: Promise<unknown>): Promise<string | null> {
-  const err = await pending.then(() => null, (e: unknown) => e)
+  const err = await pending.then(
+    () => null,
+    (e: unknown) => e
+  )
   return isVaultError(err) ? err.code : err === null ? null : String(err)
 }
 
@@ -96,7 +99,10 @@ describe('signing records', () => {
     await vault.write('Run.md', 'data', { author: 'alice' })
     await vault.sign('Run.md', 'alice')
     const log = path.join(root, '.prem', 'history', 'Run.md.jsonl')
-    await writeFile(log, (await readFile(log, 'utf8')).replace('"author":"alice","kind":"signed"', '"author":"mallory","kind":"signed"'))
+    await writeFile(
+      log,
+      (await readFile(log, 'utf8')).replace('"author":"alice","kind":"signed"', '"author":"mallory","kind":"signed"')
+    )
     expect((await new LocalFsProvider(root).recordStatus('Run.md')).chainOk).toBe(false)
   })
 

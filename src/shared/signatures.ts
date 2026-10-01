@@ -30,7 +30,13 @@ export interface RecordStatus {
   timesSigned: number
 }
 
-export const EMPTY_STATUS: RecordStatus = { state: 'draft', locked: false, witnesses: [], changedOutside: false, timesSigned: 0 }
+export const EMPTY_STATUS: RecordStatus = {
+  state: 'draft',
+  locked: false,
+  witnesses: [],
+  changedOutside: false,
+  timesSigned: 0
+}
 
 /**
  * Folds one history entry into a note's signing status. Walking a note's whole log through this

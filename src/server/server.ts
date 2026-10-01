@@ -157,11 +157,19 @@ export async function startServer(config: ServerConfig, log: Logger = console): 
       }
       case `GET ${Routes.entries}`: {
         const entries = await provider.list()
-        return sendJson(res, 200, entries.filter((e) => access.canSee(e.path, e.kind)))
+        return sendJson(
+          res,
+          200,
+          entries.filter((e) => access.canSee(e.path, e.kind))
+        )
       }
       case `GET ${Routes.files}`: {
         const files = await provider.readAllMarkdown()
-        return sendJson(res, 200, files.filter((f) => access.canRead(f.path)))
+        return sendJson(
+          res,
+          200,
+          files.filter((f) => access.canRead(f.path))
+        )
       }
       case `GET ${Routes.file}`: {
         const path = queryPath(url)

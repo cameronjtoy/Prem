@@ -43,7 +43,11 @@ export function RecordBar({
 
   const me = info?.author ?? ''
   const canWitness =
-    status.locked && !!status.signature && !!me && status.signature.by !== me && !status.witnesses.some((w) => w.by === me)
+    status.locked &&
+    !!status.signature &&
+    !!me &&
+    status.signature.by !== me &&
+    !status.witnesses.some((w) => w.by === me)
 
   const submit = async (e: FormEvent): Promise<void> => {
     e.preventDefault()
@@ -77,7 +81,9 @@ export function RecordBar({
           {status.signature && when(status.signature.at)}
           {status.signature?.statement && ` · “${status.signature.statement}”`}
           {status.witnesses.map((w) => ` · Witnessed by ${w.by}, ${when(w.at)}`).join('')}
-          {status.state === 'amended' && status.amendment && `${status.amendment.by}, ${when(status.amendment.at)}: ${status.amendment.reason}`}
+          {status.state === 'amended' &&
+            status.amendment &&
+            `${status.amendment.by}, ${when(status.amendment.at)}: ${status.amendment.reason}`}
         </span>
         {!form && !amending && (
           <span className="record-actions">
@@ -101,7 +107,9 @@ export function RecordBar({
             {canEdit && status.locked && <button onClick={() => setForm({ kind: 'amend', text: '' })}>Amend…</button>}
           </span>
         )}
-        {amending && <span className="record-amending">Amending: {amending}. Your next change is recorded as an amendment.</span>}
+        {amending && (
+          <span className="record-amending">Amending: {amending}. Your next change is recorded as an amendment.</span>
+        )}
       </div>
       {!status.chainOk && (
         <div className="record-warning">
@@ -121,18 +129,28 @@ export function RecordBar({
               amendment with a reason.
             </span>
           ) : (
-            <span className="hint">Why does this signed record need to change? The reason is kept with the amendment.</span>
+            <span className="hint">
+              Why does this signed record need to change? The reason is kept with the amendment.
+            </span>
           )}
           <div className="record-form-row">
             <input
               autoFocus
               className="text-input"
-              placeholder={form.kind === 'sign' ? 'Optional statement, e.g. “Results reviewed”' : 'Reason for the amendment (required)'}
+              placeholder={
+                form.kind === 'sign'
+                  ? 'Optional statement, e.g. “Results reviewed”'
+                  : 'Reason for the amendment (required)'
+              }
               value={form.text}
               onChange={(e) => setForm({ ...form, text: e.target.value })}
               onKeyDown={(e) => e.key === 'Escape' && setForm(null)}
             />
-            <button type="submit" className="record-primary" disabled={busy || (form.kind === 'amend' && !form.text.trim())}>
+            <button
+              type="submit"
+              className="record-primary"
+              disabled={busy || (form.kind === 'amend' && !form.text.trim())}
+            >
               {form.kind === 'sign' ? 'Sign and lock' : 'Unlock to amend'}
             </button>
             <button type="button" onClick={() => setForm(null)}>

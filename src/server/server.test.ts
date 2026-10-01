@@ -64,7 +64,9 @@ afterAll(async () => {
 describe('config', () => {
   it('rejects malformed configs', () => {
     expect(() => parseConfig({ vault: '.', users: [] }, base)).toThrow(/at least one user/)
-    expect(() => parseConfig({ vault: '.', users: [{ name: 'x', tokenHash: 'abc', access: {} }] }, base)).toThrow(/tokenHash/)
+    expect(() => parseConfig({ vault: '.', users: [{ name: 'x', tokenHash: 'abc', access: {} }] }, base)).toThrow(
+      /tokenHash/
+    )
     expect(() =>
       parseConfig({ vault: '.', users: [{ name: 'x', tokenHash: hashToken('t'), access: { '': 'admin' } }] }, base)
     ).toThrow(/access/)

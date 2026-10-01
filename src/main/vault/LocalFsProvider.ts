@@ -44,7 +44,11 @@ export interface LocalFsOptions {
 
 /** Hidden files and folders (`.prem`, `.trash`, `.git`, …) are Prem's own or another tool's, never notes. */
 function assertNotHidden(relPath: string): void {
-  if (normalizeVaultPath(relPath).split('/').some((part) => part.startsWith('.'))) {
+  if (
+    normalizeVaultPath(relPath)
+      .split('/')
+      .some((part) => part.startsWith('.'))
+  ) {
     throw new VaultError('INVALID_PATH', `Hidden files and folders can't be opened in Prem: ${relPath}`)
   }
 }
@@ -132,7 +136,13 @@ export class LocalFsProvider implements VaultProvider {
       throw new VaultError('LOCKED', `${notePath} is signed. To change it, amend it and give a reason.`)
     }
     const result = await this.writeFile(relPath, content, options)
-    await this.notes.record(notePath, content, options.author ?? '', locked ? 'amended' : 'save', locked ? reason : undefined)
+    await this.notes.record(
+      notePath,
+      content,
+      options.author ?? '',
+      locked ? 'amended' : 'save',
+      locked ? reason : undefined
+    )
     return result
   }
 
@@ -214,7 +224,11 @@ export class LocalFsProvider implements VaultProvider {
     return this.abs(relPath)
   }
 
-  private async writeFile(relPath: VaultPath, content: string | Uint8Array, options: WriteOptions): Promise<WriteResult> {
+  private async writeFile(
+    relPath: VaultPath,
+    content: string | Uint8Array,
+    options: WriteOptions
+  ): Promise<WriteResult> {
     const abs = await this.abs(relPath)
     const current = await fs.stat(abs).catch(() => null)
     if (options.createOnly && current) throw new VaultError('EXISTS', `Already exists: ${relPath}`)
@@ -273,7 +287,9 @@ export class LocalFsProvider implements VaultProvider {
     if (!(await this.existsAbs(abs))) throw new VaultError('NOT_FOUND', `Not found: ${relPath}`)
     const target = normalizeVaultPath(relPath)
     await this.assertUnlocked(target, 'delete')
-    const notes = isMarkdown(target) ? [target] : (await this.notes.notesUnder(target)).filter((p) => isInside(p, target))
+    const notes = isMarkdown(target)
+      ? [target]
+      : (await this.notes.notesUnder(target)).filter((p) => isInside(p, target))
     await this.trash(abs)
     // The history itself is kept: a deleted note's past versions stay readable and restorable.
     for (const note of notes) await this.notes.recordDeleted(note, author)

@@ -35,7 +35,8 @@ export function diffLines(before: string, after: string): DiffLine[] {
   const lcs = new Uint32Array(rows * cols)
   for (let i = midA.length - 1; i >= 0; i--) {
     for (let j = midB.length - 1; j >= 0; j--) {
-      lcs[i * cols + j] = midA[i] === midB[j] ? lcs[(i + 1) * cols + j + 1] + 1 : Math.max(lcs[(i + 1) * cols + j], lcs[i * cols + j + 1])
+      lcs[i * cols + j] =
+        midA[i] === midB[j] ? lcs[(i + 1) * cols + j + 1] + 1 : Math.max(lcs[(i + 1) * cols + j], lcs[i * cols + j + 1])
     }
   }
   const middle: DiffLine[] = []

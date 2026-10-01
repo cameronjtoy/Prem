@@ -82,7 +82,8 @@ describe('note history', () => {
     const stop = vault.watch(() => {})
     await new Promise((r) => setTimeout(r, 300))
     await writeFile(path.join(root, 'N.md'), 'edited in another app')
-    for (let i = 0; i < 40 && (await vault.history('N.md')).length < 2; i++) await new Promise((r) => setTimeout(r, 100))
+    for (let i = 0; i < 40 && (await vault.history('N.md')).length < 2; i++)
+      await new Promise((r) => setTimeout(r, 100))
     stop()
     expect(await kinds('N.md')).toEqual(['save:alice', 'external:'])
   })
@@ -95,7 +96,10 @@ describe('note history', () => {
       vault.write('.git/config.md', 'x'),
       vault.exists('Notes/.hidden/x.md')
     ]) {
-      const err = await attempt.then(() => null, (e: unknown) => e)
+      const err = await attempt.then(
+        () => null,
+        (e: unknown) => e
+      )
       expect(isVaultError(err, 'INVALID_PATH')).toBe(true)
     }
   })

@@ -111,7 +111,19 @@ export function VaultProvider({ children }: { children: ReactNode }) {
   }, [info])
 
   const value = useMemo(
-    () => ({ info, entries, starting, error, resolver, noteTitles, canWrite, openVault, connectServer, refresh, subscribe }),
+    () => ({
+      info,
+      entries,
+      starting,
+      error,
+      resolver,
+      noteTitles,
+      canWrite,
+      openVault,
+      connectServer,
+      refresh,
+      subscribe
+    }),
     [info, entries, starting, error, resolver, noteTitles, canWrite, openVault, connectServer, refresh, subscribe]
   )
   return <VaultContext.Provider value={value}>{children}</VaultContext.Provider>

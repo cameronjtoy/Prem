@@ -86,7 +86,11 @@ export function FileTree() {
         </span>
         {canCreate && (
           <>
-            <button className="icon-button" title="New note (⌘N)" onClick={() => void ws.createNote(ws.currentFolder())}>
+            <button
+              className="icon-button"
+              title="New note (⌘N)"
+              onClick={() => void ws.createNote(ws.currentFolder())}
+            >
               <NewNoteIcon />
             </button>
             <button

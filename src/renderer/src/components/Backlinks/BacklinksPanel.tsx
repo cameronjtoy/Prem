@@ -8,11 +8,7 @@ function Snippet({ text }: { text: string }) {
   return (
     <p className="snippet">
       {parts.map((part, i) =>
-        part.startsWith('[[') ? (
-          <mark key={i}>{part.slice(2, -2).split('|').pop()}</mark>
-        ) : (
-          <span key={i}>{part}</span>
-        )
+        part.startsWith('[[') ? <mark key={i}>{part.slice(2, -2).split('|').pop()}</mark> : <span key={i}>{part}</span>
       )}
     </p>
   )

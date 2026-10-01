@@ -43,8 +43,7 @@ function Shell() {
         if (canCreate) ws.showTemplatePicker(ws.currentFolder())
       } else if (key === 'n') {
         if (canCreate) void ws.createNote(ws.currentFolder())
-      }
-      else if (key === 'k' && !e.shiftKey) setSearching((open) => !open)
+      } else if (key === 'k' && !e.shiftKey) setSearching((open) => !open)
       else if (key === 't' && !e.shiftKey) {
         if (canKeepNotebook) void ws.openToday()
       } else if (key === 'g' && !e.shiftKey) ws.setView(ws.view === 'graph' ? 'editor' : 'graph')

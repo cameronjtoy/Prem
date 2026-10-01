@@ -3,8 +3,14 @@ import { parseQuery, SearchIndex } from './search'
 
 const index = new SearchIndex()
 index.build([
-  { path: 'Protocols/Miniprep.md', content: '# Miniprep\n\n## Steps\n1. [ ] Pellet 2 mL culture\n2. [ ] Add P2 lysis buffer' },
-  { path: 'Notebook/2026/2026-09-30.md', content: '# 2026-09-30\n\nRan the [[Miniprep]] on S-0042. Yield was low, try fresh culture.' },
+  {
+    path: 'Protocols/Miniprep.md',
+    content: '# Miniprep\n\n## Steps\n1. [ ] Pellet 2 mL culture\n2. [ ] Add P2 lysis buffer'
+  },
+  {
+    path: 'Notebook/2026/2026-09-30.md',
+    content: '# 2026-09-30\n\nRan the [[Miniprep]] on S-0042. Yield was low, try fresh culture.'
+  },
   { path: 'Notebook/Gel check.md', content: 'Gel looked clean.\nLadder: 1 kb.' },
   { path: 'templates/Protocol.md', content: '# {{title}}\n\n## Steps\nculture' }
 ])

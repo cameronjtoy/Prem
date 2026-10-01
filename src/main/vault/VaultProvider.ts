@@ -1,13 +1,6 @@
 import type { HistoryEntry } from '@shared/history'
 import type { RecordCheck } from '@shared/signatures'
-import type {
-  FileRecord,
-  VaultChange,
-  VaultEntry,
-  VaultPath,
-  WriteOptions,
-  WriteResult
-} from '@shared/types'
+import type { FileRecord, VaultChange, VaultEntry, VaultPath, WriteOptions, WriteResult } from '@shared/types'
 
 /**
  * Storage backend for one vault. Everything above this interface uses vault-relative paths,

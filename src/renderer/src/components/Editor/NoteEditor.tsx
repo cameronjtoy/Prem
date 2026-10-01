@@ -145,7 +145,12 @@ export function NoteEditor({ path, cursor }: { path: string; cursor: number | nu
     let from = 0
     while (from < before.length && from < text.length && before[from] === text[from]) from++
     let end = 0
-    while (end < before.length - from && end < text.length - from && before[before.length - 1 - end] === text[text.length - 1 - end]) end++
+    while (
+      end < before.length - from &&
+      end < text.length - from &&
+      before[before.length - 1 - end] === text[text.length - 1 - end]
+    )
+      end++
     view.dispatch({
       changes: { from, to: before.length - end, insert: text.slice(from, text.length - end) },
       selection: anchor === undefined ? undefined : { anchor },
@@ -156,7 +161,11 @@ export function NoteEditor({ path, cursor }: { path: string; cursor: number | nu
 
   const onComplete = (): void => {
     const left = meta.progress.total - meta.progress.done
-    if (left > 0 && !window.confirm(`${left} step${left === 1 ? " isn't" : "s aren't"} ticked. Complete the run anyway?`)) return
+    if (
+      left > 0 &&
+      !window.confirm(`${left} step${left === 1 ? " isn't" : "s aren't"} ticked. Complete the run anyway?`)
+    )
+      return
     rewrite((text) => ({ text: completeRun(text, new Date()) }))
   }
 
@@ -173,7 +182,11 @@ export function NoteEditor({ path, cursor }: { path: string; cursor: number | nu
           ))}
         </div>
         {!loading && (
-          <button className="icon-button" title="History: every saved version of this note" onClick={() => setShowHistory(true)}>
+          <button
+            className="icon-button"
+            title="History: every saved version of this note"
+            onClick={() => setShowHistory(true)}
+          >
             <HistoryIcon />
           </button>
         )}
@@ -181,7 +194,11 @@ export function NoteEditor({ path, cursor }: { path: string; cursor: number | nu
           (readOnly ? (
             <span
               className="save-status"
-              title={canEdit ? 'Signed records are locked. Use Amend to change it.' : 'You can read this note but not edit it'}
+              title={
+                canEdit
+                  ? 'Signed records are locked. Use Amend to change it.'
+                  : 'You can read this note but not edit it'
+              }
             >
               {canEdit ? 'Locked' : 'Read only'}
             </span>
