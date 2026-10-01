@@ -18,8 +18,9 @@ export function TemplatePicker({ folder }: { folder: string }) {
       .catch((err) => setError(errorMessage(err)))
   }, [])
 
-  const submit = (): void => {
-    const template = templates?.[selected]
+  // Takes the index rather than reading `selected`, which may not have re-rendered yet after a quick click.
+  const submit = (index = selected): void => {
+    const template = templates?.[index]
     if (!template) return
     close()
     void createFromTemplate(template.path, title.trim() || template.name, folder)
@@ -65,7 +66,7 @@ export function TemplatePicker({ folder }: { folder: string }) {
               aria-selected={i === selected}
               className={i === selected ? 'selected' : undefined}
               onMouseEnter={() => setSelected(i)}
-              onClick={submit}
+              onClick={() => submit(i)}
             >
               {t.name}
             </li>

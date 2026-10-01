@@ -22,6 +22,9 @@ describe('attachments', () => {
     expect(attachmentMarkdown('Notebook/Gel.md', 'Notebook/attachments/plate.csv')).toBe(
       '![plate.csv](attachments/plate.csv)'
     )
+    expect(attachmentMarkdown('Notebook/Gel.md', 'Notebook/attachments/growth curve.ipynb')).toBe(
+      '![growth curve.ipynb](attachments/growth%20curve.ipynb)'
+    )
     expect(attachmentMarkdown('Notebook/Gel.md', 'Notebook/attachments/trace.ab1')).toBe(
       '[trace.ab1](attachments/trace.ab1)'
     )
@@ -54,6 +57,8 @@ describe('attachments', () => {
   it('only opens known data formats directly', () => {
     expect(attachmentKind('a.JPG')).toBe('image')
     expect(attachmentKind('a.tsv')).toBe('table')
+    expect(attachmentKind('analysis.IPYNB')).toBe('notebook')
+    expect(isSafeToOpen('analysis.ipynb')).toBe(true)
     expect(isSafeToOpen('run.fasta')).toBe(true)
     expect(isSafeToOpen('setup.exe')).toBe(false)
     expect(isSafeToOpen('analysis.py')).toBe(false)

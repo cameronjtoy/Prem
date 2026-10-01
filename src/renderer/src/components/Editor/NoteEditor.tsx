@@ -7,7 +7,7 @@ import { EMPTY_STATUS, type RecordCheck } from '@shared/records/signatures'
 import { errorMessage, vaultClient } from '../../services/vaultClient'
 import { useVault } from '../../state/VaultContext'
 import { useWorkspace } from '../../state/WorkspaceContext'
-import { HistoryIcon } from '../icons'
+import { ExportIcon, HistoryIcon } from '../icons'
 import { createExtensions, refreshLinks, type EditorHost } from './extensions'
 import { HistoryPanel } from './HistoryPanel'
 import { NoteSession, type Conflict, type SaveStatus } from './NoteSession'
@@ -23,7 +23,7 @@ const STATUS_LABEL: Record<SaveStatus, string> = {
 
 export function NoteEditor({ path, cursor }: { path: string; cursor: number | null }) {
   const { resolver, noteTitles, subscribe, canWrite } = useVault()
-  const { openLink, registerEditor, showNotice } = useWorkspace()
+  const { openLink, registerEditor, showNotice, exportPdf } = useWorkspace()
   const hostRef = useRef<HTMLDivElement>(null)
   const sessionRef = useRef<NoteSession | null>(null)
   const [status, setStatus] = useState<SaveStatus>('saved')
@@ -181,6 +181,15 @@ export function NoteEditor({ path, cursor }: { path: string; cursor: number | nu
             </span>
           ))}
         </div>
+        {!loading && (
+          <button
+            className="icon-button"
+            title="Export as PDF, with signatures and history check (⌘P)"
+            onClick={() => void exportPdf(path)}
+          >
+            <ExportIcon />
+          </button>
+        )}
         {!loading && (
           <button
             className="icon-button"

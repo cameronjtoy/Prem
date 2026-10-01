@@ -2,6 +2,7 @@ import { EditorView, WidgetType } from '@codemirror/view'
 import { attachmentKind, extension, MAX_ATTACHMENT_BYTES } from '@shared/attachments/attachments'
 import { parseDelimited } from '@shared/attachments/csv'
 import { hostFacet, type EditorHost } from './host'
+import { loadNotebookPreview } from './notebookPreview'
 
 const PREVIEW_ROWS = 25
 const MIME: Record<string, string> = { svg: 'image/svg+xml' }
@@ -45,6 +46,11 @@ export class AttachmentWidget extends WidgetType {
     const kind = attachmentKind(this.path)
     const wrap = document.createElement('span')
     wrap.className = `cm-attachment cm-attachment-${kind}`
+    if (kind === 'notebook') {
+      // A notebook preview is read and scrolled in place, so it opens from its own button instead of on click.
+      loadNotebookPreview(wrap, this.path, host)
+      return wrap
+    }
     wrap.title = `${fileName(this.path)} — click to open`
     wrap.addEventListener('mousedown', (e) => {
       if (e.button !== 0) return

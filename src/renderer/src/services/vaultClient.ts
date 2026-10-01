@@ -25,6 +25,7 @@ export const vaultClient = {
   recordStatus: (path: string) => unwrap(window.api.record.status(path)),
   sign: (path: string, statement?: string) => unwrap(window.api.record.sign(path, statement)),
   witness: (path: string) => unwrap(window.api.record.witness(path)),
+  exportPdf: (path: string) => unwrap(window.api.record.exportPdf(path)),
   addAttachment: (notePath: string, fileName: string, data: Uint8Array) =>
     unwrap(window.api.attachments.add(notePath, fileName, data)),
   openFile: (path: string) => unwrap(window.api.attachments.open(path)),

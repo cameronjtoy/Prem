@@ -5,3 +5,7 @@ package-lock.json
 *.md
 examples
 docs/runbooks
+dist
+_site
+test-results
+playwright-report

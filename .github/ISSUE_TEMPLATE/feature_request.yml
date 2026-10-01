@@ -1,0 +1,38 @@
+name: Feature request
+description: Suggest something Prem should do
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What are you trying to do in the lab?
+      description: Describe the situation, not the solution. Who is doing it, and what gets in the way today?
+      placeholder: When a sample is split into aliquots, I want each one to ...
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: What would you like Prem to do?
+      description: If you have a specific idea, describe it. Sketches and screenshots from other tools are welcome.
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: How do you handle it now?
+      description: Paper, a spreadsheet, another tool? This helps us understand what the feature has to beat.
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Notebook and editor
+        - Protocols and runs
+        - Samples
+        - Workflows
+        - Attachments and data analysis
+        - History and signing
+        - Team server and permissions
+        - Search
+        - Export and printing
+        - Installation and updates
+        - Other

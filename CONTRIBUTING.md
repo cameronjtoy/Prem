@@ -1,5 +1,7 @@
 # Contributing to Prem
 
+By taking part you agree to follow our [Code of Conduct](CODE_OF_CONDUCT.md).
+
 Thanks for helping build Prem, an open-source lab notebook that runs on your own machines. Bug reports, feature ideas and pull requests are all welcome.
 
 ## Getting set up
@@ -24,13 +26,16 @@ npm run typecheck
 npm test
 npm run build
 npm run server:build
+npm run e2e            # end-to-end tests of the built app; on Linux without a display: xvfb-run -a npm run e2e
 ```
 
 Formatting is [Prettier](https://prettier.io) and linting is [oxlint](https://oxc.rs); both read their settings from the repo (`.prettierrc.json`, `.oxlintrc.json`), and `.editorconfig` keeps editors consistent. Most editors can format on save with the Prettier extension. Use the Node version in `.nvmrc` (`nvm use`). Commits that only reformat code are listed in `.git-blame-ignore-revs`; run `git config blame.ignoreRevsFile .git-blame-ignore-revs` once so `git blame` skips them (GitHub does this automatically).
 
 We use oxlint rather than ESLint because the project is on TypeScript 7, which the ESLint TypeScript plugin doesn't support yet. A few React rules are turned off in `.oxlintrc.json` because they flag patterns this code uses on purpose, such as keeping the latest callback in a ref so the editor isn't recreated on every render; `react-hooks/exhaustive-deps` stays on.
 
-Also try your change in the app itself. Tests cover the shared logic, but most bugs show up in the editor.
+Also try your change in the app itself. Unit tests cover the shared logic, but most bugs show up in the editor.
+
+The end-to-end tests in `e2e/` drive the built app with [Playwright](https://playwright.dev): each test gets a fresh copy of the example vault and its own settings, and `team.spec.ts` runs the real server with two people. They take about 20 seconds. When you add a feature people use through the app, add a test there; `e2e/fixtures.ts` has helpers to open notes, rename, and answer save dialogs. On failure CI keeps a trace you can open with `npx playwright show-trace`.
 
 ## How changes are made
 - Work on a branch and open a pull request against `main`. `main` is protected, and every change goes through a pull request with passing CI.
@@ -49,6 +54,19 @@ Lab notebooks hold research data. Changes that touch storage, the team server, p
 - Never let a user see or change something their permissions don't allow.
 
 If you're unsure, ask in the pull request.
+
+## Making a release
+Maintainers release from `main`:
+
+1. Set `version` in `package.json` and rename the `[Unreleased]` heading in `CHANGELOG.md` to `[x.y.z] - <date>`, in one pull request.
+2. After it merges, tag the merge commit: `git tag v0.1.0 && git push origin v0.1.0`. Use a suffix such as `v0.1.0-rc.1` for a test build; it becomes a pre-release and doesn't move the Docker `latest` tag.
+3. The [release workflow](.github/workflows/release.yml) builds the installers, the server file and the Docker image, and opens a **draft** release with checksums and the changelog section as notes.
+4. Install at least one build, then publish the draft.
+
+To try packaging locally, `npm run package:dir` builds an unpacked app in `dist/` for your platform.
+
+## The website
+The site at https://cameronjtoy.github.io/Prem/ is built from `site/` and the guides in `docs/` by `npm run site`, and published from `main` by [the website workflow](.github/workflows/site.yml). Pages share `site/layout.html`; a guide in `docs/` appears on the site once it's listed in `DOCS` in `scripts/build-site.mjs`. Open `_site/index.html` in a browser to preview.
 
 ## Reporting security issues
 Please don't open a public issue for security problems. See [SECURITY.md](SECURITY.md).

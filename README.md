@@ -6,6 +6,10 @@ Prem is a desktop app for research labs. Each person keeps a daily notebook; the
 
 Prem is in active development towards a first release. It is being piloted with research labs now; see the [roadmap](#roadmap).
 
+**Website:** [cameronjtoy.github.io/Prem](https://cameronjtoy.github.io/Prem/)
+
+![An experiment entry in Prem with a reagent table, results and a gel image](site/assets/screenshots/experiment.png)
+
 ## Why Prem
 
 - **Your data stays with the lab.** Notebooks are folders of markdown and attachments on your computer or on a server you run. No account with us, no cloud, no telemetry.
@@ -16,7 +20,9 @@ Prem is in active development towards a first release. It is being piloted with 
 
 ## Getting started
 
-Installers for macOS, Windows and Linux are coming with v0.1 (see the roadmap). Until then, run from source:
+Download Prem for macOS, Windows or Linux from the [latest release](https://github.com/cameronjtoy/Prem/releases/latest). The installers aren't signed yet, so macOS and Windows warn the first time you open Prem; the [install guide](docs/install.md) shows how to get past that.
+
+To run from source instead:
 
 ```bash
 git clone https://github.com/cameronjtoy/Prem.git
@@ -36,6 +42,7 @@ Choose **Open a folder as a vault** and pick [`examples/sample-vault/`](examples
 | ⌘N / ⌘⇧N | New note / new note from template |
 | ⌘G | Graph of how notes link |
 | ⌘S | Save now (notes also autosave) |
+| ⌘P | Export the open note as a PDF |
 | ⌘O | Open another vault |
 
 ## Features
@@ -44,8 +51,8 @@ Choose **Open a folder as a vault** and pick [`examples/sample-vault/`](examples
 - **Daily entries** (⌘T) filed by year: `Notebook/2026/2026-09-30.md`, or `Notebooks/<name>/…` on a shared vault so each person's notebook can have its own permissions.
 - **Templates** for Experiment, Protocol, Sample, Lab meeting, Reference and Daily entry, with `{{title}}`, `{{date}}`, `{{time}}`, `{{author}}` and `{{cursor}}` placeholders. Add your own to the vault's `templates/` folder.
 - **Live-preview editor** (CodeMirror): markdown syntax hides except on the line you're editing. Equations with KaTeX, tables, checkboxes, syntax-highlighted code.
-- **Links** between notes with `[[Note]]`, autocomplete, backlinks and a graph view. A link to a note that doesn't exist yet creates it on click.
-- **Attachments**: drop files or paste screenshots into an entry. Images and CSV/TSV preview inline; other files open in their default app (only known data formats are opened directly, so a stray script can't run by accident). Up to 100 MB per file.
+- **Links** between notes with `[[Note]]`, autocomplete, backlinks and a graph view. A link to a note that doesn't exist yet creates it on click. Renaming or moving a note, attachment or folder updates the links to it everywhere; signed notes are left as signed, and Prem tells you which still use the old name.
+- **Attachments**: drop files or paste screenshots into an entry. Images and CSV/TSV preview inline, and **Jupyter notebooks (.ipynb)** show their markdown, code and saved outputs (tables, plots, errors) read-only, with nothing run; other files open in their default app (only known data formats are opened directly, so a stray script can't run by accident). Up to 100 MB per file.
 - **Search** (⌘K) across titles, folders and text, with quoted phrases; results open at the match.
 
 **Protocols and runs**
@@ -55,16 +62,21 @@ Choose **Open a folder as a vault** and pick [`examples/sample-vault/`](examples
 **Records you can trust**
 - **History**: every save of every note is kept, including edits made in other apps, with who and when. View what changed, restore any version (as a normal, undoable edit).
 - **Signing**: sign an experiment, run or entry to lock it; a colleague can **witness** it; change it only through an **amendment** with a reason. The history is a hash chain, so altering a past version or signature is detected. Prem flags signed notes changed outside the app, even while it was closed.
+- **PDF export** (⌘P, or right-click a note or folder): the entry with its metadata, embedded images, every signature, witness and amendment, whether the history checks out, and a hash of the printed content. A folder exports as one PDF, one entry per page, for archiving a notebook.
 - Signatures record identity from your team-server login (or your computer's user locally). They are tamper-evident attestations, not cryptographic signatures yet, and Prem is not certified for 21 CFR Part 11.
 
 **Lab server**
 - Hosts one vault for the whole lab: a token per person, per-folder `none` / `read` / `write` permissions, live updates, and conflict protection when two people edit the same note.
+- **`init` sets up a lab in one step**: the vault, a notebook per person, and roles (PI, member, viewer) with sensible permissions, including whether notebooks are private. Add or remove people and replace lost tokens while it runs; changes apply without a restart.
 - A single Node file with no database. The vault stays a folder you can back up or keep in git.
-- See [docs/runbooks](docs/runbooks/Deploying%20Prem.md) for deploying, adding people, backups and troubleshooting, and [docs/examples](docs/examples/prem-server.example.json) for the config format.
+- Each release includes it as a Docker image (`ghcr.io/cameronjtoy/prem-server`) and as a single file for Node.js. [Running a lab server](docs/lab-server.md) covers setup, HTTPS with Tailscale or Caddy, permissions and backups.
+
+From source:
 
 ```bash
-npm run server:token -- alice      # create a token for a person or bot
+npm run server -- init             # set up a lab: prem-server.json, the vault and a token per person
 npm run server                     # build and start the server (reads prem-server.json)
+npm run server -- add carol        # add a person while it runs
 ```
 
 ## Roadmap
@@ -80,14 +92,18 @@ npm run server                     # build and start the server (reads prem-serv
 ```bash
 npm run dev            # run the app with hot reload
 npm test               # unit tests
+npm run e2e            # end-to-end tests of the built app (npm run build first)
 npm run lint           # oxlint
 npm run format         # prettier
 npm run typecheck      # main, preload, renderer and server
 npm run build          # production bundles into out/
 npm run server:build   # the team server as a single file, out/server/index.js
+npm run package        # installers for this computer, into dist/ (see electron-builder.yml)
+npm run package:dir    # an unpacked app in dist/, quicker for testing packaging
+npm run site           # the website (site/ and docs/) into _site/, with a link check
 ```
 
-Read [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for how the pieces fit: the storage seam that lets every feature work on a local folder and on the team server alike, how history and signing are stored, and where logic belongs. [CONTRIBUTING.md](CONTRIBUTING.md) covers setup and how changes are made; [SECURITY.md](SECURITY.md) explains how to report a vulnerability privately.
+Read [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for how the pieces fit: the storage seam that lets every feature work on a local folder and on the team server alike, how history and signing are stored, and where logic belongs. [CONTRIBUTING.md](CONTRIBUTING.md) covers setup and how changes are made; [SECURITY.md](SECURITY.md) explains how to report a vulnerability privately, and everyone taking part follows the [Code of Conduct](CODE_OF_CONDUCT.md). Notable changes are listed in [CHANGELOG.md](CHANGELOG.md).
 
 ### Troubleshooting
 If `npm run dev` fails with `Cannot read properties of undefined (reading 'whenReady')`, your shell has `ELECTRON_RUN_AS_NODE` set (some editors' terminals do this). Run `unset ELECTRON_RUN_AS_NODE` and try again.

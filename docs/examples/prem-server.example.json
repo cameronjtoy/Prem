@@ -2,21 +2,24 @@
   "vault": "/var/lib/prem/vault",
   "host": "127.0.0.1",
   "port": 4747,
+  "lab": { "shareNotebooks": true },
   "users": [
     {
+      "name": "Pat Lee",
+      "role": "pi",
+      "tokenHash": "sha256:replace-with-a-hash-from-prem-server-init-or-add",
+      "access": { "": "write", "Notebooks": "read", "Notebooks/Pat Lee": "write" }
+    },
+    {
       "name": "alice",
-      "tokenHash": "sha256:replace-with-the-hash-printed-by-npm-run-server-token",
-      "access": { "": "write" }
+      "role": "member",
+      "tokenHash": "sha256:replace-with-a-hash-from-prem-server-init-or-add",
+      "access": { "": "read", "Notebooks": "read", "Notebooks/alice": "write", "Samples": "write" }
     },
     {
-      "name": "finance-lead",
-      "tokenHash": "sha256:replace-with-the-hash-printed-by-npm-run-server-token",
-      "access": { "": "read", "Finance": "write" }
-    },
-    {
-      "name": "support-bot",
-      "tokenHash": "sha256:replace-with-the-hash-printed-by-npm-run-server-token",
-      "access": { "Runbooks": "read", "Reference": "read" }
+      "name": "plate-reader-bot",
+      "tokenHash": "sha256:replace-with-a-hash-from-prem-server-init-or-add",
+      "access": { "Instruments/Plate reader": "write" }
     }
   ]
 }

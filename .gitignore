@@ -8,3 +8,7 @@ coverage/
 prem-server.json
 # Note history kept by Prem inside the example vault
 examples/sample-vault/.prem/
+THIRD_PARTY_NOTICES.md
+_site/
+test-results
+playwright-report

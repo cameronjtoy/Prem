@@ -90,3 +90,10 @@ export const HistoryIcon = (p: IconProps) => (
     <path d="M3 3v5h5M12 7v5l3 2" />
   </svg>
 )
+
+export const ExportIcon = (p: IconProps) => (
+  <svg {...base(p)}>
+    <path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z" />
+    <path d="M14 3v6h6M12 11v7M9 15l3 3 3-3" />
+  </svg>
+)

@@ -17,7 +17,21 @@
     "unicorn/no-array-sort": "off",
     "unicorn/no-array-reverse": "off",
     "vitest/require-to-throw-message": "off",
-    "vitest/expect-expect": ["error", { "assertFunctionNames": ["expect", "expectCode"] }]
+    "vitest/expect-expect": [
+      "error",
+      {
+        "assertFunctionNames": ["expect", "expectCode"]
+      }
+    ]
   },
-  "ignorePatterns": ["out", "node_modules"]
+  "ignorePatterns": ["out", "node_modules"],
+  "overrides": [
+    {
+      "files": ["e2e/**"],
+      "rules": {
+        "no-empty-pattern": "off",
+        "react-hooks/rules-of-hooks": "off"
+      }
+    }
+  ]
 }

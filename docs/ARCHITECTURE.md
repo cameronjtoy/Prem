@@ -47,7 +47,13 @@ Every read returns a `version` (derived from mtime and size); every write may ca
 
 Saves, outside edits (from the watcher, or caught up before the next operation), renames, deletions, **signatures, witnesses and amendments** are all entries in this log. [`shared/records/signatures.ts`](../src/shared/records/signatures.ts) folds a log into a `RecordStatus` (draft / signed / witnessed / amended, locked or not); the provider refuses writes and deletes to locked notes unless the save carries an amendment reason.
 
+**PDF export** ([`src/main/export`](../src/main/export)) prints a note, or every note in a folder, from a self-contained HTML page: [`printable.ts`](../src/main/export/printable.ts) turns markdown, metadata, the signing events and the history check into HTML (pure, unit-tested), and [`pdf.ts`](../src/main/export/pdf.ts) embeds vault images and prints it in a hidden window with scripts off. Raw HTML in a note is printed as text and the page's content security policy blocks every network load.
+
 Signatures are **attestations tied to the authenticated user** (team-server token, or the OS user locally); they are tamper-evident but not cryptographic yet.
+
+## Renames and links
+
+[`shared/notes/relink.ts`](../src/shared/notes/relink.ts) is a pure function from a note's text to its text after a move: it resolves each wikilink against the vault as it was before (the same resolver the editor uses) and rewrites the ones that pointed at something that moved, and recomputes relative markdown links. `VaultManager.rename` runs it over every note after the provider moves the files, writing with the version it read so a concurrent edit isn't overwritten. Locked and read-only notes are reported, not changed, so a rename never alters a signed record or bypasses permissions. On a team vault this happens in the renaming person's app, through the same permission checks as any other save.
 
 ## Team server
 
@@ -57,6 +63,7 @@ Signatures are **attestations tied to the authenticated user** (team-server toke
 - **Permissions**: per-folder `none` / `read` / `write` rules ([`shared/vault/access.ts`](../src/shared/vault/access.ts)); the deepest matching rule wins; unmatched paths are invisible. Listings, reads, search results and live events are all filtered by them.
 - **Attribution**: the author of every save, signature and witness comes from the token, never from the request body.
 - **Change stream**: `GET /api/events` is server-sent events, filtered per user; a client's own saves are not echoed back to it.
+- **Administration**: [`cli.ts`](../src/server/cli.ts) is the command line (`init`, `add`, `remove`, `token`, `list`, and serving). [`lab.ts`](../src/server/lab.ts) holds the roles and the permissions each gets, and edits the config as plain JSON so unknown fields survive. The running server watches its config and calls `updateUsers`, which swaps the people in place and closes the live stream of anyone whose token or permissions changed, so their app reconnects under the new rules.
 
 The server bundles to a single file (`out/server/index.js`) with only Node built-ins, so deploying it is copying one file.
 

@@ -1,0 +1,60 @@
+name: Bug report
+description: Something in Prem doesn't work as it should
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report this. If the problem is a security risk (reading or changing data you shouldn't be able to, escaping a vault, or altering signed records), please don't file it here: see [SECURITY.md](https://github.com/cameronjtoy/Prem/blob/main/SECURITY.md).
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: What did you do, what did you expect, and what happened instead?
+      placeholder: I ticked a step in a run and ...
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open the sample vault
+        2. Open Protocols/Plasmid miniprep
+        3. Press Start run
+        4. ...
+    validations:
+      required: true
+  - type: dropdown
+    id: vault
+    attributes:
+      label: Vault type
+      options:
+        - Local folder
+        - Team server
+        - Both
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Prem version
+      description: The installer version, or the git commit if you run from source.
+      placeholder: 0.1.0
+    validations:
+      required: true
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating system
+      options:
+        - macOS
+        - Windows
+        - Linux
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs or screenshots
+      description: Anything from the developer console (View → Toggle Developer Tools) or the team server log. Please remove tokens and anything confidential from your notebook first.

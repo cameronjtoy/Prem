@@ -1,7 +1,7 @@
 import { mkdtemp, realpath, stat, writeFile } from 'node:fs/promises'
 import { tmpdir, userInfo } from 'node:os'
 import { join } from 'node:path'
-import { shell } from 'electron'
+import { app, shell } from 'electron'
 import {
   attachmentFileName,
   attachmentFolder,
@@ -14,6 +14,8 @@ import { VaultError } from '@shared/vault/errors'
 import type { HistoryEntry } from '@shared/records/history'
 import type { RecordCheck } from '@shared/records/signatures'
 import { LinkIndex } from '@shared/notes/linkIndex'
+import { movesFor, relink } from '@shared/notes/relink'
+import { createResolver } from '@shared/notes/resolve'
 import { dailyNotePath, parseDay } from '@shared/notes/notebook'
 import { basename, isMarkdown, isTemplate, joinPath, sanitizeFileName, TEMPLATES_FOLDER } from '@shared/vault/paths'
 import { SearchIndex, type SearchHit } from '@shared/search/search'
@@ -22,6 +24,7 @@ import type {
   AddedAttachment,
   CreatedNote,
   LinkIndexSnapshot,
+  RenameResult,
   TemplateInfo,
   VaultChange,
   VaultInfo,
@@ -29,6 +32,8 @@ import type {
   WriteOptions,
   WriteResult
 } from '@shared/vault/types'
+import { loadImages, loadPrintable, notesToPrint, printToPdf } from '../export/pdf'
+import { printableHtml, type PrintableNote } from '../export/printable'
 import { rememberServer, saveSettings } from '../settings'
 import { DAILY_TEMPLATE, DEFAULT_TEMPLATES } from './defaultTemplates'
 import { LocalFsProvider } from './LocalFsProvider'
@@ -128,8 +133,47 @@ export class VaultManager {
     return result
   }
 
-  rename(from: VaultPath, to: VaultPath): Promise<void> {
-    return this.current.rename(from, to, this.author)
+  /** Moves a note, attachment or folder, then rewrites links to whatever moved so they keep working. */
+  async rename(from: VaultPath, to: VaultPath): Promise<RenameResult> {
+    const provider = this.current
+    const filesBefore = (await provider.list()).filter((e) => e.kind === 'file').map((e) => e.path)
+    await provider.rename(from, to, this.author)
+    return this.relinkAfterMove(provider, movesFor(from, to, filesBefore), filesBefore)
+  }
+
+  private async relinkAfterMove(
+    provider: VaultProvider,
+    moves: Map<string, VaultPath>,
+    filesBefore: VaultPath[]
+  ): Promise<RenameResult> {
+    const result: RenameResult = { updated: [], locked: [], readOnly: [] }
+    if (!moves.size) return result
+    const filesAfter = filesBefore.map((p) => moves.get(p.toLowerCase()) ?? p)
+    const oldPathOf = new Map(filesBefore.map((p, i) => [filesAfter[i].toLowerCase(), p]))
+    const shared = {
+      moves,
+      before: createResolver(filesBefore),
+      after: createResolver(filesAfter),
+      existed: new Set(filesBefore.map((p) => p.toLowerCase()))
+    }
+    for (const note of await provider.readAllMarkdown()) {
+      const oldNotePath = oldPathOf.get(note.path.toLowerCase()) ?? note.path
+      const next = relink(note.content, { ...shared, oldNotePath, notePath: note.path })
+      if (next === note.content) continue
+      try {
+        await this.write(note.path, next, { expectedVersion: note.version })
+        result.updated.push(note.path)
+      } catch (err) {
+        if (err instanceof VaultError && err.code === 'LOCKED') result.locked.push(note.path)
+        else if (err instanceof VaultError && (err.code === 'FORBIDDEN' || err.code === 'CONFLICT'))
+          result.readOnly.push(note.path)
+        else throw err
+      }
+    }
+    // Prem's own writes don't come back through the watcher, so tell open editors about these.
+    if (result.updated.length)
+      this.events.onChanged(result.updated.map((path) => ({ type: 'modified', path, kind: 'file' })))
+    return result
   }
 
   remove(path: VaultPath): Promise<void> {
@@ -154,6 +198,28 @@ export class VaultManager {
 
   witness(path: VaultPath): Promise<RecordCheck> {
     return this.current.witness(path, this.author)
+  }
+
+  /**
+   * Prints a note, or every note in a folder, to a PDF with its metadata, signatures, witnesses,
+   * amendments and the result of checking its history. `file` is where to save it.
+   */
+  async exportPdf(path: VaultPath, file: string): Promise<{ notes: number }> {
+    const provider = this.current
+    const paths = await notesToPrint(provider, path)
+    const notes: PrintableNote[] = []
+    for (const p of paths) notes.push(await loadPrintable(provider, p))
+    const images = await loadImages(provider, notes)
+    const html = printableHtml(notes, {
+      vaultName: provider.name,
+      exportedBy: this.author,
+      exportedAt: new Date(),
+      appVersion: app.getVersion(),
+      embedImage: (p) => images.get(p) ?? null
+    })
+    const footer = notes.length === 1 ? notes[0].path : `${path || provider.name} · ${notes.length} entries`
+    await printToPdf(html, file, footer)
+    return { notes: notes.length }
   }
 
   async listTemplates(): Promise<TemplateInfo[]> {

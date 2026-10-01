@@ -7,6 +7,7 @@ import type {
   CreatedNote,
   FileRecord,
   LinkIndexSnapshot,
+  RenameResult,
   TemplateInfo,
   VaultChange,
   VaultEntry,
@@ -31,6 +32,7 @@ export const Channels = {
   recordStatus: 'record:status',
   sign: 'record:sign',
   witness: 'record:witness',
+  exportPdf: 'record:exportPdf',
   addAttachment: 'attachments:add',
   openFile: 'attachments:open',
   listTemplates: 'templates:list',
@@ -55,7 +57,8 @@ export interface Api {
     read(path: string): R<FileRecord>
     write(path: string, content: string, options?: WriteOptions): R<WriteResult>
     mkdir(path: string): R<void>
-    rename(from: string, to: string): R<void>
+    /** Moves a note, attachment or folder, and rewrites links to it in other notes. */
+    rename(from: string, to: string): R<RenameResult>
     remove(path: string): R<void>
     readBinary(path: string): R<Uint8Array>
     onChanged(listener: (changes: VaultChange[]) => void): () => void
@@ -73,6 +76,11 @@ export interface Api {
     status(path: string): R<RecordCheck>
     sign(path: string, statement?: string): R<RecordCheck>
     witness(path: string): R<RecordCheck>
+    /**
+     * Asks where to save, then prints a note or every note in a folder to PDF with its signatures and
+     * history check. Returns the saved file, or null if the person cancelled.
+     */
+    exportPdf(path: string): R<{ file: string; notes: number } | null>
   }
   templates: {
     list(): R<TemplateInfo[]>

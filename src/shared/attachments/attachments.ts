@@ -8,10 +8,11 @@ export const ATTACHMENTS_FOLDER = 'attachments'
 /** Largest attachment accepted, in bytes. Bigger files (raw instrument data) should stay on shared storage. */
 export const MAX_ATTACHMENT_BYTES = 100 * 1024 * 1024
 
-export type AttachmentKind = 'image' | 'table' | 'file'
+export type AttachmentKind = 'image' | 'table' | 'notebook' | 'file'
 
 const IMAGE = new Set(['png', 'jpg', 'jpeg', 'gif', 'webp', 'bmp', 'svg', 'avif'])
 const TABLE = new Set(['csv', 'tsv'])
+const NOTEBOOK = new Set(['ipynb'])
 
 /**
  * File types that are safe to hand to the operating system's default app. Anything else
@@ -21,6 +22,8 @@ const TABLE = new Set(['csv', 'tsv'])
 const SAFE_TO_OPEN = new Set([
   ...IMAGE,
   ...TABLE,
+  // Opening a notebook shows it; nothing runs until someone runs a cell.
+  ...NOTEBOOK,
   'tif',
   'tiff',
   'pdf',
@@ -78,6 +81,7 @@ export function extension(path: string): string {
 export function attachmentKind(path: string): AttachmentKind {
   const ext = extension(path)
   if (IMAGE.has(ext)) return 'image'
+  if (NOTEBOOK.has(ext)) return 'notebook'
   if (TABLE.has(ext)) return 'table'
   return 'file'
 }
