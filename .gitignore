@@ -10,3 +10,5 @@ prem-server.json
 examples/sample-vault/.prem/
 THIRD_PARTY_NOTICES.md
 _site/
+test-results
+playwright-report

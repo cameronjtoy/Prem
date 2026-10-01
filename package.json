@@ -22,9 +22,9 @@
     "dev": "electron-vite dev",
     "build": "electron-vite build",
     "preview": "electron-vite preview",
-    "typecheck": "tsc --noEmit -p tsconfig.node.json --composite false && tsc --noEmit -p tsconfig.web.json --composite false",
+    "typecheck": "tsc --noEmit -p tsconfig.node.json --composite false && tsc --noEmit -p tsconfig.web.json --composite false && tsc -p tsconfig.e2e.json",
     "test": "vitest run",
-    "lint": "oxlint src scripts build *.ts",
+    "lint": "oxlint src scripts build e2e *.ts",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "server:build": "vite build --config vite.server.config.ts",
@@ -32,7 +32,8 @@
     "notices": "node scripts/third-party-notices.mjs",
     "package": "npm run build && npm run notices && electron-builder",
     "package:dir": "npm run build && npm run notices && electron-builder --dir",
-    "site": "node scripts/build-site.mjs"
+    "site": "node scripts/build-site.mjs",
+    "e2e": "playwright test -c e2e/playwright.config.ts"
   },
   "devDependencies": {
     "@codemirror/autocomplete": "^6.20.3",
@@ -46,6 +47,7 @@
     "@lezer/common": "^1.5.3",
     "@lezer/highlight": "^1.2.4",
     "@lezer/markdown": "^1.7.2",
+    "@playwright/test": "^1.63.0",
     "@types/node": "^26.6.3",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",

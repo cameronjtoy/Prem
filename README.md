@@ -92,6 +92,7 @@ npm run server -- add carol        # add a person while it runs
 ```bash
 npm run dev            # run the app with hot reload
 npm test               # unit tests
+npm run e2e            # end-to-end tests of the built app (npm run build first)
 npm run lint           # oxlint
 npm run format         # prettier
 npm run typecheck      # main, preload, renderer and server
