@@ -26,7 +26,7 @@ npm run build
 npm run server:build
 ```
 
-Formatting is [Prettier](https://prettier.io) and linting is [oxlint](https://oxc.rs); both read their settings from the repo (`.prettierrc.json`, `.oxlintrc.json`), and `.editorconfig` keeps editors consistent. Most editors can format on save with the Prettier extension. Use the Node version in `.nvmrc` (`nvm use`).
+Formatting is [Prettier](https://prettier.io) and linting is [oxlint](https://oxc.rs); both read their settings from the repo (`.prettierrc.json`, `.oxlintrc.json`), and `.editorconfig` keeps editors consistent. Most editors can format on save with the Prettier extension. Use the Node version in `.nvmrc` (`nvm use`). Commits that only reformat code are listed in `.git-blame-ignore-revs`; run `git config blame.ignoreRevsFile .git-blame-ignore-revs` once so `git blame` skips them (GitHub does this automatically).
 
 We use oxlint rather than ESLint because the project is on TypeScript 7, which the ESLint TypeScript plugin doesn't support yet. A few React rules are turned off in `.oxlintrc.json` because they flag patterns this code uses on purpose, such as keeping the latest callback in a ref so the editor isn't recreated on every render; `react-hooks/exhaustive-deps` stays on.
 
