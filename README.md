@@ -52,7 +52,7 @@ Choose **Open a folder as a vault** and pick [`examples/sample-vault/`](examples
 - **Templates** for Experiment, Protocol, Sample, Lab meeting, Reference and Daily entry, with `{{title}}`, `{{date}}`, `{{time}}`, `{{author}}` and `{{cursor}}` placeholders. Add your own to the vault's `templates/` folder.
 - **Live-preview editor** (CodeMirror): markdown syntax hides except on the line you're editing. Equations with KaTeX, tables, checkboxes, syntax-highlighted code.
 - **Links** between notes with `[[Note]]`, autocomplete, backlinks and a graph view. A link to a note that doesn't exist yet creates it on click. Renaming or moving a note, attachment or folder updates the links to it everywhere; signed notes are left as signed, and Prem tells you which still use the old name.
-- **Attachments**: drop files or paste screenshots into an entry. Images and CSV/TSV preview inline; other files open in their default app (only known data formats are opened directly, so a stray script can't run by accident). Up to 100 MB per file.
+- **Attachments**: drop files or paste screenshots into an entry. Images and CSV/TSV preview inline, and **Jupyter notebooks (.ipynb)** show their markdown, code and saved outputs (tables, plots, errors) read-only, with nothing run; other files open in their default app (only known data formats are opened directly, so a stray script can't run by accident). Up to 100 MB per file.
 - **Search** (⌘K) across titles, folders and text, with quoted phrases; results open at the match.
 
 **Protocols and runs**

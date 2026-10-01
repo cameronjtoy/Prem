@@ -353,6 +353,197 @@
   cursor: default;
 }
 
+/* Jupyter notebook preview */
+
+.cm-attachment-notebook {
+  display: block;
+  margin: 8px 0;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+  cursor: default;
+  font-size: 0.92em;
+  white-space: normal;
+}
+
+.nb-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 10px;
+  background: var(--code-bg);
+  border-bottom: 1px solid var(--border);
+}
+
+.nb-title {
+  font-weight: 600;
+}
+
+.nb-meta {
+  flex: 1;
+  color: var(--text-muted);
+  font-size: 0.9em;
+}
+
+.nb-open {
+  padding: 2px 10px;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  background: var(--bg);
+  color: var(--text);
+  cursor: pointer;
+}
+
+.nb-open:hover {
+  border-color: var(--accent);
+}
+
+.nb-body {
+  max-height: 560px;
+  overflow: auto;
+  padding: 4px 12px 10px;
+  user-select: text;
+}
+
+.nb-cell {
+  margin: 8px 0;
+}
+
+.nb-markdown > :first-child {
+  margin-top: 0;
+}
+
+.nb-markdown img {
+  max-width: 100%;
+}
+
+.nb-input {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+}
+
+.nb-prompt {
+  flex: none;
+  width: 4.5em;
+  padding-top: 7px;
+  color: var(--accent);
+  font-family: var(--font-mono);
+  font-size: 0.85em;
+  text-align: right;
+}
+
+.nb-source,
+.nb-text,
+.nb-error pre {
+  margin: 0;
+  padding: 6px 8px;
+  font-family: var(--font-mono);
+  font-size: 0.88em;
+  line-height: 1.45;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.nb-source {
+  flex: 1;
+  min-width: 0;
+  background: var(--code-bg);
+  border-radius: 5px;
+}
+
+.nb-output {
+  display: block;
+  margin: 4px 0 4px calc(4.5em + 8px);
+  max-width: calc(100% - 4.5em - 8px);
+}
+
+.nb-stderr {
+  background: var(--warning-bg);
+  border-radius: 5px;
+}
+
+.nb-error {
+  padding: 6px 8px;
+  background: var(--error-bg);
+  border: 1px solid var(--error-border);
+  border-radius: 5px;
+  color: var(--danger);
+}
+
+.nb-image {
+  max-height: 420px;
+  background: #fff;
+  border-radius: 4px;
+}
+
+.nb-html {
+  overflow-x: auto;
+}
+
+.nb-html table {
+  border-collapse: collapse;
+  font-family: var(--font-mono);
+  font-size: 0.85em;
+}
+
+.nb-html th,
+.nb-html td {
+  padding: 2px 8px;
+  border: 1px solid var(--border);
+  text-align: right;
+  white-space: nowrap;
+}
+
+.nb-html th {
+  background: var(--code-bg);
+}
+
+.nb-blocked {
+  color: var(--text-muted);
+  font-style: italic;
+  font-size: 0.9em;
+}
+
+.nb-unsupported {
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.nb-source .tok-keyword {
+  color: var(--syn-keyword);
+}
+
+.nb-source .tok-string,
+.nb-source .tok-string2 {
+  color: var(--syn-string);
+}
+
+.nb-source .tok-comment {
+  color: var(--syn-comment);
+  font-style: italic;
+}
+
+.nb-source .tok-number,
+.nb-source .tok-bool,
+.nb-source .tok-atom {
+  color: var(--syn-number);
+}
+
+.nb-source .tok-variableName.tok-definition,
+.nb-source .tok-propertyName.tok-definition {
+  color: var(--syn-function);
+}
+
+.nb-source .tok-typeName,
+.nb-source .tok-className {
+  color: var(--syn-type);
+}
+
+.nb-source .tok-propertyName {
+  color: var(--syn-property);
+}
+
 .cm-attachment-source {
   color: var(--text-muted);
 }

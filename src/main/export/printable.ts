@@ -8,6 +8,7 @@ import katex from 'katex'
 import { Marked, type Tokens } from 'marked'
 import { attachmentKind, resolveAttachment } from '@shared/attachments/attachments'
 import { parseFrontmatter } from '@shared/notes/frontmatter'
+import { mathExtensions } from '@shared/notes/markedMath'
 import { splitLinkText } from '@shared/notes/wikilinks'
 import type { HistoryEntry } from '@shared/records/history'
 import type { RecordCheck } from '@shared/records/signatures'
@@ -66,28 +67,7 @@ function markdownRenderer(note: PrintableNote, options: PrintOptions): Marked {
   return new Marked({
     gfm: true,
     extensions: [
-      {
-        name: 'blockMath',
-        level: 'block',
-        start: (src) => src.match(/^\$\$/m)?.index,
-        tokenizer(src) {
-          const m = /^\$\$([\s\S]+?)\$\$[ \t]*(?:\n|$)/.exec(src)
-          if (m) return { type: 'blockMath', raw: m[0], text: m[1].trim() }
-          return undefined
-        },
-        renderer: (token) => `<div class="math">${renderMath(token.text as string, true)}</div>\n`
-      },
-      {
-        name: 'inlineMath',
-        level: 'inline',
-        start: (src) => src.indexOf('$'),
-        tokenizer(src) {
-          const m = /^\$(?!\s)((?:\\.|[^$\\\n])+?)(?<!\s)\$(?!\d)/.exec(src)
-          if (m) return { type: 'inlineMath', raw: m[0], text: m[1] }
-          return undefined
-        },
-        renderer: (token) => renderMath(token.text as string, false)
-      },
+      ...mathExtensions(renderMath),
       {
         name: 'wikilink',
         level: 'inline',
@@ -111,7 +91,11 @@ function markdownRenderer(note: PrintableNote, options: PrintOptions): Marked {
       checkbox: ({ checked }: Tokens.Checkbox) => `<span class="box">${checked ? '☑' : '☐'}</span> `,
       image({ href, text }: Tokens.Image) {
         const path = resolveAttachment(note.path, href)
-        const data = path && attachmentKind(path) === 'image' ? options.embedImage(path) : null
+        if (path && attachmentKind(path) !== 'image') {
+          // A notebook or table preview in the app prints as a reference to the attached file.
+          return `<span class="attachment">${escapeHtml(path.slice(path.lastIndexOf('/') + 1))}</span> <span class="ref">(attached: ${escapeHtml(path)})</span>`
+        }
+        const data = path ? options.embedImage(path) : null
         if (data) {
           return `<figure><img src="${data}" alt="${escapeHtml(text)}" /><figcaption>${escapeHtml(path ?? '')}</figcaption></figure>`
         }
