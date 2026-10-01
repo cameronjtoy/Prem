@@ -4,7 +4,7 @@ All notable changes to Prem are listed here. The format follows [Keep a Changelo
 
 ## [Unreleased]
 
-Everything below will ship as **0.1.0**, the first pilot release, together with a guided lab-server setup.
+Everything below will ship as **0.1.0**, the first pilot release.
 
 ### Added
 - **Notebook**: daily entries (⌘T) filed by year; templates for Experiment, Protocol, Sample, Lab meeting, Reference and Daily entry, with `{{title}}`, `{{date}}`, `{{time}}`, `{{author}}` and `{{cursor}}`.
@@ -15,6 +15,7 @@ Everything below will ship as **0.1.0**, the first pilot release, together with 
 - **History**: every save kept, including edits made outside Prem, in a hash-chained log per note. View, diff and restore versions.
 - **Signing**: sign, witness, lock and amend records. Signed notes changed outside Prem are flagged.
 - **PDF export** (⌘P, or right-click a note or folder): metadata as a table, images embedded, equations, and a record block listing every signature, witness and amendment, the history check and a SHA-256 of the printed content. Nothing in a note can run or load from the network while it prints.
+- **Lab server setup**: `prem-server init` creates the vault, a notebook per person and a token for each, with PI, member and viewer roles and private or shared notebooks. `add`, `remove`, `token` and `list` manage people; changes to the config apply without a restart, and anyone whose access changed is reconnected with the new rules. A broken config is reported and the previous one kept. `docs/lab-server.md` covers setup, HTTPS with Tailscale or Caddy, and backups.
 - **Team server**: one vault for a lab, with a token per person, per-folder `none`/`read`/`write` permissions, live updates and conflict protection. Notes you can't edit open read-only.
 - **Installers**: macOS (`.dmg`, Apple silicon and Intel), Windows (`.exe`) and Linux (AppImage and `.deb`), built for each tagged release with checksums. Not signed yet; see `docs/install.md`.
 - **Server packages**: the team server as a Docker image on GitHub Container Registry and as a single file for Node.js.

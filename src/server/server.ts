@@ -9,7 +9,7 @@ import { CLIENT_HEADER, Routes, STATUS_BY_CODE, type ServerInfo } from '@shared/
 import type { VaultChange, VaultPath, WriteOptions } from '@shared/vault/types'
 import { DEFAULT_TEMPLATES } from '../main/vault/defaultTemplates'
 import { LocalFsProvider } from '../main/vault/LocalFsProvider'
-import { UserDirectory, type ServerConfig, type User } from './config'
+import { UserDirectory, type ServerConfig, type User, type UserConfig } from './config'
 
 const MAX_BODY_BYTES = 20 * 1024 * 1024
 const HEARTBEAT_MS = 25_000
@@ -21,6 +21,11 @@ export interface Logger {
 
 export interface PremServer {
   url: string
+  /**
+   * Replaces the people on the server and their permissions without a restart. Live connections of anyone
+   * removed, given a new token or given different permissions are closed; the app reconnects with the new rules.
+   */
+  updateUsers(users: UserConfig[]): void
   close(): Promise<void>
 }
 
@@ -111,7 +116,7 @@ export async function startServer(config: ServerConfig, log: Logger = console): 
     }
   }
 
-  const users = new UserDirectory(config.users)
+  let users = new UserDirectory(config.users)
   const clients = new Set<EventClient>()
   const locks = new KeyedLock()
 
@@ -315,6 +320,14 @@ export async function startServer(config: ServerConfig, log: Logger = console): 
 
   return {
     url: `http://${host}:${port}`,
+    updateUsers: (next) => {
+      users = new UserDirectory(next)
+      for (const client of clients) {
+        if (users.stillValid(client.user)) continue
+        client.res.end()
+        clients.delete(client)
+      }
+    },
     close: async () => {
       unwatch()
       clearInterval(heartbeat)

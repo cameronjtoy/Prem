@@ -72,41 +72,13 @@ Prem doesn't update itself yet. Download the new version from the releases page 
 
 ## The lab server
 
-To share one notebook across a lab, someone runs the Prem server on a machine everyone can reach. Each release includes it in two forms.
-
-**Docker** (recommended): the image is `ghcr.io/cameronjtoy/prem-server`. Make a folder for its data, such as `/srv/prem`, owned by user ID 1000 (the image runs as the unprivileged `node` user):
+To share one notebook across a lab, someone runs the Prem server on a machine everyone can reach. Each release includes it as a Docker image, `ghcr.io/cameronjtoy/prem-server`, and as a single file for Node.js 20 or later, `prem-server-<version>.js`. Setting up a lab takes one command:
 
 ```bash
-sudo mkdir -p /srv/prem/vault && sudo chown -R 1000:1000 /srv/prem
-
-# Create a token for each person. Give them the token; put the printed entry in the config.
-docker run --rm ghcr.io/cameronjtoy/prem-server token alice
+docker run --rm -it -v /srv/prem:/data ghcr.io/cameronjtoy/prem-server \
+  init --config /data/prem-server.json --vault /data/vault --host 0.0.0.0
 ```
 
-Write `/srv/prem/prem-server.json`. Inside the container the vault is `/data/vault`, and the server must listen on `0.0.0.0`:
+It asks who is in the lab and prints a token for each person. [Running a lab server](lab-server.md) covers the rest: starting it, HTTPS, adding people, permissions and backups.
 
-```json
-{
-  "vault": "/data/vault",
-  "host": "0.0.0.0",
-  "port": 4747,
-  "users": [
-    { "name": "alice", "tokenHash": "sha256:…", "access": { "": "write" } }
-  ]
-}
-```
-
-Then start it:
-
-```bash
-docker run -d --name prem --restart unless-stopped -p 4747:4747 -v /srv/prem:/data ghcr.io/cameronjtoy/prem-server
-```
-
-**Single file**: `prem-server-<version>.js` needs only Node.js 20 or later:
-
-```bash
-node prem-server-v0.1.0.js token alice
-node prem-server-v0.1.0.js --config prem-server.json
-```
-
-The server speaks plain HTTP. Put it behind HTTPS before people connect over a network you don't control; [docs/runbooks](runbooks/Deploying%20Prem.md) covers that, along with backups and adding people. In Prem, each person enters the server address and their token under **Or join your lab's shared vault** and chooses **Connect**.
+In Prem, each person enters the server address and their token under **Or join your lab's shared vault** and chooses **Connect**.

@@ -24,6 +24,13 @@ const DOCS = [
     description: 'Installing Prem on macOS, Windows and Linux, and running the lab server with Docker or Node.js.'
   },
   {
+    source: 'docs/lab-server.md',
+    page: 'docs/lab-server.html',
+    title: 'Running a lab server',
+    description:
+      'Setting up the Prem server for a lab: people and permissions, HTTPS with Tailscale or Caddy, and backups.'
+  },
+  {
     source: 'docs/ARCHITECTURE.md',
     page: 'docs/architecture.html',
     title: 'Architecture',
@@ -128,7 +135,6 @@ const docsIndex = `<section class="wrap page">
 <h1>Documentation</h1>
 <ul class="doc-list">
 ${DOCS.map((d) => `<li><a href="${path.posix.relative('docs', d.page)}">${escapeHtml(d.title)}</a><p>${escapeHtml(d.description)}</p></li>`).join('\n')}
-<li><a href="${REPO_URL}/tree/main/docs/runbooks">Lab server runbooks</a><p>Deploying the server behind HTTPS, adding people, backups and troubleshooting.</p></li>
 <li><a href="${REPO_URL}/blob/main/CONTRIBUTING.md">Contributing</a><p>Setting up a development copy, the checks a pull request needs, and how releases are made.</p></li>
 </ul>
 </section>`

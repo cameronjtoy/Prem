@@ -67,14 +67,16 @@ Choose **Open a folder as a vault** and pick [`examples/sample-vault/`](examples
 
 **Lab server**
 - Hosts one vault for the whole lab: a token per person, per-folder `none` / `read` / `write` permissions, live updates, and conflict protection when two people edit the same note.
+- **`init` sets up a lab in one step**: the vault, a notebook per person, and roles (PI, member, viewer) with sensible permissions, including whether notebooks are private. Add or remove people and replace lost tokens while it runs; changes apply without a restart.
 - A single Node file with no database. The vault stays a folder you can back up or keep in git.
-- See [docs/runbooks](docs/runbooks/Deploying%20Prem.md) for deploying, adding people, backups and troubleshooting, and [docs/examples](docs/examples/prem-server.example.json) for the config format.
+- Each release includes it as a Docker image (`ghcr.io/cameronjtoy/prem-server`) and as a single file for Node.js. [Running a lab server](docs/lab-server.md) covers setup, HTTPS with Tailscale or Caddy, permissions and backups.
 
-Each release includes the server as a Docker image (`ghcr.io/cameronjtoy/prem-server`) and as a single JavaScript file for Node.js; see [the install guide](docs/install.md#the-lab-server). From source:
+From source:
 
 ```bash
-npm run server:token -- alice      # create a token for a person or bot
+npm run server -- init             # set up a lab: prem-server.json, the vault and a token per person
 npm run server                     # build and start the server (reads prem-server.json)
+npm run server -- add carol        # add a person while it runs
 ```
 
 ## Roadmap

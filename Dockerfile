@@ -1,9 +1,10 @@
 # The Prem team server as a container image.
 #
-#   docker run -d -p 4747:4747 -v /srv/prem:/data ghcr.io/cameronjtoy/prem-server
+#   docker run --rm -it -v /srv/prem:/data ghcr.io/cameronjtoy/prem-server \
+#     init --config /data/prem-server.json --vault /data/vault --host 0.0.0.0
+#   docker run -d -p 127.0.0.1:4747:4747 -v /srv/prem:/data ghcr.io/cameronjtoy/prem-server
 #
-# /data must hold prem-server.json (with "host": "0.0.0.0" and "vault": "/data/vault") and the vault.
-# Create a token with: docker run --rm ghcr.io/cameronjtoy/prem-server token <name>
+# /data holds prem-server.json and the vault, and must be writable by user ID 1000. See docs/lab-server.md.
 
 FROM node:22-alpine AS build
 WORKDIR /src
