@@ -75,6 +75,7 @@ test('a member writes in their own notebook and cannot see private ones', async 
 
   await alice.page.keyboard.press('ControlOrMeta+t')
   await expect(alice.page.locator('.breadcrumb')).toHaveAttribute('title', /^Notebooks\/alice\/\d{4}\//)
+  await expect(alice.page.locator('.cm-content')).toBeFocused()
   await alice.page.keyboard.type('Transformed DH5α with pUC19-gfp.')
   await savedStatus(alice.page)
   await alice.close()
