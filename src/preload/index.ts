@@ -32,7 +32,8 @@ const api: Api = {
   record: {
     status: (path) => ipcRenderer.invoke(Channels.recordStatus, path),
     sign: (path, statement) => ipcRenderer.invoke(Channels.sign, path, statement),
-    witness: (path) => ipcRenderer.invoke(Channels.witness, path)
+    witness: (path) => ipcRenderer.invoke(Channels.witness, path),
+    exportPdf: (path) => ipcRenderer.invoke(Channels.exportPdf, path)
   },
   templates: {
     list: () => ipcRenderer.invoke(Channels.listTemplates),

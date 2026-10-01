@@ -31,6 +31,7 @@ export const Channels = {
   recordStatus: 'record:status',
   sign: 'record:sign',
   witness: 'record:witness',
+  exportPdf: 'record:exportPdf',
   addAttachment: 'attachments:add',
   openFile: 'attachments:open',
   listTemplates: 'templates:list',
@@ -73,6 +74,11 @@ export interface Api {
     status(path: string): R<RecordCheck>
     sign(path: string, statement?: string): R<RecordCheck>
     witness(path: string): R<RecordCheck>
+    /**
+     * Asks where to save, then prints a note or every note in a folder to PDF with its signatures and
+     * history check. Returns the saved file, or null if the person cancelled.
+     */
+    exportPdf(path: string): R<{ file: string; notes: number } | null>
   }
   templates: {
     list(): R<TemplateInfo[]>

@@ -260,6 +260,11 @@ button {
   border-color: var(--error-border);
 }
 
+.banner.info {
+  background: var(--accent-soft);
+  border-color: var(--accent-soft);
+}
+
 .banner button {
   padding: 3px 10px;
   border: 1px solid var(--border);

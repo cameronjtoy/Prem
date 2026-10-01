@@ -47,6 +47,8 @@ Every read returns a `version` (derived from mtime and size); every write may ca
 
 Saves, outside edits (from the watcher, or caught up before the next operation), renames, deletions, **signatures, witnesses and amendments** are all entries in this log. [`shared/records/signatures.ts`](../src/shared/records/signatures.ts) folds a log into a `RecordStatus` (draft / signed / witnessed / amended, locked or not); the provider refuses writes and deletes to locked notes unless the save carries an amendment reason.
 
+**PDF export** ([`src/main/export`](../src/main/export)) prints a note, or every note in a folder, from a self-contained HTML page: [`printable.ts`](../src/main/export/printable.ts) turns markdown, metadata, the signing events and the history check into HTML (pure, unit-tested), and [`pdf.ts`](../src/main/export/pdf.ts) embeds vault images and prints it in a hidden window with scripts off. Raw HTML in a note is printed as text and the page's content security policy blocks every network load.
+
 Signatures are **attestations tied to the authenticated user** (team-server token, or the OS user locally); they are tamper-evident but not cryptographic yet.
 
 ## Team server

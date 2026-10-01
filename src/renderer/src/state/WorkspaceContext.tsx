@@ -28,6 +28,8 @@ interface WorkspaceState {
   renamingPath: VaultPath | null
   templatePickerFolder: VaultPath | null
   notice: string | null
+  /** Errors and refusals are 'error'; confirmations such as a finished export are 'info'. */
+  noticeKind: 'error' | 'info'
   setView(view: MainView): void
   openNote(path: VaultPath, cursor?: number | null): void
   openLink(target: string, fromPath?: VaultPath): Promise<void>
@@ -41,6 +43,8 @@ interface WorkspaceState {
   startRename(path: VaultPath | null): void
   rename(path: VaultPath, newName: string): Promise<void>
   remove(path: VaultPath): Promise<void>
+  /** Saves a note, or every note in a folder, as a PDF with its signatures and history check. */
+  exportPdf(path: VaultPath): Promise<void>
   showTemplatePicker(folder: VaultPath | null): void
   showNotice(message: string | null): void
   registerEditor(handle: EditorHandle | null): void
@@ -64,7 +68,12 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
   const [view, setView] = useState<MainView>('editor')
   const [renamingPath, setRenamingPath] = useState<VaultPath | null>(null)
   const [templatePickerFolder, setTemplatePickerFolder] = useState<VaultPath | null>(null)
-  const [notice, setNotice] = useState<string | null>(null)
+  const [notice, setNoticeText] = useState<string | null>(null)
+  const [noticeKind, setNoticeKind] = useState<'error' | 'info'>('error')
+  const setNotice = useCallback((message: string | null, kind: 'error' | 'info' = 'error') => {
+    setNoticeText(message)
+    setNoticeKind(kind)
+  }, [])
   const editor = useRef<EditorHandle | null>(null)
   const activeRef = useRef(active)
   activeRef.current = active
@@ -88,7 +97,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
     [subscribe]
   )
 
-  const fail = useCallback((err: unknown) => setNotice(errorMessage(err)), [])
+  const fail = useCallback((err: unknown) => setNotice(errorMessage(err)), [setNotice])
 
   const openNote = useCallback(
     (path: VaultPath, cursor: number | null = null) => {
@@ -158,7 +167,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
       if (!canWrite(folder)) return setNotice(`"${target}" isn't a note you have access to.`)
       await createFromTemplate('', basename(target), folder)
     },
-    [resolver, openNote, createFromTemplate, canWrite]
+    [resolver, openNote, createFromTemplate, canWrite, setNotice]
   )
 
   const createNote = useCallback(
@@ -230,6 +239,24 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
     [refresh, fail]
   )
 
+  const exportPdf = useCallback(
+    async (path: VaultPath) => {
+      try {
+        // Print what's on screen, not what was last saved.
+        const current = activeRef.current
+        if (current && isInside(current.path, path)) await editor.current?.flush()
+        const saved = await vaultClient.exportPdf(path)
+        if (saved) {
+          const what = saved.notes === 1 ? 'Exported' : `Exported ${saved.notes} entries`
+          setNotice(`${what} to ${saved.file}`, 'info')
+        }
+      } catch (err) {
+        fail(err)
+      }
+    },
+    [fail, setNotice]
+  )
+
   const registerEditor = useCallback((handle: EditorHandle | null) => {
     editor.current = handle
   }, [])
@@ -243,6 +270,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
       renamingPath,
       templatePickerFolder,
       notice,
+      noticeKind,
       setView,
       openNote,
       openLink,
@@ -254,8 +282,9 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
       startRename: setRenamingPath,
       rename,
       remove,
+      exportPdf,
       showTemplatePicker: setTemplatePickerFolder,
-      showNotice: setNotice,
+      showNotice: (message: string | null) => setNotice(message),
       registerEditor,
       currentFolder
     }),
@@ -265,6 +294,8 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
       renamingPath,
       templatePickerFolder,
       notice,
+      noticeKind,
+      setNotice,
       openNote,
       openLink,
       createNote,
@@ -274,6 +305,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
       startRun,
       rename,
       remove,
+      exportPdf,
       registerEditor,
       currentFolder
     ]

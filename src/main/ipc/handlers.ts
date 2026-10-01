@@ -1,6 +1,16 @@
-import { dialog, ipcMain, shell, type BrowserWindow, type OpenDialogOptions } from 'electron'
+import { join } from 'node:path'
+import {
+  app,
+  dialog,
+  ipcMain,
+  shell,
+  type BrowserWindow,
+  type OpenDialogOptions,
+  type SaveDialogOptions
+} from 'electron'
 import { VaultError, type IpcResult } from '@shared/vault/errors'
 import { Channels } from '@shared/vault/ipc'
+import { basename, sanitizeFileName, stripMd } from '@shared/vault/paths'
 import type { WriteOptions } from '@shared/vault/types'
 import { loadSettings, recallToken } from '../settings'
 import type { VaultManager } from '../vault/VaultManager'
@@ -78,6 +88,21 @@ export function registerIpc(vaults: VaultManager, getWindow: () => BrowserWindow
     vaults.sign(str(path, 'path'), statement === undefined ? undefined : str(statement, 'statement'))
   )
   handle(Channels.witness, (path) => vaults.witness(str(path, 'path')))
+  handle(Channels.exportPdf, async (rawPath) => {
+    const path = str(rawPath, 'path')
+    const name = sanitizeFileName(stripMd(basename(path)) || vaults.current.name) || 'Prem export'
+    const options: SaveDialogOptions = {
+      title: 'Export as PDF',
+      defaultPath: join(app.getPath('documents'), `${name}.pdf`),
+      filters: [{ name: 'PDF', extensions: ['pdf'] }]
+    }
+    const win = getWindow()
+    const result = win ? await dialog.showSaveDialog(win, options) : await dialog.showSaveDialog(options)
+    if (result.canceled || !result.filePath) return null
+    const file = /\.pdf$/i.test(result.filePath) ? result.filePath : `${result.filePath}.pdf`
+    const { notes } = await vaults.exportPdf(path, file)
+    return { file, notes }
+  })
 
   handle(Channels.readBinary, (path) => vaults.readBinary(str(path, 'path')))
   handle(Channels.addAttachment, (notePath, fileName, data) => {

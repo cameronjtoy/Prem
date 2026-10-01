@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type MouseEvent } from 'react'
-import { dirname } from '@shared/vault/paths'
+import { dirname, isMarkdown } from '@shared/vault/paths'
 import { useVault } from '../../state/VaultContext'
 import { useWorkspace } from '../../state/WorkspaceContext'
 import { ContextMenu, type MenuItem, type MenuState } from '../ContextMenu'
@@ -67,6 +67,10 @@ export function FileTree() {
     }
     if (node) {
       if (node.kind === 'folder') setExpanded((prev) => new Set(prev).add(node.path))
+      if (node.kind === 'folder' || isMarkdown(node.path)) {
+        if (items.length) items.push('separator')
+        items.push({ label: 'Export as PDF…', onSelect: () => void ws.exportPdf(node.path) })
+      }
       if (canWrite(node.path)) {
         if (items.length) items.push('separator')
         items.push(

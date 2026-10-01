@@ -42,6 +42,7 @@ Choose **Open a folder as a vault** and pick [`examples/sample-vault/`](examples
 | ⌘N / ⌘⇧N | New note / new note from template |
 | ⌘G | Graph of how notes link |
 | ⌘S | Save now (notes also autosave) |
+| ⌘P | Export the open note as a PDF |
 | ⌘O | Open another vault |
 
 ## Features
@@ -61,6 +62,7 @@ Choose **Open a folder as a vault** and pick [`examples/sample-vault/`](examples
 **Records you can trust**
 - **History**: every save of every note is kept, including edits made in other apps, with who and when. View what changed, restore any version (as a normal, undoable edit).
 - **Signing**: sign an experiment, run or entry to lock it; a colleague can **witness** it; change it only through an **amendment** with a reason. The history is a hash chain, so altering a past version or signature is detected. Prem flags signed notes changed outside the app, even while it was closed.
+- **PDF export** (⌘P, or right-click a note or folder): the entry with its metadata, embedded images, every signature, witness and amendment, whether the history checks out, and a hash of the printed content. A folder exports as one PDF, one entry per page, for archiving a notebook.
 - Signatures record identity from your team-server login (or your computer's user locally). They are tamper-evident attestations, not cryptographic signatures yet, and Prem is not certified for 21 CFR Part 11.
 
 **Lab server**
