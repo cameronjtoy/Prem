@@ -13,10 +13,16 @@ permissions:
 jobs:
   analyze:
     name: Analyze (JavaScript and TypeScript)
+    # Code scanning results can only be uploaded for public repositories (or private ones with GitHub Code
+    # Security). Pull requests and pushes scan once the repository is public; the weekly scan, whose event
+    # doesn't say whether the repository is public, runs once the CODE_SCANNING variable is set to "true".
+    if: ${{ github.event.repository.private == false || vars.CODE_SCANNING == 'true' }}
     runs-on: ubuntu-latest
     timeout-minutes: 20
     permissions:
       contents: read
+      # Lets CodeQL read this workflow run's details, which it needs before uploading.
+      actions: read
       security-events: write
     steps:
       - uses: actions/checkout@v4
