@@ -21,6 +21,8 @@ test('creates an entry from a template and saves it to disk', async ({ prem: { p
   await page.locator('.template-list li', { hasText: 'Experiment' }).click()
   await expect(page.locator('.breadcrumb')).toHaveAttribute('title', /PCR check\.md$/)
   const notePath = (await page.locator('.breadcrumb').getAttribute('title'))!
+  // A new note focuses its editor once it has loaded; typing before then would go nowhere.
+  await expect(page.locator('.cm-content')).toBeFocused()
   await page.keyboard.type('Band at 1.2 kb in lanes 2 to 4.')
   await savedStatus(page)
   const text = await read(notePath)
