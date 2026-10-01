@@ -139,27 +139,42 @@ function Shell() {
 
 function EmptyState() {
   const ws = useWorkspace()
-  const { canWrite } = useVault()
-  if (!canWrite('')) {
+  const { info, canWrite } = useVault()
+  const notebook = notebookFolder(info?.user)
+  const canKeepNotebook = canWrite(notebook)
+  const canWriteProtocols = canWrite('Protocols')
+  if (!canKeepNotebook && !canWriteProtocols) {
     return (
       <div className="empty-state">
         <p>No note open.</p>
-        <p className="hint">Pick a note from the list on the left. ⌘G shows the graph.</p>
+        <p className="hint">Pick a note from the list on the left. ⌘K searches everything you can read.</p>
       </div>
     )
   }
   return (
     <div className="empty-state">
-      <p>No note open.</p>
+      <p className="empty-title">What are you working on?</p>
       <div className="empty-actions">
-        <button className="primary-button" onClick={() => void ws.createNote('')}>
-          New note
-        </button>
-        <button className="text-button" onClick={() => ws.showTemplatePicker('')}>
-          New from template
-        </button>
+        {canKeepNotebook && (
+          <button className="primary-button" onClick={() => void ws.openToday()}>
+            Today&apos;s entry <kbd>⌘T</kbd>
+          </button>
+        )}
+        {canKeepNotebook && (
+          <button className="text-button" onClick={() => ws.showTemplatePicker(notebook)}>
+            New experiment or note
+          </button>
+        )}
+        {canWriteProtocols && (
+          <button className="text-button" onClick={() => ws.showTemplatePicker('Protocols')}>
+            Write a protocol
+          </button>
+        )}
       </div>
-      <p className="hint">⌘K search · ⌘T today · ⌘N new note · ⌘⇧N from template · ⌘G graph · ⌘S save</p>
+      <p className="hint">
+        Open a protocol and choose Start run to record a run step by step. ⌘K searches everything; ⌘G shows how notes
+        link.
+      </p>
     </div>
   )
 }

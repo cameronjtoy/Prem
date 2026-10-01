@@ -99,11 +99,20 @@ test('previews an attached Jupyter notebook without running it', async ({ prem: 
     .toEqual([expect.stringMatching(/Growth curve analysis\.ipynb$/)])
 })
 
-test('keeps a new vault usable from an empty folder', async () => {
+test('offers a starting point in a new, empty vault', async () => {
   const vault = await tempDir('empty')
   const { app, page } = await launch({ vault })
   await expect(page.locator('.file-tree [title="templates"]')).toBeVisible()
-  await page.keyboard.press('ControlOrMeta+n')
-  await expect(page.locator('.file-tree input')).toBeVisible()
+  await expect(page.locator('.empty-state')).toContainText('What are you working on?')
+  await expect(page.getByRole('button', { name: 'Write a protocol' })).toBeVisible()
+  await page.getByRole('button', { name: /Today's entry/ }).click()
+  await expect(page.locator('.breadcrumb')).toHaveAttribute('title', /^Notebook\/\d{4}\/\d{4}-\d\d-\d\d\.md$/)
   await app.close()
+})
+
+test('shows backlinks as readable text', async ({ prem: { page } }) => {
+  await openNote(page, 'Notebook/2026/Ligation of insert into pUC19.md')
+  const welcome = page.locator('.side-panel .snippet').filter({ hasText: 'Notebook:' })
+  await expect(welcome.first()).toBeVisible()
+  await expect(page.locator('.side-panel .snippet').filter({ hasText: '**' })).toHaveCount(0)
 })

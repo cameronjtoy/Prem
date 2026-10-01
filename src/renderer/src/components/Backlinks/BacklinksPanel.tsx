@@ -1,14 +1,21 @@
 import { useMemo } from 'react'
+import { plainSnippet } from '@shared/notes/snippet'
+import { splitLinkText } from '@shared/notes/wikilinks'
 import { noteTitle } from '@shared/vault/paths'
 import { useLinkIndex } from '../../state/LinkIndexContext'
 import { useWorkspace } from '../../state/WorkspaceContext'
 
+function linkLabel(inner: string): string {
+  const { target, alias } = splitLinkText(inner)
+  return alias ?? target
+}
+
 function Snippet({ text }: { text: string }) {
-  const parts = text.split(/(\[\[[^[\]\n]+\]\])/)
+  const parts = plainSnippet(text).split(/(\[\[[^[\]\n]+\]\])/)
   return (
     <p className="snippet">
       {parts.map((part, i) =>
-        part.startsWith('[[') ? <mark key={i}>{part.slice(2, -2).split('|').pop()}</mark> : <span key={i}>{part}</span>
+        part.startsWith('[[') ? <mark key={i}>{linkLabel(part.slice(2, -2))}</mark> : <span key={i}>{part}</span>
       )}
     </p>
   )
