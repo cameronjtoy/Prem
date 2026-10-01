@@ -53,7 +53,7 @@
     "@types/node": "^26.6.3",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
-    "@vitejs/plugin-react": "^6.1.1",
+    "@vitejs/plugin-react": "^5.2.0",
     "chokidar": "^5.0.0",
     "dompurify": "^3.4.16",
     "electron": "^44.4.5",
@@ -68,7 +68,7 @@
     "react-force-graph-2d": "^1.29.1",
     "react-resizable-panels": "^4.14.1",
     "typescript": "^7.0.2",
-    "vite": "^8.3.1",
+    "vite": "^7.3.6",
     "vitest": "^5.0.2"
   }
 }
