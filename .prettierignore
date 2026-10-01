@@ -5,3 +5,4 @@ package-lock.json
 *.md
 examples
 docs/runbooks
+dist

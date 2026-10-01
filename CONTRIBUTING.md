@@ -52,6 +52,16 @@ Lab notebooks hold research data. Changes that touch storage, the team server, p
 
 If you're unsure, ask in the pull request.
 
+## Making a release
+Maintainers release from `main`:
+
+1. Set `version` in `package.json` and rename the `[Unreleased]` heading in `CHANGELOG.md` to `[x.y.z] - <date>`, in one pull request.
+2. After it merges, tag the merge commit: `git tag v0.1.0 && git push origin v0.1.0`. Use a suffix such as `v0.1.0-rc.1` for a test build; it becomes a pre-release and doesn't move the Docker `latest` tag.
+3. The [release workflow](.github/workflows/release.yml) builds the installers, the server file and the Docker image, and opens a **draft** release with checksums and the changelog section as notes.
+4. Install at least one build, then publish the draft.
+
+To try packaging locally, `npm run package:dir` builds an unpacked app in `dist/` for your platform.
+
 ## Reporting security issues
 Please don't open a public issue for security problems. See [SECURITY.md](SECURITY.md).
 
