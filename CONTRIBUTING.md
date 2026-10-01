@@ -62,6 +62,9 @@ Maintainers release from `main`:
 
 To try packaging locally, `npm run package:dir` builds an unpacked app in `dist/` for your platform.
 
+## The website
+The site at https://cameronjtoy.github.io/Prem/ is built from `site/` and the guides in `docs/` by `npm run site`, and published from `main` by [the website workflow](.github/workflows/site.yml). Pages share `site/layout.html`; a guide in `docs/` appears on the site once it's listed in `DOCS` in `scripts/build-site.mjs`. Open `_site/index.html` in a browser to preview.
+
 ## Reporting security issues
 Please don't open a public issue for security problems. See [SECURITY.md](SECURITY.md).
 

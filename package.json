@@ -32,7 +32,8 @@
     "server:token": "npm run server:build --silent && node out/server/index.js token",
     "notices": "node scripts/third-party-notices.mjs",
     "package": "npm run build && npm run notices && electron-builder",
-    "package:dir": "npm run build && npm run notices && electron-builder --dir"
+    "package:dir": "npm run build && npm run notices && electron-builder --dir",
+    "site": "node scripts/build-site.mjs"
   },
   "devDependencies": {
     "@codemirror/autocomplete": "^6.20.3",
@@ -55,6 +56,7 @@
     "electron-builder": "^26.15.3",
     "electron-vite": "^5.0.0",
     "katex": "^0.18.9",
+    "marked": "^18.0.14",
     "oxlint": "^1.86.0",
     "prettier": "^3.9.9",
     "react": "^19.3.0",

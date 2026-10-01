@@ -6,6 +6,10 @@ Prem is a desktop app for research labs. Each person keeps a daily notebook; the
 
 Prem is in active development towards a first release. It is being piloted with research labs now; see the [roadmap](#roadmap).
 
+**Website:** [cameronjtoy.github.io/Prem](https://cameronjtoy.github.io/Prem/)
+
+![An experiment entry in Prem with a reagent table, results and a gel image](site/assets/screenshots/experiment.png)
+
 ## Why Prem
 
 - **Your data stays with the lab.** Notebooks are folders of markdown and attachments on your computer or on a server you run. No account with us, no cloud, no telemetry.
@@ -91,6 +95,7 @@ npm run build          # production bundles into out/
 npm run server:build   # the team server as a single file, out/server/index.js
 npm run package        # installers for this computer, into dist/ (see electron-builder.yml)
 npm run package:dir    # an unpacked app in dist/, quicker for testing packaging
+npm run site           # the website (site/ and docs/) into _site/, with a link check
 ```
 
 Read [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for how the pieces fit: the storage seam that lets every feature work on a local folder and on the team server alike, how history and signing are stored, and where logic belongs. [CONTRIBUTING.md](CONTRIBUTING.md) covers setup and how changes are made; [SECURITY.md](SECURITY.md) explains how to report a vulnerability privately, and everyone taking part follows the [Code of Conduct](CODE_OF_CONDUCT.md). Notable changes are listed in [CHANGELOG.md](CHANGELOG.md).
