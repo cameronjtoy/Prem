@@ -18,6 +18,12 @@ updates:
       # Major Electron upgrades change Chromium and Node; do them deliberately, not from a bot.
       - dependency-name: electron
         update-types: ['version-update:semver-major']
+      # electron-vite only supports Vite up to 7 in its stable release; Vite 8 (and plugin-react 6, which
+      # needs it) wait until it does.
+      - dependency-name: vite
+        update-types: ['version-update:semver-major']
+      - dependency-name: '@vitejs/plugin-react'
+        update-types: ['version-update:semver-major']
   - package-ecosystem: github-actions
     directory: /
     schedule:
