@@ -1,10 +1,10 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { VaultError } from '@shared/vault/errors'
 import { notebookFolder } from '@shared/notes/notebook'
-import { basename, dirname, isInside, isMarkdown, joinPath, sanitizeFileName } from '@shared/vault/paths'
+import { basename, dirname, isInside, isMarkdown, joinPath, sanitizeFileName, stripMd } from '@shared/vault/paths'
 import { createRun, runPath } from '@shared/records/runs'
 import { formatDate } from '@shared/notes/templates'
-import type { VaultPath } from '@shared/vault/types'
+import type { RenameResult, VaultPath } from '@shared/vault/types'
 import { errorMessage, vaultClient } from '../services/vaultClient'
 import { useVault } from './VaultContext'
 
@@ -53,6 +53,24 @@ interface WorkspaceState {
 }
 
 const WorkspaceContext = createContext<WorkspaceState | null>(null)
+
+const count = (n: number, one: string, many: string): string => `${n} ${n === 1 ? one : many}`
+
+/** Says what happened to links elsewhere after a rename, or nothing if no other note linked to it. */
+function renameReport({ updated, locked, readOnly }: RenameResult): { text: string; kind: 'error' | 'info' } | null {
+  const parts: string[] = []
+  if (updated.length) parts.push(`Updated links in ${count(updated.length, 'note', 'notes')}.`)
+  if (locked.length) {
+    const names = locked.map((p) => stripMd(basename(p))).join(', ')
+    parts.push(
+      `${count(locked.length, 'signed note still links', 'signed notes still link')} to the old name: ${names}.`
+    )
+  }
+  if (readOnly.length)
+    parts.push(`${count(readOnly.length, "note you can't edit links", "notes you can't edit link")} to the old name.`)
+  if (!parts.length) return null
+  return { text: parts.join(' '), kind: locked.length || readOnly.length ? 'error' : 'info' }
+}
 
 async function freePath(folder: VaultPath, name: string, ext: string): Promise<VaultPath> {
   const existing = new Set((await vaultClient.list()).map((e) => e.path.toLowerCase()))
@@ -208,16 +226,19 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
       try {
         const current = activeRef.current
         const affectsActive = current && isInside(current.path, path)
-        if (affectsActive) await editor.current?.flush()
-        await vaultClient.rename(path, to)
+        // Save first: the open note may link to what's moving, and its links are about to be rewritten.
+        await editor.current?.flush()
+        const result = await vaultClient.rename(path, to)
         // Switch before the watcher reports the old path as deleted, which would close the note.
         if (affectsActive && current) setActive({ path: to + current.path.slice(path.length), cursor: null })
         await refresh()
+        const report = renameReport(result)
+        if (report) setNotice(report.text, report.kind)
       } catch (err) {
         fail(err)
       }
     },
-    [refresh, fail]
+    [refresh, fail, setNotice]
   )
 
   const remove = useCallback(

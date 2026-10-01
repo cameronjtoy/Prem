@@ -102,3 +102,13 @@ export interface CreatedNote {
   /** Offset where the cursor should be placed, from a {{cursor}} marker. */
   cursor: number | null
 }
+
+/** What happened to links elsewhere in the vault when something was renamed or moved. */
+export interface RenameResult {
+  /** Notes whose links were rewritten to follow the move. */
+  updated: VaultPath[]
+  /** Signed notes that link to what moved; they're locked, so their links weren't changed. */
+  locked: VaultPath[]
+  /** Notes you can read but not edit that link to what moved; their links weren't changed. */
+  readOnly: VaultPath[]
+}
