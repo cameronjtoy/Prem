@@ -47,7 +47,9 @@ export function createRun(
   const { fields, end } = parseFrontmatter(protocolText)
   const body = protocolText.slice(end)
   const copied = sections(body).filter((s) => COPIED_SECTIONS.includes(s.heading))
-  const steps = copied.length ? copied.map((s) => resetTasks(s.text)).join('\n\n') : `## Steps\n${resetTasks(body.trim())}`
+  const steps = copied.length
+    ? copied.map((s) => resetTasks(s.text)).join('\n\n')
+    : `## Steps\n${resetTasks(body.trim())}`
   const title = noteTitle(protocolPath)
   const started = formatDate(options.now, 'YYYY-MM-DD HH:mm')
   return `---

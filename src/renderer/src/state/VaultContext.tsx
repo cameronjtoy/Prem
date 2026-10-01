@@ -28,7 +28,7 @@ function applyChanges(entries: VaultEntry[], changes: VaultChange[]): VaultEntry
   const byPath = new Map(entries.map((e) => [e.path, e]))
   for (const c of changes) {
     if (c.type === 'deleted') {
-      for (const p of [...byPath.keys()]) if (isInside(p, c.path)) byPath.delete(p)
+      for (const p of byPath.keys()) if (isInside(p, c.path)) byPath.delete(p)
     } else if (!byPath.has(c.path)) {
       byPath.set(c.path, { path: c.path, kind: c.kind })
     }
@@ -111,7 +111,19 @@ export function VaultProvider({ children }: { children: ReactNode }) {
   }, [info])
 
   const value = useMemo(
-    () => ({ info, entries, starting, error, resolver, noteTitles, canWrite, openVault, connectServer, refresh, subscribe }),
+    () => ({
+      info,
+      entries,
+      starting,
+      error,
+      resolver,
+      noteTitles,
+      canWrite,
+      openVault,
+      connectServer,
+      refresh,
+      subscribe
+    }),
     [info, entries, starting, error, resolver, noteTitles, canWrite, openVault, connectServer, refresh, subscribe]
   )
   return <VaultContext.Provider value={value}>{children}</VaultContext.Provider>

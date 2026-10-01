@@ -56,7 +56,7 @@ function countOf(lower: string, term: string, cap: number): number {
   return n
 }
 
-function score(doc: Doc, terms: string[]): number {
+function scoreDoc(doc: Doc, terms: string[]): number {
   const title = doc.title.toLowerCase()
   let total = 0
   if (terms.every((t) => title.includes(t))) total += 100
@@ -82,7 +82,13 @@ export class SearchIndex {
     if (!isMarkdown(path) || isInside(path, TEMPLATES_FOLDER)) return
     const title = noteTitle(path)
     const lower = content.toLowerCase()
-    this.docs.set(path, { path, title, content, lower, haystack: `${title.toLowerCase()}\n${path.toLowerCase()}\n${lower}` })
+    this.docs.set(path, {
+      path,
+      title,
+      content,
+      lower,
+      haystack: `${title.toLowerCase()}\n${path.toLowerCase()}\n${lower}`
+    })
   }
 
   remove(path: VaultPath): void {
@@ -90,7 +96,7 @@ export class SearchIndex {
   }
 
   removeFolder(folder: VaultPath): void {
-    for (const p of [...this.docs.keys()]) if (isInside(p, folder)) this.docs.delete(p)
+    for (const p of this.docs.keys()) if (isInside(p, folder)) this.docs.delete(p)
   }
 
   get size(): number {
@@ -103,7 +109,7 @@ export class SearchIndex {
     // Score every matching note cheaply, then build snippets only for the ones shown.
     const scored: { doc: Doc; score: number }[] = []
     for (const doc of this.docs.values()) {
-      if (terms.every((t) => doc.haystack.includes(t))) scored.push({ doc, score: score(doc, terms) })
+      if (terms.every((t) => doc.haystack.includes(t))) scored.push({ doc, score: scoreDoc(doc, terms) })
     }
     return scored
       .sort((a, b) => b.score - a.score || a.doc.title.localeCompare(b.doc.title))
@@ -131,7 +137,10 @@ export class SearchIndex {
       matches.push({
         line: doc.content.slice(0, lineStart).split('\n').length,
         text: (from > lineStart ? '…' : '') + text + (to < end ? '…' : ''),
-        ranges: rangesOf(text.toLowerCase(), terms).map(([s, e]) => [s + (from > lineStart ? 1 : 0), e + (from > lineStart ? 1 : 0)]),
+        ranges: rangesOf(text.toLowerCase(), terms).map(([s, e]) => [
+          s + (from > lineStart ? 1 : 0),
+          e + (from > lineStart ? 1 : 0)
+        ]),
         offset: at
       })
       if (matches.length >= MAX_MATCH_LINES) break

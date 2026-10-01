@@ -36,7 +36,8 @@ export function normalizeServerUrl(input: string): string {
     throw new VaultError('INVALID_ARGUMENT', 'The server address should not include a user name, query or fragment')
   }
   const secure = url.protocol === 'https:' || (url.protocol === 'http:' && LOOPBACK.has(url.hostname))
-  if (!secure) throw new VaultError('INVALID_ARGUMENT', 'Team servers must use https:// (http:// only works for localhost)')
+  if (!secure)
+    throw new VaultError('INVALID_ARGUMENT', 'Team servers must use https:// (http:// only works for localhost)')
   return url.toString().replace(/\/+$/, '')
 }
 
@@ -116,16 +117,29 @@ export class RemoteProvider implements VaultProvider {
     return url
   }
 
-  private async send(method: string, url: URL, init: { headers: Record<string, string>; body?: string | Uint8Array; timeout: number }): Promise<Response> {
+  private async send(
+    method: string,
+    url: URL,
+    init: { headers: Record<string, string>; body?: string | Uint8Array; timeout: number }
+  ): Promise<Response> {
     try {
-      return await fetch(url, { method, headers: init.headers, body: init.body, signal: AbortSignal.timeout(init.timeout) })
+      return await fetch(url, {
+        method,
+        headers: init.headers,
+        body: init.body,
+        signal: AbortSignal.timeout(init.timeout)
+      })
     } catch (err) {
       const reason = err instanceof Error ? err.message : String(err)
       throw new VaultError('UNAVAILABLE', `Can't reach the server at ${this.root} (${reason})`)
     }
   }
 
-  private async request<T>(method: string, route: string, options: { path?: VaultPath; body?: unknown } = {}): Promise<T> {
+  private async request<T>(
+    method: string,
+    route: string,
+    options: { path?: VaultPath; body?: unknown } = {}
+  ): Promise<T> {
     const res = await this.send(method, this.url(route, options.path), {
       headers: this.headers(options.body !== undefined),
       body: options.body === undefined ? undefined : JSON.stringify(options.body),
@@ -174,7 +188,10 @@ export class RemoteProvider implements VaultProvider {
   }
 
   async readBinary(path: VaultPath): Promise<Uint8Array> {
-    const res = await this.send('GET', this.url(Routes.blob, path), { headers: this.headers(false), timeout: TRANSFER_TIMEOUT_MS })
+    const res = await this.send('GET', this.url(Routes.blob, path), {
+      headers: this.headers(false),
+      timeout: TRANSFER_TIMEOUT_MS
+    })
     if (!res.ok) return this.parse<never>(res)
     return new Uint8Array(await res.arrayBuffer())
   }
@@ -265,7 +282,8 @@ export class RemoteProvider implements VaultProvider {
           listener(changes)
         }
       } catch (err) {
-        if (!signal.aborted) console.warn(`[remote] change stream interrupted: ${err instanceof Error ? err.message : err}`)
+        if (!signal.aborted)
+          console.warn(`[remote] change stream interrupted: ${err instanceof Error ? err.message : err}`)
       } finally {
         clearTimeout(idle)
         signal.removeEventListener('abort', stop)
@@ -278,8 +296,8 @@ export class RemoteProvider implements VaultProvider {
   private track(changes: VaultChange[]): void {
     for (const c of changes) {
       if (c.type === 'deleted') {
-        for (const p of [...this.versions.keys()]) if (isInside(p, c.path)) this.versions.delete(p)
-        if (this.known) for (const p of [...this.known.keys()]) if (isInside(p, c.path)) this.known.delete(p)
+        for (const p of this.versions.keys()) if (isInside(p, c.path)) this.versions.delete(p)
+        if (this.known) for (const p of this.known.keys()) if (isInside(p, c.path)) this.known.delete(p)
       } else {
         this.versions.delete(c.path)
         this.known?.set(c.path, c.kind)

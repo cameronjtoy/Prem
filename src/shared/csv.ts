@@ -2,7 +2,11 @@
  * Parses CSV or TSV text into rows, handling quoted fields with embedded separators, quotes and
  * line breaks. Stops after `maxRows` rows so a huge instrument export can't freeze a preview.
  */
-export function parseDelimited(text: string, separator: ',' | '\t', maxRows = Infinity): { rows: string[][]; truncated: boolean } {
+export function parseDelimited(
+  text: string,
+  separator: ',' | '\t',
+  maxRows = Infinity
+): { rows: string[][]; truncated: boolean } {
   const rows: string[][] = []
   let row: string[] = []
   let field = ''

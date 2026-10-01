@@ -110,7 +110,8 @@ export function GraphView() {
             ctx.globalAlpha = dimmed ? 0.35 : 1
             ctx.beginPath()
             ctx.arc(n.x, n.y, radius, 0, 2 * Math.PI)
-            ctx.fillStyle = isFocus || n.id === active?.path ? colors.active : n.resolved ? colors.node : colors.unresolved
+            ctx.fillStyle =
+              isFocus || n.id === active?.path ? colors.active : n.resolved ? colors.node : colors.unresolved
             ctx.fill()
             if (scale > 1.2 || isFocus || neighbors.has(n.id)) {
               ctx.font = `${Math.max(11 / scale, 2)}px system-ui, sans-serif`

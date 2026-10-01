@@ -30,18 +30,18 @@ describe('createResolver', () => {
   })
 })
 
-describe('LinkIndex', () => {
-  const build = () => {
-    const index = new LinkIndex()
-    index.build([
-      { path: 'A.md', content: 'Links to [[B]] and [[Missing]].\nAgain [[B|bee]]' },
-      { path: 'B.md', content: 'Back to [[A]]' },
-      { path: 'C.md', content: 'Self [[C]] and [[B]]' },
-      { path: 'templates/Runbook.md', content: '[[A]]' }
-    ])
-    return index
-  }
+function build(): LinkIndex {
+  const index = new LinkIndex()
+  index.build([
+    { path: 'A.md', content: 'Links to [[B]] and [[Missing]].\nAgain [[B|bee]]' },
+    { path: 'B.md', content: 'Back to [[A]]' },
+    { path: 'C.md', content: 'Self [[C]] and [[B]]' },
+    { path: 'templates/Runbook.md', content: '[[A]]' }
+  ])
+  return index
+}
 
+describe('LinkIndex', () => {
   it('computes backlinks with snippets', () => {
     const snap = build().snapshot()
     expect(snap.backlinks['B.md']).toEqual([

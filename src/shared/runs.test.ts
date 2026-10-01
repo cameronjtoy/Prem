@@ -46,7 +46,9 @@ describe('frontmatter', () => {
 
 describe('protocol runs', () => {
   it('files runs in the notebook by year', () => {
-    expect(runPath('Notebooks/alice', 'Protocols/Miniprep.md', now)).toBe('Notebooks/alice/Runs/2026/Miniprep run 2026-09-30 1405.md')
+    expect(runPath('Notebooks/alice', 'Protocols/Miniprep.md', now)).toBe(
+      'Notebooks/alice/Runs/2026/Miniprep run 2026-09-30 1405.md'
+    )
   })
 
   it('snapshots materials and steps with fresh checkboxes', () => {
@@ -54,7 +56,13 @@ describe('protocol runs', () => {
     expect(isRun(run)).toBe(true)
     expect(isProtocol(protocol)).toBe(true)
     const { fields } = parseFrontmatter(run)
-    expect(fields).toMatchObject({ protocol: '[[Miniprep]]', 'protocol-version': '3', operator: 'alice', started: '2026-09-30 14:05', status: 'in progress' })
+    expect(fields).toMatchObject({
+      protocol: '[[Miniprep]]',
+      'protocol-version': '3',
+      operator: 'alice',
+      started: '2026-09-30 14:05',
+      status: 'in progress'
+    })
     expect(run).toContain('| P1 buffer | 250 µL |')
     expect(run).toContain('1. [ ] Pellet 2 mL culture\n')
     expect(run).toContain('   - [ ] Vortex until no clumps')

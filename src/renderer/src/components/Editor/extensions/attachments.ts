@@ -12,7 +12,11 @@ const urls = new Map<string, Promise<string>>()
 function objectUrl(host: EditorHost, path: string): Promise<string> {
   let url = urls.get(path)
   if (!url) {
-    url = host.loadFile(path).then((data) => URL.createObjectURL(new Blob([data as Uint8Array<ArrayBuffer>], { type: MIME[extension(path)] ?? '' })))
+    url = host
+      .loadFile(path)
+      .then((data) =>
+        URL.createObjectURL(new Blob([data as Uint8Array<ArrayBuffer>], { type: MIME[extension(path)] ?? '' }))
+      )
     url.catch(() => urls.delete(path))
     urls.set(path, url)
   }
@@ -104,7 +108,9 @@ async function attachFiles(view: EditorView, files: File[], pos: number): Promis
   const parts: string[] = []
   for (const file of files) {
     if (file.size > MAX_ATTACHMENT_BYTES) {
-      host.notify(`"${file.name}" is over ${MAX_ATTACHMENT_BYTES / 1024 / 1024} MB. Keep large raw data on shared storage and link to it.`)
+      host.notify(
+        `"${file.name}" is over ${MAX_ATTACHMENT_BYTES / 1024 / 1024} MB. Keep large raw data on shared storage and link to it.`
+      )
       continue
     }
     try {
@@ -144,7 +150,11 @@ export const attachmentInput = EditorView.domEventHandlers({
     event.preventDefault()
     if (view.state.readOnly) return true
     const named = files.map((f) =>
-      f.name && f.name !== 'image.png' ? f : new File([f], `Pasted image ${new Date().toISOString().slice(0, 19).replace(/[T:]/g, '-')}.png`, { type: f.type })
+      f.name && f.name !== 'image.png'
+        ? f
+        : new File([f], `Pasted image ${new Date().toISOString().slice(0, 19).replace(/[T:]/g, '-')}.png`, {
+            type: f.type
+          })
     )
     void attachFiles(view, named, view.state.selection.main.head)
     return true

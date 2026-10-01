@@ -98,7 +98,10 @@ export class NoteSession {
     this.ui.onStatus('saving')
     try {
       const amending = this.amendReason
-      const { version } = await vaultClient.write(this.path, content, { expectedVersion, amendReason: amending ?? undefined })
+      const { version } = await vaultClient.write(this.path, content, {
+        expectedVersion,
+        amendReason: amending ?? undefined
+      })
       if (amending && this.amendReason === amending) {
         this.amendReason = null
         this.ui.onAmended?.()

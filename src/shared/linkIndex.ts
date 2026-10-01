@@ -1,14 +1,6 @@
 import { isInside, isMarkdown, noteTitle, TEMPLATES_FOLDER } from './paths'
 import { createResolver, type Resolver } from './resolve'
-import type {
-  Backlink,
-  GraphLink,
-  GraphNode,
-  LinkIndexSnapshot,
-  OutgoingLink,
-  ParsedLink,
-  VaultPath
-} from './types'
+import type { Backlink, GraphLink, GraphNode, LinkIndexSnapshot, OutgoingLink, ParsedLink, VaultPath } from './types'
 import { parseWikilinks } from './wikilinks'
 
 interface IndexedNote {
@@ -47,7 +39,7 @@ export class LinkIndex {
 
   removeFolder(folder: VaultPath): void {
     let changed = false
-    for (const p of [...this.notes.keys()]) {
+    for (const p of this.notes.keys()) {
       if (isInside(p, folder)) changed = this.notes.delete(p) || changed
     }
     if (changed) this.touch(true)

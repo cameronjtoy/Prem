@@ -43,7 +43,13 @@ const entry = (n: number, minutes: number, author = 'alice', kind: HistoryEntry[
 
 describe('groupSessions', () => {
   it('groups quick saves by one person, newest session first', () => {
-    const sessions = groupSessions([entry(1, 0), entry(2, 3), entry(3, 30), entry(4, 31, 'bob'), entry(5, 32, '', 'external')])
+    const sessions = groupSessions([
+      entry(1, 0),
+      entry(2, 3),
+      entry(3, 30),
+      entry(4, 31, 'bob'),
+      entry(5, 32, '', 'external')
+    ])
     expect(sessions.map((s) => s.map((e) => e.n))).toEqual([[5], [4], [3], [1, 2]])
   })
 })

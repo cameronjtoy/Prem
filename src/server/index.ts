@@ -9,7 +9,10 @@ const USAGE = `Usage:
 async function main(): Promise<void> {
   const { values, positionals } = parseArgs({
     allowPositionals: true,
-    options: { config: { type: 'string', short: 'c', default: 'prem-server.json' }, help: { type: 'boolean', short: 'h' } }
+    options: {
+      config: { type: 'string', short: 'c', default: 'prem-server.json' },
+      help: { type: 'boolean', short: 'h' }
+    }
   })
   if (values.help) return console.log(USAGE)
 

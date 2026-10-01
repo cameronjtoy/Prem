@@ -11,6 +11,9 @@
     "type": "git",
     "url": "git+https://github.com/cameronjtoy/Prem.git"
   },
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "postinstall": "node node_modules/electron/install.js",
     "dev": "electron-vite dev",
@@ -18,6 +21,9 @@
     "preview": "electron-vite preview",
     "typecheck": "tsc --noEmit -p tsconfig.node.json --composite false && tsc --noEmit -p tsconfig.web.json --composite false",
     "test": "vitest run",
+    "lint": "oxlint src *.ts",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
     "server:build": "vite build --config vite.server.config.ts",
     "server": "npm run server:build && node out/server/index.js",
     "server:token": "npm run server:build --silent && node out/server/index.js token"
@@ -42,6 +48,8 @@
     "electron": "^44.4.5",
     "electron-vite": "^5.0.0",
     "katex": "^0.18.9",
+    "oxlint": "^1.86.0",
+    "prettier": "^3.9.9",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
     "react-force-graph-2d": "^1.29.1",

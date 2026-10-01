@@ -8,7 +8,10 @@ export function normalizeVaultPath(input: string): VaultPath {
   if (/^([a-zA-Z]:|[\\/])/.test(input)) {
     throw new VaultError('INVALID_PATH', `Path must be relative to the vault: ${input}`)
   }
-  const parts = input.replace(/\\/g, '/').split('/').filter((p) => p !== '' && p !== '.')
+  const parts = input
+    .replace(/\\/g, '/')
+    .split('/')
+    .filter((p) => p !== '' && p !== '.')
   if (parts.includes('..')) throw new VaultError('INVALID_PATH', `Path may not contain "..": ${input}`)
   return parts.join('/')
 }

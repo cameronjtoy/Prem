@@ -15,14 +15,7 @@ import type { HistoryEntry } from '@shared/history'
 import type { RecordCheck } from '@shared/signatures'
 import { LinkIndex } from '@shared/linkIndex'
 import { dailyNotePath, parseDay } from '@shared/notebook'
-import {
-  basename,
-  isMarkdown,
-  isTemplate,
-  joinPath,
-  sanitizeFileName,
-  TEMPLATES_FOLDER
-} from '@shared/paths'
+import { basename, isMarkdown, isTemplate, joinPath, sanitizeFileName, TEMPLATES_FOLDER } from '@shared/paths'
 import { SearchIndex, type SearchHit } from '@shared/search'
 import { renderTemplate } from '@shared/templates'
 import type {
@@ -88,7 +81,13 @@ export class VaultManager {
     this.user = provider.user
     this.author = provider.user
     await rememberServer(provider.root, token)
-    return { name: provider.name, root: provider.root, user: provider.user, author: provider.user, access: provider.access }
+    return {
+      name: provider.name,
+      root: provider.root,
+      user: provider.user,
+      author: provider.user,
+      access: provider.access
+    }
   }
 
   private async attach(provider: VaultProvider): Promise<void> {
@@ -235,7 +234,9 @@ export class VaultManager {
     if (await provider.exists(path)) return { path, cursor: null }
 
     const custom = `${TEMPLATES_FOLDER}/${DAILY_TEMPLATE}`
-    const source = (await provider.exists(custom)) ? (await provider.read(custom)).content : DEFAULT_TEMPLATES[DAILY_TEMPLATE]
+    const source = (await provider.exists(custom))
+      ? (await provider.read(custom)).content
+      : DEFAULT_TEMPLATES[DAILY_TEMPLATE]
     // The entry is dated for the day asked for; {{time}} still means the time it was created.
     const now = new Date()
     const when = parseDay(day)

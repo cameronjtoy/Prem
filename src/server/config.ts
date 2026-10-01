@@ -45,7 +45,8 @@ export function parseConfig(raw: unknown, baseDir: string): ServerConfig {
   const { vault, host = '127.0.0.1', port = 4747, users } = raw as Record<string, unknown>
   if (typeof vault !== 'string' || !vault) fail('"vault" must be the path of a folder')
   if (typeof host !== 'string') fail('"host" must be a string')
-  if (typeof port !== 'number' || !Number.isInteger(port) || port < 0 || port > 65535) fail('"port" is not a valid port')
+  if (typeof port !== 'number' || !Number.isInteger(port) || port < 0 || port > 65535)
+    fail('"port" is not a valid port')
   if (!Array.isArray(users) || users.length === 0) fail('"users" must list at least one user')
 
   const names = new Set<string>()

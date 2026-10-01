@@ -20,9 +20,7 @@ export function WelcomeScreen() {
     <div className="welcome">
       <div className="welcome-card">
         <h1>Prem</h1>
-        <p>
-          A shared home for your team's knowledge: reference notes, formulas and runbooks, all linked together.
-        </p>
+        <p>A shared home for your team's knowledge: reference notes, formulas and runbooks, all linked together.</p>
         <button className="primary-button" onClick={() => void openVault()}>
           <VaultIcon /> Open a folder as a vault
         </button>

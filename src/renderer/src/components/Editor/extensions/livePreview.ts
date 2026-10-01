@@ -1,12 +1,6 @@
 import { syntaxTree } from '@codemirror/language'
 import { StateField, type EditorState, type Extension, type Range } from '@codemirror/state'
-import {
-  Decoration,
-  EditorView,
-  ViewPlugin,
-  type DecorationSet,
-  type ViewUpdate
-} from '@codemirror/view'
+import { Decoration, EditorView, ViewPlugin, type DecorationSet, type ViewUpdate } from '@codemirror/view'
 import type { SyntaxNodeRef } from '@lezer/common'
 import { splitLinkText } from '@shared/wikilinks'
 import { hostFacet, refreshLinks } from './host'
@@ -119,7 +113,8 @@ function buildInline(view: EditorView): DecorationSet {
         const textTo = marks[1].from
         const url = node.node.getChild('URL')
         const isFile = !!url && host.resolveFile(state.sliceDoc(url.from, url.to)) !== null
-        if (textTo > textFrom) decos.push(mark(isFile ? 'cm-md-link cm-file-link' : 'cm-md-link').range(textFrom, textTo))
+        if (textTo > textFrom)
+          decos.push(mark(isFile ? 'cm-md-link cm-file-link' : 'cm-md-link').range(textFrom, textTo))
         if (!isActive(node.from)) {
           decos.push(hide.range(node.from, textFrom))
           decos.push(hide.range(textTo, node.to))

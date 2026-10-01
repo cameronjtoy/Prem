@@ -14,5 +14,13 @@
     "esModuleInterop": true,
     "paths": { "@shared/*": ["./src/shared/*"] }
   },
-  "include": ["electron.vite.config.ts", "vite.server.config.ts", "vitest.config.ts", "src/main/**/*", "src/preload/**/*", "src/shared/**/*", "src/server/**/*"]
+  "include": [
+    "electron.vite.config.ts",
+    "vite.server.config.ts",
+    "vitest.config.ts",
+    "src/main/**/*",
+    "src/preload/**/*",
+    "src/shared/**/*",
+    "src/server/**/*"
+  ]
 }
