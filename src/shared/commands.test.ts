@@ -80,6 +80,8 @@ describe('keys', () => {
     expect(accelerator(parseKey('Mod+Shift+P')!)).toBe('CmdOrCtrl+Shift+P')
     expect(accelerator(parseKey('Mod+[')!)).toBe('CmdOrCtrl+[')
     expect(accelerator(parseKey('Mod+Enter')!)).toBe('CmdOrCtrl+Enter')
+    expect(accelerator(parseKey('Alt+Up')!)).toBe('Alt+Up')
+    expect(accelerator(parseKey('F5')!)).toBe('F5')
   })
 })
 

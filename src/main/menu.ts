@@ -1,5 +1,5 @@
 import { app, Menu, type BrowserWindow, type MenuItemConstructorOptions } from 'electron'
-import { accelerator, commandById, defaultBindings, type CommandId } from '@shared/commands'
+import { accelerator, commandById, defaultBindings, type CommandId, type KeyBinding } from '@shared/commands'
 import { Channels } from '@shared/vault/ipc'
 
 type Entry = CommandId | '-' | MenuItemConstructorOptions
@@ -55,8 +55,10 @@ const LAYOUT: Record<string, Entry[]> = {
   Help: ['app.shortcuts', '-', 'help.website', 'help.reportIssue']
 }
 
-export function buildMenu(getWindow: () => BrowserWindow | null): Menu {
-  const bindings = defaultBindings()
+export function buildMenu(
+  getWindow: () => BrowserWindow | null,
+  bindings: Map<string, KeyBinding> = defaultBindings()
+): Menu {
   const mac = process.platform === 'darwin'
 
   const item = (entry: Entry): MenuItemConstructorOptions => {
@@ -120,6 +122,7 @@ export function buildMenu(getWindow: () => BrowserWindow | null): Menu {
   return Menu.buildFromTemplate(template)
 }
 
-export function installMenu(getWindow: () => BrowserWindow | null): void {
-  Menu.setApplicationMenu(buildMenu(getWindow))
+/** Sets the application menu. Called again whenever keybindings.json changes, so menus show the new shortcuts. */
+export function installMenu(getWindow: () => BrowserWindow | null, bindings?: Map<string, KeyBinding>): void {
+  Menu.setApplicationMenu(buildMenu(getWindow, bindings))
 }

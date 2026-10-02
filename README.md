@@ -89,6 +89,21 @@ Everything on that screen is also in `settings.json`, which lists only what you'
 
 **Open settings.json** on the Settings screen opens it in your editor. It lives in Prem's settings folder (`~/Library/Application Support/Prem` on macOS, `%APPDATA%\Prem` on Windows, `~/.config/Prem` on Linux), and changes apply as soon as you save. If the file has a mistake, Prem says where and keeps using your last good settings.
 
+### Changing shortcuts
+
+Settings → **Keyboard shortcuts** lists every command. Choose **Change** and press the new keys; if another command already uses them, Prem asks whether to move the shortcut or let both share it (whichever can run at the time does). **Remove** and **Reset** undo a change.
+
+Your changes are saved in `keybindings.json`, next to `settings.json`. Write `Mod` for ⌘ on macOS and Ctrl elsewhere, and put `-` before a command to take its shortcut away:
+
+```json
+[
+  { "key": "Mod+Shift+L", "command": "format.link" },
+  { "command": "-note.today" }
+]
+```
+
+The command ids are listed on the Keyboard shortcuts tab. Like settings, the file applies as soon as you save it, menus included.
+
 ## Features
 
 **Notebook**

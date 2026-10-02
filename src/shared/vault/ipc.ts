@@ -1,4 +1,5 @@
 import type { IpcResult } from './errors'
+import type { KeybindingsSnapshot } from '../keybindings'
 import type { SettingKey, SettingsSnapshot } from '../settings/schema'
 import type { HistoryEntry } from '../records/history'
 import type { SearchHit } from '../search/search'
@@ -48,6 +49,11 @@ export const Channels = {
   setSetting: 'settings:set',
   openSettingsFile: 'settings:openFile',
   settingsChanged: 'settings:changed',
+  getKeybindings: 'keybindings:get',
+  setKeybinding: 'keybindings:set',
+  resetKeybinding: 'keybindings:reset',
+  openKeybindingsFile: 'keybindings:openFile',
+  keybindingsChanged: 'keybindings:changed',
   vaultChanged: 'vault:changed',
   indexUpdated: 'index:updated'
 } as const
@@ -111,6 +117,15 @@ export interface Api {
     /** Opens settings.json in the person's editor, creating it if needed. */
     openFile(): R<void>
     onChanged(listener: (snapshot: SettingsSnapshot) => void): () => void
+  }
+  keybindings: {
+    get(): R<KeybindingsSnapshot>
+    /** Gives a command a new shortcut such as "Mod+Shift+L", or none with null, and saves keybindings.json. */
+    set(command: string, key: string | null): R<KeybindingsSnapshot>
+    reset(command: string): R<KeybindingsSnapshot>
+    /** Opens keybindings.json in the person's editor, creating it if needed. */
+    openFile(): R<void>
+    onChanged(listener: (snapshot: KeybindingsSnapshot) => void): () => void
   }
   app: {
     openExternal(url: string): R<void>

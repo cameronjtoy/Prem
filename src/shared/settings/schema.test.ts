@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { DEFAULTS, SETTINGS, syntaxErrorLocation, validate, withSetting } from './schema'
+import { DEFAULTS, jsonErrorOffset, SETTINGS, syntaxErrorLocation, validate, withSetting } from './schema'
 
 const folderOk = (folder: string): boolean => validate({ 'notebook.folder': folder }).problems.length === 0
 
@@ -81,5 +81,23 @@ describe('syntaxErrorLocation', () => {
 
   it('points at the end of a file that stops early', () => {
     expect(location('{\n  "appearance.theme": [1,\n')).toMatch(/^line 2, column \d+: Unexpected end/)
+  })
+})
+
+const restFromError = (text: string): string => text.slice(jsonErrorOffset(text))
+
+describe('jsonErrorOffset', () => {
+  it('finds where JSON stops being valid', () => {
+    expect(restFromError('[{ "key": "Mod+J", "command": "x" },]')).toBe(']')
+    expect(restFromError('{\n  "a": 1,\n  b: 2\n}')).toBe('b: 2\n}')
+    expect(restFromError('{ "a": tru }')).toBe(' }')
+    expect(restFromError('[1, 2]')).toBe('')
+  })
+
+  it('places a message without a position at that spot', () => {
+    const text = '[\n  { "key": "Mod+J" },\n]'
+    expect(syntaxErrorLocation(text, new SyntaxError(`Unexpected token ']', "${text}" is not valid JSON`))).toBe(
+      "line 3, column 1: Unexpected token ']'"
+    )
   })
 })

@@ -168,7 +168,7 @@ export function QuickSwitcher({ onClose }: { onClose(): void }) {
 }
 
 /** ⌘/: every shortcut, grouped. */
-export function ShortcutsSheet({ onClose }: { onClose(): void }) {
+export function ShortcutsSheet({ onClose, onCustomize }: { onClose(): void; onCustomize(): void }) {
   const groups = new Map<string, Command[]>()
   for (const c of COMMANDS as readonly Command[]) {
     if (!currentBindings().has(c.id)) continue
@@ -190,6 +190,9 @@ export function ShortcutsSheet({ onClose }: { onClose(): void }) {
           <span className="hint">
             {shortcutFor('app.commandPalette')} lists every command, including those without a shortcut.
           </span>
+          <button className="text-button" onClick={onCustomize}>
+            Change shortcuts…
+          </button>
         </div>
         <div className="shortcuts-grid">
           {[...groups].map(([category, commands]) => (

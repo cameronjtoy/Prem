@@ -13,6 +13,7 @@ import { vaultClient } from './services/vaultClient'
 import { TemplatePicker } from './components/TemplatePicker'
 import { WelcomeScreen } from './components/WelcomeScreen'
 import { LinkIndexProvider } from './state/LinkIndexContext'
+import { KeybindingsProvider, useKeybindings } from './state/KeybindingsContext'
 import { SettingsProvider, useNotebookFolder, useSettings } from './state/SettingsContext'
 import { useVault, VaultProvider } from './state/VaultContext'
 import { useWorkspace, WorkspaceProvider } from './state/WorkspaceContext'
@@ -23,13 +24,15 @@ const ISSUES = 'https://github.com/cameronjtoy/Prem/issues/new/choose'
 export function App() {
   return (
     <SettingsProvider>
-      <VaultProvider>
-        <LinkIndexProvider>
-          <WorkspaceProvider>
-            <Shell />
-          </WorkspaceProvider>
-        </LinkIndexProvider>
-      </VaultProvider>
+      <KeybindingsProvider>
+        <VaultProvider>
+          <LinkIndexProvider>
+            <WorkspaceProvider>
+              <Shell />
+            </WorkspaceProvider>
+          </LinkIndexProvider>
+        </VaultProvider>
+      </KeybindingsProvider>
     </SettingsProvider>
   )
 }
@@ -39,9 +42,14 @@ function Shell() {
   const ws = useWorkspace()
   const canCreate = canWrite(ws.currentFolder())
   const canKeepNotebook = canWrite(useNotebookFolder(info?.user))
-  const [overlay, setOverlay] = useState<'search' | 'commands' | 'notes' | 'shortcuts' | 'settings' | null>(null)
+  const [overlay, setOverlay] = useState<
+    'search' | 'commands' | 'notes' | 'shortcuts' | 'settings' | 'keybindings' | null
+  >(null)
   const { snapshot: settingsSnapshot } = useSettings()
-  const settingsTrouble = !!settingsSnapshot.error || settingsSnapshot.problems.length > 0
+  // Reading the shortcuts here re-renders the app when they change, so every label shows the new keys.
+  const { snapshot: keysSnapshot } = useKeybindings()
+  const trouble = troubleWith(settingsSnapshot, keysSnapshot)
+  const settingsOpen = overlay === 'settings' || overlay === 'keybindings'
   const filesPanel = usePanelRef()
   const linksPanel = usePanelRef()
   const vaultOpen = (): boolean => !!info
@@ -55,7 +63,9 @@ function Shell() {
 
   useCommand('app.commandPalette', toggle('commands'), vaultOpen)
   useCommand('app.shortcuts', toggle('shortcuts'))
-  useCommand('app.settings', toggle('settings'))
+  useCommand('app.settings', () =>
+    setOverlay((open) => (open === 'settings' || open === 'keybindings' ? null : 'settings'))
+  )
   useCommand('app.search', toggle('search'), vaultOpen)
   useCommand('app.quickSwitcher', toggle('notes'), vaultOpen)
   useCommand('nav.back', ws.goBack, ws.canGoBack)
@@ -113,14 +123,23 @@ function Shell() {
     }
   }, [])
 
-  const settings = overlay === 'settings' && <SettingsView onClose={() => setOverlay(null)} />
+  const settings = settingsOpen && (
+    <SettingsView
+      tab={overlay === 'keybindings' ? 'keybindings' : 'settings'}
+      onTab={(tab) => setOverlay(tab)}
+      onClose={() => setOverlay(null)}
+    />
+  )
+  const sheet = overlay === 'shortcuts' && (
+    <ShortcutsSheet onClose={() => setOverlay(null)} onCustomize={() => setOverlay('keybindings')} />
+  )
 
   if (!info) {
     return (
       <>
         <WelcomeScreen />
         {settings}
-        {overlay === 'shortcuts' && <ShortcutsSheet onClose={() => setOverlay(null)} />}
+        {sheet}
       </>
     )
   }
@@ -184,14 +203,10 @@ function Shell() {
                 <VaultIcon /> Switch vault
               </button>
             </div>
-            {settingsTrouble && overlay !== 'settings' && (
+            {trouble && !settingsOpen && (
               <div className="banner warning settings-trouble">
-                <span>
-                  {settingsSnapshot.error
-                    ? `settings.json has a mistake at ${settingsSnapshot.error}. Your last good settings are in use.`
-                    : 'Some entries in settings.json were ignored.'}
-                </span>
-                <button onClick={() => setOverlay('settings')}>Show</button>
+                <span>{trouble.message}</span>
+                <button onClick={() => setOverlay(trouble.tab)}>Show</button>
               </div>
             )}
             {ws.notice && (
@@ -220,10 +235,35 @@ function Shell() {
       {overlay === 'search' && <SearchPalette onClose={() => setOverlay(null)} />}
       {overlay === 'commands' && <CommandPalette onClose={() => setOverlay(null)} />}
       {overlay === 'notes' && <QuickSwitcher onClose={() => setOverlay(null)} />}
-      {overlay === 'shortcuts' && <ShortcutsSheet onClose={() => setOverlay(null)} />}
+      {sheet}
       {settings}
     </div>
   )
+}
+
+interface FileTrouble {
+  problems: string[]
+  error: string | null
+}
+
+/** A one-line warning about settings.json or keybindings.json, and which Settings tab explains it. */
+function troubleWith(
+  settings: FileTrouble,
+  keys: FileTrouble
+): { message: string; tab: 'settings' | 'keybindings' } | null {
+  if (settings.error)
+    return {
+      message: `settings.json has a mistake at ${settings.error}. Your last good settings are in use.`,
+      tab: 'settings'
+    }
+  if (keys.error)
+    return {
+      message: `keybindings.json has a mistake at ${keys.error}. Your last good shortcuts are in use.`,
+      tab: 'keybindings'
+    }
+  if (settings.problems.length) return { message: 'Some entries in settings.json were ignored.', tab: 'settings' }
+  if (keys.problems.length) return { message: 'Some entries in keybindings.json were ignored.', tab: 'keybindings' }
+  return null
 }
 
 function EmptyState() {
