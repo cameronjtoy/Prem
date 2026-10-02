@@ -55,6 +55,15 @@ describe('findCells', () => {
     expect(cells[0].output).toBeNull()
   })
 
+  it('reads an output block closed with --!>, which HTML also accepts', () => {
+    const text = '```python {run}\n1\n```\n<!-- prem:output code=abc --!>\n```text\n1\n```\n<!-- /prem:output --!>\n'
+    expect(findCells(text)[0].output).toMatchObject({
+      from: text.indexOf('<!--'),
+      to: text.length,
+      meta: { code: 'abc' }
+    })
+  })
+
   it('ignores run cells shown inside other code blocks', () => {
     const text = '````markdown\n```python {run}\nprint(1)\n```\n````\n'
     expect(findCells(text)).toEqual([])
@@ -138,7 +147,10 @@ describe('outputs', () => {
 
   it('round-trips the record of a run', () => {
     const m = { ...meta('x'), ok: false, env: null }
-    expect(parseMeta(metaComment(m).replace(/^<!-- prem:output|-->$/g, ''))).toEqual(m)
+    const comment = metaComment(m)
+    const open = '<!-- prem:output'
+    expect(comment.startsWith(open) && comment.endsWith('-->')).toBe(true)
+    expect(parseMeta(comment.slice(open.length, -'-->'.length))).toEqual(m)
   })
 
   it('describes a run in one line', () => {

@@ -91,7 +91,7 @@ function markdownRenderer(note: PrintableNote, options: PrintOptions): Marked {
       // A note's HTML is shown, not interpreted: nothing in a record should run or load when printed.
       html: ({ text }: Tokens.HTML | Tokens.Tag) => {
         // The record of a Python cell's run prints as a line saying what produced the output below it.
-        const output = /^<!--\s*prem:output\b(.*?)-->\s*$/s.exec(text.trim())
+        const output = /^<!--\s*prem:output\b(.*?)--!?>\s*$/s.exec(text.trim())
         const meta = output ? parseMeta(output[1]) : null
         if (meta) {
           const inputs = meta.inputs.map((i) => `${i.path} (sha256 ${i.sha256}…)`).join(', ')
@@ -99,7 +99,7 @@ function markdownRenderer(note: PrintableNote, options: PrintOptions): Marked {
             describeMeta({ ...meta, inputs: [] }, formatTime)
           )} · code ${escapeHtml(meta.code)}${inputs ? ` · read ${escapeHtml(inputs)}` : ''}</p>`
         }
-        if (/^<!--\s*\/prem:output\s*-->\s*$/.test(text.trim())) return ''
+        if (/^<!--\s*\/prem:output\s*--!?>\s*$/.test(text.trim())) return ''
         return escapeHtml(text)
       },
       // Disabled checkboxes print faintly; characters print as clearly as the text around them.

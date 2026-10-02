@@ -17,8 +17,9 @@
 import type { CellOutput, CellResult } from './results'
 
 const OPEN = /^(`{3,})[ \t]*(?:python|py)[ \t]+\{[ \t]*run[ \t]*\}[ \t]*$/
-const OUTPUT_START = /^<!--\s*prem:output\b(.*?)-->\s*$/
-const OUTPUT_END = /^<!--\s*\/prem:output\s*-->\s*$/
+// HTML also ends a comment at "--!>", so both are accepted.
+const OUTPUT_START = /^<!--\s*prem:output\b(.*?)--!?>\s*$/
+const OUTPUT_END = /^<!--\s*\/prem:output\s*--!?>\s*$/
 
 export interface OutputMeta {
   /** codeHash() of the code that produced the output. */
