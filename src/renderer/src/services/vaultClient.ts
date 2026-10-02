@@ -29,6 +29,7 @@ export const vaultClient = {
   addAttachment: (notePath: string, fileName: string, data: Uint8Array) =>
     unwrap(window.api.attachments.add(notePath, fileName, data)),
   openFile: (path: string) => unwrap(window.api.attachments.open(path)),
+  pickAttachments: (notePath: string) => unwrap(window.api.attachments.pick(notePath)),
   onChanged: window.api.vault.onChanged,
   listTemplates: () => unwrap(window.api.templates.list()),
   createFromTemplate: (templatePath: string, title: string, folder: string) =>

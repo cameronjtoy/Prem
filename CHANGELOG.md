@@ -7,6 +7,7 @@ All notable changes to Prem are listed here. The format follows [Keep a Changelo
 Everything below will ship as **0.1.0**, the first pilot release.
 
 ### Added
+- **Keyboard and menus**: a command palette (⇧⌘P) listing every command you can run, a note switcher (⌘E), back and forward through the notes you opened (⌘[ / ⌘]), and a shortcuts sheet (⌘/). New shortcuts for formatting (bold, italic, strikethrough, headings, links), ticking a step with its time (⌘↵), inserting the date and time, attaching a file, signing, starting a run, logging a deviation, history, and hiding the side panels. An application menu (File, Edit, View, Go, Note, Help) shows them all.
 - **Notebook**: daily entries (⌘T) filed by year; templates for Experiment, Protocol, Sample, Lab meeting, Reference and Daily entry, with `{{title}}`, `{{date}}`, `{{time}}`, `{{author}}` and `{{cursor}}`.
 - **Editor**: live-preview markdown (CodeMirror), KaTeX equations, tables, checkboxes, wikilinks with autocomplete, backlinks and a graph view.
 - **Attachments**: drop or paste files into an entry. Images and CSV/TSV preview inline; known data formats open in their default app and anything else is revealed in its folder. 100 MB limit.

@@ -34,6 +34,7 @@ export const Channels = {
   witness: 'record:witness',
   exportPdf: 'record:exportPdf',
   addAttachment: 'attachments:add',
+  pickAttachments: 'attachments:pick',
   openFile: 'attachments:open',
   listTemplates: 'templates:list',
   createFromTemplate: 'templates:create',
@@ -41,6 +42,7 @@ export const Channels = {
   getIndex: 'index:get',
   search: 'search:query',
   openExternal: 'app:openExternal',
+  command: 'app:command',
   vaultChanged: 'vault:changed',
   indexUpdated: 'index:updated'
 } as const
@@ -65,6 +67,8 @@ export interface Api {
   }
   attachments: {
     add(notePath: string, fileName: string, data: Uint8Array): R<AddedAttachment>
+    /** Asks which files to attach, stores them next to the note, and returns the markdown for each. */
+    pick(notePath: string): R<string[]>
     /** Opens a file in its default app, or shows it in its folder if it isn't a known data format. */
     open(path: string): R<void>
   }
@@ -97,5 +101,7 @@ export interface Api {
   }
   app: {
     openExternal(url: string): R<void>
+    /** Commands chosen from the application menu, by id. */
+    onCommand(listener: (id: string) => void): () => void
   }
 }

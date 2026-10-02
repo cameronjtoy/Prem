@@ -23,6 +23,7 @@ const api: Api = {
   },
   attachments: {
     add: (notePath, fileName, data) => ipcRenderer.invoke(Channels.addAttachment, notePath, fileName, data),
+    pick: (notePath) => ipcRenderer.invoke(Channels.pickAttachments, notePath),
     open: (path) => ipcRenderer.invoke(Channels.openFile, path)
   },
   history: {
@@ -49,7 +50,8 @@ const api: Api = {
     onUpdated: (listener) => subscribe(Channels.indexUpdated, listener)
   },
   app: {
-    openExternal: (url) => ipcRenderer.invoke(Channels.openExternal, url)
+    openExternal: (url) => ipcRenderer.invoke(Channels.openExternal, url),
+    onCommand: (listener) => subscribe(Channels.command, listener)
   }
 }
 
