@@ -1,8 +1,11 @@
 import path from 'node:path'
-import { app, BrowserWindow, shell } from 'electron'
+import { app, BrowserWindow, nativeTheme, shell } from 'electron'
+import { DEFAULTS, type SettingsSnapshot } from '@shared/settings/schema'
 import { Channels } from '@shared/vault/ipc'
 import { registerIpc } from './ipc/handlers'
 import { installMenu } from './menu'
+import { SettingsStore } from './settings'
+import { migrateState } from './state'
 import { VaultManager } from './vault/VaultManager'
 
 let mainWindow: BrowserWindow | null = null
@@ -11,10 +14,20 @@ const send = (channel: string, payload: unknown): void => {
   if (mainWindow && !mainWindow.isDestroyed()) mainWindow.webContents.send(channel, payload)
 }
 
-const vaults = new VaultManager({
-  onChanged: (changes) => send(Channels.vaultChanged, changes),
-  onIndexUpdated: (snapshot) => send(Channels.indexUpdated, snapshot)
-})
+function applySettings(snapshot: SettingsSnapshot): void {
+  // The renderer's prefers-color-scheme follows this, so the theme needs nothing else.
+  nativeTheme.themeSource = snapshot.values['appearance.theme'] as 'system' | 'light' | 'dark'
+}
+
+let settings: SettingsStore | null = null
+
+const vaults = new VaultManager(
+  {
+    onChanged: (changes) => send(Channels.vaultChanged, changes),
+    onIndexUpdated: (snapshot) => send(Channels.indexUpdated, snapshot)
+  },
+  () => settings?.values ?? DEFAULTS
+)
 
 function isSafeExternal(url: string): boolean {
   try {
@@ -61,8 +74,15 @@ function createWindow(): void {
   else void mainWindow.loadFile(path.join(__dirname, '../renderer/index.html'))
 }
 
-app.whenReady().then(() => {
-  registerIpc(vaults, () => mainWindow)
+app.whenReady().then(async () => {
+  await migrateState()
+  settings = new SettingsStore(path.join(app.getPath('userData'), 'settings.json'), (snapshot) => {
+    applySettings(snapshot)
+    send(Channels.settingsChanged, snapshot)
+  })
+  applySettings(await settings.load())
+  settings.watch()
+  registerIpc(vaults, settings, () => mainWindow)
   installMenu(() => mainWindow)
   createWindow()
   app.on('activate', () => {
@@ -74,4 +94,7 @@ app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit()
 })
 
-app.on('before-quit', () => void vaults.close())
+app.on('before-quit', () => {
+  settings?.close()
+  void vaults.close()
+})

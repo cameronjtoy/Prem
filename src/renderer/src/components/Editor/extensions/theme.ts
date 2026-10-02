@@ -39,7 +39,15 @@ export const editorTheme = EditorView.theme({
   '&.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground, .cm-selectionBackground, .cm-content ::selection':
     { backgroundColor: 'var(--selection)' },
   '.cm-activeLine': { backgroundColor: 'transparent' },
-  '.cm-gutters': { display: 'none' },
+  // Only shown when line numbers are turned on in settings.
+  '.cm-gutters': {
+    backgroundColor: 'transparent',
+    border: 'none',
+    color: 'var(--text-faint)',
+    fontFamily: 'var(--font-mono)',
+    fontSize: '0.75em'
+  },
+  '.cm-lineNumbers .cm-gutterElement': { padding: '0 8px 0 12px' },
   '.cm-tooltip': {
     backgroundColor: 'var(--bg-elevated)',
     border: '1px solid var(--border)',

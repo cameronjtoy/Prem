@@ -49,6 +49,12 @@ const api: Api = {
     get: () => ipcRenderer.invoke(Channels.getIndex),
     onUpdated: (listener) => subscribe(Channels.indexUpdated, listener)
   },
+  settings: {
+    get: () => ipcRenderer.invoke(Channels.getSettings),
+    set: (key, value) => ipcRenderer.invoke(Channels.setSetting, key, value),
+    openFile: () => ipcRenderer.invoke(Channels.openSettingsFile),
+    onChanged: (listener) => subscribe(Channels.settingsChanged, listener)
+  },
   app: {
     openExternal: (url) => ipcRenderer.invoke(Channels.openExternal, url),
     onCommand: (listener) => subscribe(Channels.command, listener)

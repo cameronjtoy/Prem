@@ -1,4 +1,5 @@
 import { VaultError, type IpcResult } from '@shared/vault/errors'
+import type { SettingKey } from '@shared/settings/schema'
 import type { WriteOptions } from '@shared/vault/types'
 
 async function unwrap<T>(pending: Promise<IpcResult<T>>): Promise<T> {
@@ -38,7 +39,11 @@ export const vaultClient = {
   getIndex: () => unwrap(window.api.index.get()),
   search: (query: string) => unwrap(window.api.search(query)),
   onIndexUpdated: window.api.index.onUpdated,
-  openExternal: (url: string) => unwrap(window.api.app.openExternal(url))
+  openExternal: (url: string) => unwrap(window.api.app.openExternal(url)),
+  getSettings: () => unwrap(window.api.settings.get()),
+  setSetting: (key: SettingKey, value: unknown) => unwrap(window.api.settings.set(key, value)),
+  openSettingsFile: () => unwrap(window.api.settings.openFile()),
+  onSettingsChanged: window.api.settings.onChanged
 }
 
 export function errorMessage(err: unknown): string {

@@ -71,8 +71,11 @@ let last: { id: string; at: number } | null = null
 export function runCommand(id: string, source: 'key' | 'menu' | 'palette' = 'palette'): boolean {
   const handler = activeHandler(id)
   if (!handler) return false
-  // macOS sends menu shortcuts even while typing in a dialog; only app-level commands apply there.
-  if (source === 'menu' && document.activeElement?.closest('.modal') && !/^(app|help)\./.test(id)) return false
+  // macOS sends menu shortcuts even while typing in a dialog, and the note stays open behind Settings;
+  // only app-level commands apply there, so ⌘B in a settings box doesn't bold the note.
+  const focus = document.activeElement
+  const appOnly = !!focus?.closest('.settings-page') || (source === 'menu' && !!focus?.closest('.modal'))
+  if (appOnly && !/^(app|help)\./.test(id)) return false
   const now = Date.now()
   if (source === 'menu' && last && last.id === id && now - last.at < 400) return true
   last = { id, at: now }

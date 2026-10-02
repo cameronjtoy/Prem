@@ -95,6 +95,8 @@ export function buildMenu(getWindow: () => BrowserWindow | null): Menu {
       submenu: [
         { role: 'about' },
         { type: 'separator' },
+        { ...item('app.settings'), label: 'Settings…' },
+        { type: 'separator' },
         { role: 'services' },
         { type: 'separator' },
         { role: 'hide' },
@@ -107,7 +109,12 @@ export function buildMenu(getWindow: () => BrowserWindow | null): Menu {
     template.splice(template.length - 1, 0, { role: 'windowMenu' })
   } else {
     const file = template.find((m) => m.label === 'File')!
-    ;(file.submenu as MenuItemConstructorOptions[]).push({ type: 'separator' }, { role: 'quit', label: 'Exit' })
+    ;(file.submenu as MenuItemConstructorOptions[]).push(
+      { type: 'separator' },
+      { ...item('app.settings'), label: 'Settings…' },
+      { type: 'separator' },
+      { role: 'quit', label: 'Exit' }
+    )
   }
 
   return Menu.buildFromTemplate(template)

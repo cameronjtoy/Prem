@@ -38,6 +38,11 @@ describe('printableHtml', () => {
     expect(html).not.toContain('---')
   })
 
+  it('prints on A4 unless US Letter is chosen', () => {
+    expect(printableHtml([note('Text')], options)).toContain('@page { size: A4; }')
+    expect(printableHtml([note('Text')], { ...options, pageSize: 'Letter' })).toContain('@page { size: letter; }')
+  })
+
   it('uses the first heading as the title, or the file name when there is none', () => {
     expect(printableHtml([note('# Ligation of insert\nText')], options).match(/<h1/g)).toHaveLength(1)
     expect(printableHtml([note('Just text')], options)).toContain('<h1>Ligation</h1>')

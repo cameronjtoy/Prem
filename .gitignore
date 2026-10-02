@@ -12,3 +12,4 @@ THIRD_PARTY_NOTICES.md
 _site/
 test-results
 playwright-report
+*.tsbuildinfo

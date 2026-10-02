@@ -44,7 +44,7 @@
 
 .editor-host .cm-editor {
   height: 100%;
-  font-size: 16px;
+  font-size: var(--editor-font-size);
 }
 
 /* Headings */

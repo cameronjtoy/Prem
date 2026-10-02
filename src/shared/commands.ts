@@ -17,6 +17,7 @@ export interface Command {
 export const COMMANDS = [
   { id: 'app.commandPalette', title: 'Command palette', category: 'General', key: 'Mod+Shift+P' },
   { id: 'app.shortcuts', title: 'Keyboard shortcuts', category: 'General', key: 'Mod+/' },
+  { id: 'app.settings', title: 'Settings', category: 'General', key: 'Mod+,' },
   { id: 'app.search', title: 'Search all notes', category: 'Navigate', key: 'Mod+K' },
   { id: 'app.quickSwitcher', title: 'Go to note…', category: 'Navigate', key: 'Mod+E' },
   { id: 'nav.back', title: 'Back', category: 'Navigate', key: 'Mod+[' },
