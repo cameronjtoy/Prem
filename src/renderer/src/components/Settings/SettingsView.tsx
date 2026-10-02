@@ -4,9 +4,10 @@ import { keyFor } from '../../commands/registry'
 import { errorMessage } from '../../services/vaultClient'
 import { useKeybindings } from '../../state/KeybindingsContext'
 import { useSettings } from '../../state/SettingsContext'
+import { PythonStatus } from './PythonStatus'
 import { ShortcutsTab } from './ShortcutsTab'
 
-const SECTIONS: SettingSection[] = ['Appearance', 'Editor', 'Notebook', 'Export']
+const SECTIONS: SettingSection[] = ['Appearance', 'Editor', 'Notebook', 'Analysis', 'Export']
 const ALL = SETTINGS as readonly SettingDef[]
 
 function matchesQuery(def: SettingDef, query: string): boolean {
@@ -144,6 +145,7 @@ function GeneralTab({ query }: { query: string }) {
             {defs.map((def) => (
               <SettingRow key={def.key} def={def} />
             ))}
+            {section === 'Analysis' && <PythonStatus />}
           </section>
         )
       })}

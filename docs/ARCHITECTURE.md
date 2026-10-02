@@ -61,6 +61,15 @@ People's own shortcuts are in `keybindings.json`. [`shared/keybindings.ts`](../s
 
 [`shared/settings/schema.ts`](../src/shared/settings/schema.ts) lists every setting with its type, default and allowed values; the Settings screen is built from it and `settings.json` is checked against it. `validate` keeps every good value and reports each bad one, falling back to its default, and `withSetting` writes only what differs from the default while keeping entries Prem doesn't know. [`main/settings.ts`](../src/main/settings.ts) watches the file's folder (so editors that save by replacing the file are seen), and keeps the last good settings while the file has a syntax error. Main applies the theme through `nativeTheme`, so the renderer's `prefers-color-scheme` styles follow it, and sends every change to the renderer, which sets CSS variables and reconfigures the editor in place. What Prem remembers between launches (the last vault or server) is in [`main/state.ts`](../src/main/state.ts) and `state.json`, out of the way of people's settings.
 
+## Python analysis
+
+[`main/analysis`](../src/main/analysis) runs Python for notes; [`docs/analysis.md`](analysis.md) describes it from the outside.
+- [`python.ts`](../src/main/analysis/python.ts) finds Python (a setting, uv, then `python3`).
+- [`environment.ts`](../src/main/analysis/environment.ts) builds one environment per vault from `environment.txt` under `<userData>/envs/<vault id>` and stamps it with `pip freeze`.
+- [`prem_runner.py`](../src/main/analysis/prem_runner.py) is a stdlib-only script that runs a note's cells over JSON lines on stdin/stdout. It keeps a namespace per process, displays the last expression, captures figures and tables, and records files read via an audit hook. It is bundled into main with `?raw` and written to `<userData>/runner` at startup.
+- [`runner.ts`](../src/main/analysis/runner.ts) manages one process: queueing, timeouts and SIGINT for Stop.
+- [`AnalysisManager.ts`](../src/main/analysis/AnalysisManager.ts) keeps one runner per note. It refuses locked notes, and on team vaults copies a note's attachments to a scratch folder so code never talks to the server.
+
 ## Renames and links
 
 [`shared/notes/relink.ts`](../src/shared/notes/relink.ts) is a pure function from a note's text to its text after a move: it resolves each wikilink against the vault as it was before (the same resolver the editor uses) and rewrites the ones that pointed at something that moved, and recomputes relative markdown links. `VaultManager.rename` runs it over every note after the provider moves the files, writing with the version it read so a concurrent edit isn't overwritten. Locked and read-only notes are reported, not changed, so a rename never alters a signed record or bypasses permissions. On a team vault this happens in the renaming person's app, through the same permission checks as any other save.

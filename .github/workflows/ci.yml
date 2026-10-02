@@ -26,6 +26,11 @@ jobs:
         with:
           node-version-file: .nvmrc
           cache: npm
+      # Python cells are tested against a real Python, with the packages they most often use.
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - run: pip install pandas matplotlib
       - run: npm ci
       - run: npm run format:check
       - run: npm run lint
@@ -46,6 +51,10 @@ jobs:
         with:
           node-version-file: .nvmrc
           cache: npm
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - run: pip install pandas matplotlib
       # These launch the real app, so they need the Electron binary.
       - run: npm ci
       - run: npm run build

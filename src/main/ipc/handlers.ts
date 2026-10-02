@@ -15,6 +15,7 @@ import { VaultError, type IpcResult } from '@shared/vault/errors'
 import { Channels } from '@shared/vault/ipc'
 import { basename, sanitizeFileName, stripMd } from '@shared/vault/paths'
 import type { WriteOptions } from '@shared/vault/types'
+import type { AnalysisManager } from '../analysis/AnalysisManager'
 import type { KeybindingsStore } from '../keybindings'
 import type { SettingsStore } from '../settings'
 import { loadState, recallToken } from '../state'
@@ -53,6 +54,7 @@ export function registerIpc(
   vaults: VaultManager,
   settings: SettingsStore,
   keybindings: KeybindingsStore,
+  analysis: AnalysisManager,
   getWindow: () => BrowserWindow | null
 ): void {
   handle(Channels.pickAndOpen, async () => {
@@ -170,6 +172,12 @@ export function registerIpc(
     const error = await shell.openPath(await keybindings.ensureFile())
     if (error) throw new VaultError('UNKNOWN', `Couldn't open keybindings.json: ${error}`)
   })
+
+  handle(Channels.analysisStatus, (refresh) => analysis.status(refresh === true))
+  handle(Channels.analysisPrepare, () => analysis.prepare())
+  handle(Channels.analysisRun, (notePath, code) => analysis.run(str(notePath, 'notePath'), str(code, 'code')))
+  handle(Channels.analysisInterrupt, (notePath) => analysis.interrupt(str(notePath, 'notePath')))
+  handle(Channels.analysisRestart, (notePath) => analysis.stop(str(notePath, 'notePath')))
 
   handle(Channels.openExternal, async (url) => {
     const target = new URL(str(url, 'url'))

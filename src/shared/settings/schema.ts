@@ -1,7 +1,7 @@
 // Everything a person can set, in one place: the Settings screen is built from this list, and settings.json
 // is checked against it. The file holds only what someone changed, keyed like "appearance.theme".
 
-export type SettingSection = 'Appearance' | 'Editor' | 'Notebook' | 'Export'
+export type SettingSection = 'Appearance' | 'Editor' | 'Notebook' | 'Analysis' | 'Export'
 
 interface Base {
   key: string
@@ -14,7 +14,7 @@ export type SettingDef =
   | (Base & { type: 'enum'; options: { value: string; label: string }[]; default: string })
   | (Base & { type: 'boolean'; default: boolean })
   | (Base & { type: 'number'; min: number; max: number; step?: number; unit?: string; default: number })
-  | (Base & { type: 'string'; pattern?: RegExp; patternHint?: string; default: string })
+  | (Base & { type: 'string'; pattern?: RegExp; patternHint?: string; optional?: boolean; default: string })
 
 export const SETTINGS = [
   {
@@ -112,6 +112,35 @@ export const SETTINGS = [
     default: true
   },
   {
+    key: 'analysis.enabled',
+    section: 'Analysis',
+    title: 'Run Python in notes',
+    description: 'Show Run on ```python {run} blocks. Code only ever runs when you choose Run.',
+    type: 'boolean',
+    default: true
+  },
+  {
+    key: 'analysis.python',
+    section: 'Analysis',
+    title: 'Python',
+    description: 'Path to the Python to use. Leave empty to use uv if it is installed, or python3.',
+    type: 'string',
+    optional: true,
+    default: ''
+  },
+  {
+    key: 'analysis.timeout',
+    section: 'Analysis',
+    title: 'Stop a cell after',
+    description: 'A cell running longer than this is stopped, and the variables from earlier cells are lost.',
+    type: 'number',
+    min: 5,
+    max: 3600,
+    step: 5,
+    unit: 's',
+    default: 300
+  },
+  {
     key: 'export.pageSize',
     section: 'Export',
     title: 'PDF page size',
@@ -154,6 +183,7 @@ export function checkValue(def: SettingDef, value: unknown): { value: unknown } 
     case 'string': {
       if (typeof value !== 'string') return { problem: `"${def.key}" must be text` }
       const trimmed = value.trim()
+      if (!trimmed && def.optional) return { value: '' }
       if (!trimmed || (def.pattern && !def.pattern.test(trimmed)))
         return { problem: `"${def.key}": ${def.patternHint ?? 'not a valid value'}` }
       return { value: trimmed }

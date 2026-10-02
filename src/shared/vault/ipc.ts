@@ -1,4 +1,6 @@
 import type { IpcResult } from './errors'
+import type { AnalysisStatus } from '../analysis/environment'
+import type { CellResult } from '../analysis/results'
 import type { KeybindingsSnapshot } from '../keybindings'
 import type { SettingKey, SettingsSnapshot } from '../settings/schema'
 import type { HistoryEntry } from '../records/history'
@@ -54,6 +56,12 @@ export const Channels = {
   resetKeybinding: 'keybindings:reset',
   openKeybindingsFile: 'keybindings:openFile',
   keybindingsChanged: 'keybindings:changed',
+  analysisStatus: 'analysis:status',
+  analysisPrepare: 'analysis:prepare',
+  analysisRun: 'analysis:run',
+  analysisInterrupt: 'analysis:interrupt',
+  analysisRestart: 'analysis:restart',
+  analysisProgress: 'analysis:progress',
   vaultChanged: 'vault:changed',
   indexUpdated: 'index:updated'
 } as const
@@ -126,6 +134,20 @@ export interface Api {
     /** Opens keybindings.json in the person's editor, creating it if needed. */
     openFile(): R<void>
     onChanged(listener: (snapshot: KeybindingsSnapshot) => void): () => void
+  }
+  analysis: {
+    /** Whether Python was found, and the state of the vault's environment. `refresh` looks for Python again. */
+    status(refresh?: boolean): R<AnalysisStatus>
+    /** Builds or updates the vault's environment from environment.txt. */
+    prepare(): R<AnalysisStatus>
+    /** Runs one cell of a note in that note's runner, so it sees variables from cells run before it. */
+    run(notePath: string, code: string): R<CellResult>
+    /** Stops the cell running in a note. */
+    interrupt(notePath: string): R<void>
+    /** Ends a note's runner, forgetting its variables. */
+    restart(notePath: string): R<void>
+    /** Progress while an environment is built, e.g. "Installing packages". */
+    onProgress(listener: (message: string) => void): () => void
   }
   app: {
     openExternal(url: string): R<void>

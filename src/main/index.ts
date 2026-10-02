@@ -1,9 +1,12 @@
+import { mkdir, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 import { app, BrowserWindow, nativeTheme, shell } from 'electron'
 import { resolveBindings, type KeybindingsSnapshot } from '@shared/keybindings'
 import { DEFAULTS, type SettingsSnapshot } from '@shared/settings/schema'
 import { Channels } from '@shared/vault/ipc'
 import { registerIpc } from './ipc/handlers'
+import { AnalysisManager } from './analysis/AnalysisManager'
+import runnerSource from './analysis/prem_runner.py?raw'
 import { KeybindingsStore } from './keybindings'
 import { installMenu } from './menu'
 import { SettingsStore } from './settings'
@@ -34,6 +37,26 @@ const vaults = new VaultManager(
   },
   () => settings?.values ?? DEFAULTS
 )
+
+/** The runner is written out once per launch, so it always matches this version of Prem. */
+let runnerFile: Promise<string> | null = null
+function runnerScript(): Promise<string> {
+  runnerFile ??= (async () => {
+    const file = path.join(app.getPath('userData'), 'runner', 'prem_runner.py')
+    await mkdir(path.dirname(file), { recursive: true })
+    await writeFile(file, runnerSource, 'utf8')
+    return file
+  })()
+  return runnerFile
+}
+
+const analysis = new AnalysisManager({
+  vaults,
+  settings: () => settings?.values ?? DEFAULTS,
+  envRoot: () => path.join(app.getPath('userData'), 'envs'),
+  script: runnerScript,
+  onProgress: (message) => send(Channels.analysisProgress, message)
+})
 
 function isSafeExternal(url: string): boolean {
   try {
@@ -94,7 +117,7 @@ app.whenReady().then(async () => {
   })
   applyKeybindings(await keybindings.load())
   keybindings.watch()
-  registerIpc(vaults, settings, keybindings, () => mainWindow)
+  registerIpc(vaults, settings, keybindings, analysis, () => mainWindow)
   createWindow()
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow()
@@ -108,5 +131,6 @@ app.on('window-all-closed', () => {
 app.on('before-quit', () => {
   settings?.close()
   keybindings?.close()
+  analysis.stopAll()
   void vaults.close()
 })
