@@ -1,11 +1,11 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { VaultError } from '@shared/vault/errors'
-import { notebookFolder } from '@shared/notes/notebook'
 import { basename, dirname, isInside, isMarkdown, joinPath, sanitizeFileName, stripMd } from '@shared/vault/paths'
 import { createRun, runPath } from '@shared/records/runs'
 import { formatDate } from '@shared/notes/templates'
 import type { RenameResult, VaultPath } from '@shared/vault/types'
 import { errorMessage, vaultClient } from '../services/vaultClient'
+import { useNotebookFolder, useSettings } from './SettingsContext'
 import { useVault } from './VaultContext'
 
 export type MainView = 'editor' | 'graph'
@@ -87,6 +87,8 @@ async function freePath(folder: VaultPath, name: string, ext: string): Promise<V
 
 export function WorkspaceProvider({ children }: { children: ReactNode }) {
   const { info, entries, resolver, subscribe, refresh, canWrite } = useVault()
+  const notebook = useNotebookFolder(info?.user)
+  const confirmTrash = useSettings().values['notebook.confirmTrash']
   const [active, setActive] = useState<OpenNote | null>(null)
   const [view, setView] = useState<MainView>('editor')
   const [renamingPath, setRenamingPath] = useState<VaultPath | null>(null)
@@ -200,7 +202,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
         const now = new Date()
         const protocol = await vaultClient.read(protocolPath)
         const content = createRun(protocolPath, protocol.content, { now, operator: info?.author ?? '' })
-        const base = runPath(notebookFolder(info?.user), protocolPath, now)
+        const base = runPath(notebook, protocolPath, now)
         for (let n = 0; ; n++) {
           const path = n === 0 ? base : base.replace(/\.md$/, ` ${n}.md`)
           try {
@@ -215,7 +217,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
         fail(err)
       }
     },
-    [info, refresh, openNote, fail]
+    [info, notebook, refresh, openNote, fail]
   )
 
   const openLink = useCallback(
@@ -288,7 +290,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
   const remove = useCallback(
     async (path: VaultPath) => {
       const label = basename(path)
-      if (!window.confirm(`Move "${label}" to the trash?`)) return
+      if (confirmTrash && !window.confirm(`Move "${label}" to the trash?`)) return
       try {
         const current = activeRef.current
         if (current && isInside(current.path, path)) {
@@ -301,7 +303,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
         fail(err)
       }
     },
-    [refresh, fail]
+    [confirmTrash, refresh, fail]
   )
 
   const exportPdf = useCallback(

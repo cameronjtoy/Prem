@@ -32,6 +32,8 @@ export interface PrintOptions {
   appVersion: string
   /** Returns a data: URI for an image in the vault, or null if it can't be read. */
   embedImage(path: VaultPath): string | null
+  /** Paper size. A4 unless the person chose US Letter in settings. */
+  pageSize?: 'A4' | 'Letter'
 }
 
 export function escapeHtml(text: string): string {
@@ -199,7 +201,7 @@ export function printableHtml(notes: PrintableNote[], options: PrintOptions): st
 <meta charset="utf-8" />
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src data:; style-src 'unsafe-inline'" />
 <title>${escapeHtml(title)}</title>
-<style>${PRINT_CSS}</style>
+<style>@page { size: ${options.pageSize === 'Letter' ? 'letter' : 'A4'}; }${PRINT_CSS}</style>
 </head>
 <body>
 ${cover}
@@ -209,7 +211,7 @@ ${notes.map((n) => noteSection(n, options)).join('\n')}
 }
 
 const PRINT_CSS = `
-@page { size: A4; margin: 18mm 16mm 20mm; }
+@page { margin: 18mm 16mm 20mm; }
 body { font: 10.5pt/1.5 -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; color: #1a1a1a; margin: 0; }
 .exported { font-size: 8.5pt; color: #666; border-bottom: 1px solid #ddd; padding-bottom: 6px; margin: 0 0 14px; }
 .note + .note { break-before: page; }

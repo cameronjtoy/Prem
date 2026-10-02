@@ -14,16 +14,19 @@ export function parseDay(day: string): Date {
   return date
 }
 
+export const DEFAULT_NOTEBOOK_FOLDER = 'Notebook'
+
 /**
- * Where a person's notebook lives. A local vault belongs to one person, so it's just "Notebook".
- * On a team vault each person gets their own folder, which lines up with per-person permissions.
+ * Where a person's notebook lives. A local vault belongs to one person, so it's "Notebook", or the folder
+ * chosen in settings. On a team vault each person gets their own folder, which lines up with per-person
+ * permissions, so the setting doesn't apply there.
  */
-export function notebookFolder(user?: string): VaultPath {
-  return user ? joinPath('Notebooks', sanitizeFileName(user)) : 'Notebook'
+export function notebookFolder(user?: string, localFolder: string = DEFAULT_NOTEBOOK_FOLDER): VaultPath {
+  return user ? joinPath('Notebooks', sanitizeFileName(user)) : localFolder
 }
 
 /** The daily entry for a day, filed by year so a notebook folder stays browsable after a few years. */
-export function dailyNotePath(day: string, user?: string): VaultPath {
+export function dailyNotePath(day: string, user?: string, localFolder?: string): VaultPath {
   parseDay(day)
-  return joinPath(joinPath(notebookFolder(user), day.slice(0, 4)), `${day}.md`)
+  return joinPath(joinPath(notebookFolder(user, localFolder), day.slice(0, 4)), `${day}.md`)
 }

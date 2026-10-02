@@ -15,6 +15,8 @@ export interface Prem {
   vault: string
   /** Reads a file in the vault. */
   read(vaultPath: string): Promise<string>
+  /** This test's settings folder, where settings.json and state.json live. */
+  userData: string
 }
 
 export async function tempDir(prefix: string): Promise<string> {
@@ -24,9 +26,9 @@ export async function tempDir(prefix: string): Promise<string> {
 /** Starts Prem. With a vault it opens straight into it; without one it shows the welcome screen. */
 export async function launch(
   options: { vault?: string; userData?: string } = {}
-): Promise<{ app: ElectronApplication; page: Page }> {
+): Promise<{ app: ElectronApplication; page: Page; userData: string }> {
   const userData = options.userData ?? (await tempDir('settings'))
-  if (options.vault) await writeFile(path.join(userData, 'settings.json'), JSON.stringify({ lastVault: options.vault }))
+  if (options.vault) await writeFile(path.join(userData, 'state.json'), JSON.stringify({ lastVault: options.vault }))
   const app = await electron.launch({ args: [ROOT, '--no-sandbox', `--user-data-dir=${userData}`] })
   // Tests stand in for the operating system: no real save dialogs, browsers or default apps.
   await app.evaluate(({ shell }) => {
@@ -38,8 +40,9 @@ export async function launch(
   })
   const page = await app.firstWindow()
   await page.setViewportSize({ width: 1280, height: 860 })
-  await page.waitForSelector(options.vault ? '.file-tree' : '.welcome-card')
-  return { app, page }
+  // Without a vault given, the settings folder may still remember one.
+  await page.waitForSelector(options.vault ? '.file-tree' : '.file-tree, .welcome-card')
+  return { app, page, userData }
 }
 
 /** Makes the next "Save as" dialog choose `file`. */
@@ -94,8 +97,8 @@ export const test = base.extend<{ prem: Prem }>({
   prem: async ({}, use) => {
     const vault = await tempDir('vault')
     await cp(SAMPLE_VAULT, vault, { recursive: true })
-    const { app, page } = await launch({ vault })
-    await use({ app, page, vault, read: (p) => readFile(path.join(vault, p), 'utf8') })
+    const { app, page, userData } = await launch({ vault })
+    await use({ app, page, vault, userData, read: (p) => readFile(path.join(vault, p), 'utf8') })
     await app.close()
     await rm(vault, { recursive: true, force: true })
   }

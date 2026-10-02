@@ -10,11 +10,13 @@ import {
   type SaveDialogOptions
 } from 'electron'
 import { MAX_ATTACHMENT_BYTES } from '@shared/attachments/attachments'
+import { settingDef, type SettingKey } from '@shared/settings/schema'
 import { VaultError, type IpcResult } from '@shared/vault/errors'
 import { Channels } from '@shared/vault/ipc'
 import { basename, sanitizeFileName, stripMd } from '@shared/vault/paths'
 import type { WriteOptions } from '@shared/vault/types'
-import { loadSettings, recallToken } from '../settings'
+import type { SettingsStore } from '../settings'
+import { loadState, recallToken } from '../state'
 import type { VaultManager } from '../vault/VaultManager'
 
 function str(value: unknown, name: string): string {
@@ -46,7 +48,11 @@ function handle<T>(channel: string, fn: (...args: unknown[]) => Promise<T> | T):
   })
 }
 
-export function registerIpc(vaults: VaultManager, getWindow: () => BrowserWindow | null): void {
+export function registerIpc(
+  vaults: VaultManager,
+  settings: SettingsStore,
+  getWindow: () => BrowserWindow | null
+): void {
   handle(Channels.pickAndOpen, async () => {
     const win = getWindow()
     const options: OpenDialogOptions = {
@@ -61,7 +67,7 @@ export function registerIpc(vaults: VaultManager, getWindow: () => BrowserWindow
   handle(Channels.connect, (url, token) => vaults.connect(str(url, 'url'), str(token, 'token')))
 
   handle(Channels.openLast, async () => {
-    const { lastVault, lastServer } = await loadSettings()
+    const { lastVault, lastServer } = await loadState()
     if (lastServer) {
       const token = recallToken(lastServer)
       // A team server that's down shouldn't silently fall back to some other vault, so surface the error.
@@ -141,6 +147,17 @@ export function registerIpc(vaults: VaultManager, getWindow: () => BrowserWindow
 
   handle(Channels.getIndex, () => vaults.snapshot())
   handle(Channels.search, (query) => vaults.find(str(query, 'query')))
+
+  handle(Channels.getSettings, () => settings.current)
+  handle(Channels.setSetting, (key, value) => {
+    const name = str(key, 'key')
+    if (!settingDef(name)) throw new VaultError('INVALID_ARGUMENT', `Unknown setting "${name}"`)
+    return settings.set(name as SettingKey, value)
+  })
+  handle(Channels.openSettingsFile, async () => {
+    const error = await shell.openPath(await settings.ensureFile())
+    if (error) throw new VaultError('UNKNOWN', `Couldn't open settings.json: ${error}`)
+  })
 
   handle(Channels.openExternal, async (url) => {
     const target = new URL(str(url, 'url'))

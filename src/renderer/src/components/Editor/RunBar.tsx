@@ -1,6 +1,6 @@
 import { parseFrontmatter } from '@shared/notes/frontmatter'
-import { notebookFolder } from '@shared/notes/notebook'
 import { runProgress } from '@shared/records/runs'
+import { useNotebookFolder } from '../../state/SettingsContext'
 import { useVault } from '../../state/VaultContext'
 import { useWorkspace } from '../../state/WorkspaceContext'
 
@@ -36,9 +36,10 @@ export function RunBar({
 }) {
   const { info, canWrite } = useVault()
   const ws = useWorkspace()
+  const notebook = useNotebookFolder(info?.user)
 
   if (meta.type === 'protocol') {
-    const canStart = canWrite(notebookFolder(info?.user))
+    const canStart = canWrite(notebook)
     return (
       <div className="run-bar">
         <span className="run-kind">Protocol{meta.fields.version ? ` · version ${meta.fields.version}` : ''}</span>

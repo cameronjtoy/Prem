@@ -5,11 +5,12 @@ import { isInside } from '@shared/vault/paths'
 import { addDeviation, completeRun } from '@shared/records/runs'
 import { EMPTY_STATUS, type RecordCheck } from '@shared/records/signatures'
 import { errorMessage, vaultClient } from '../../services/vaultClient'
+import { currentSettings, useSettings } from '../../state/SettingsContext'
 import { useVault } from '../../state/VaultContext'
 import { useWorkspace } from '../../state/WorkspaceContext'
 import { keyFor, useCommand } from '../../commands/registry'
 import { ExportIcon, HistoryIcon } from '../icons'
-import { createExtensions, refreshLinks, type EditorHost } from './extensions'
+import { createExtensions, optionExtensions, optionsCompartment, refreshLinks, type EditorHost } from './extensions'
 import {
   insertAtCursor,
   insertWikilink,
@@ -33,6 +34,9 @@ const STATUS_LABEL: Record<SaveStatus, string> = {
 export function NoteEditor({ path, cursor }: { path: string; cursor: number | null }) {
   const { resolver, noteTitles, subscribe, canWrite } = useVault()
   const { openLink, registerEditor, showNotice, exportPdf, startRun } = useWorkspace()
+  const { values: settings } = useSettings()
+  const spellcheck = settings['editor.spellcheck']
+  const lineNumbers = settings['editor.lineNumbers']
   const hostRef = useRef<HTMLDivElement>(null)
   const sessionRef = useRef<NoteSession | null>(null)
   const [status, setStatus] = useState<SaveStatus>('saved')
@@ -95,7 +99,10 @@ export function NoteEditor({ path, cursor }: { path: string; cursor: number | nu
           file,
           hostRef.current,
           (s) => [
-            createExtensions(host, () => void s.save(), readOnly),
+            createExtensions(host, () => void s.save(), readOnly, {
+              spellcheck: currentSettings()['editor.spellcheck'],
+              lineNumbers: currentSettings()['editor.lineNumbers']
+            }),
             EditorView.updateListener.of((u) => u.docChanged && setMeta(readMeta(u.state.doc.toString())))
           ],
           {
@@ -105,7 +112,8 @@ export function NoteEditor({ path, cursor }: { path: string; cursor: number | nu
             onAmended: () => {
               setAmending(null)
               void refreshRecord()
-            }
+            },
+            autosaveDelay: () => currentSettings()['editor.autosaveDelay']
           },
           cursor
         )
@@ -144,6 +152,12 @@ export function NoteEditor({ path, cursor }: { path: string; cursor: number | nu
   useEffect(() => {
     sessionRef.current?.view.dispatch({ effects: refreshLinks.of(null) })
   }, [resolver])
+
+  useEffect(() => {
+    sessionRef.current?.view.dispatch({
+      effects: optionsCompartment.reconfigure(optionExtensions({ spellcheck, lineNumbers }))
+    })
+  }, [spellcheck, lineNumbers])
 
   /** Applies a whole-note rewrite as the smallest edit, so undo and the cursor behave naturally. */
   const rewrite = (fn: (text: string) => { text: string; cursor?: number }): void => {
@@ -215,7 +229,11 @@ export function NoteEditor({ path, cursor }: { path: string; cursor: number | nu
     },
     editable
   )
-  useCommand('note.insertDateTime', () => view() && insertAtCursor(view()!, nowStamp()), editable)
+  useCommand(
+    'note.insertDateTime',
+    () => view() && insertAtCursor(view()!, nowStamp(new Date(), settings['editor.timestampFormat'])),
+    editable
+  )
   useCommand(
     'note.sign',
     () => setSignRequest((n) => n + 1),

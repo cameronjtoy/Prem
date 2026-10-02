@@ -42,6 +42,7 @@ Press ⌘⇧P for the command palette, which lists every command, or ⌘/ for th
 |---|---|
 | ⇧⌘P | Command palette |
 | ⌘/ | Keyboard shortcuts |
+| ⌘, | Settings |
 | ⌘K | Search all notes |
 | ⌘E | Go to note… |
 | ⌘[ | Back |
@@ -71,6 +72,22 @@ Press ⌘⇧P for the command palette, which lists every command, or ⌘/ for th
 | ⌘\\ | Show or hide the file list |
 | ⇧⌘\\ | Show or hide links |
 <!-- shortcuts:end -->
+
+### Settings
+
+Open **Settings** with ⌘, (Ctrl+, on Windows and Linux): theme, text size and line width; spelling, line numbers, how soon notes save and the inserted date format; where your notebook goes and whether to confirm before trashing; and the PDF page size.
+
+Everything on that screen is also in `settings.json`, which lists only what you've changed, so it's easy to read, copy to another computer or keep in a dotfiles repo:
+
+```json
+{
+  "appearance.theme": "dark",
+  "appearance.textSize": 18,
+  "notebook.folder": "Lab notebook"
+}
+```
+
+**Open settings.json** on the Settings screen opens it in your editor. It lives in Prem's settings folder (`~/Library/Application Support/Prem` on macOS, `%APPDATA%\Prem` on Windows, `~/.config/Prem` on Linux), and changes apply as soon as you save. If the file has a mistake, Prem says where and keeps using your last good settings.
 
 ## Features
 

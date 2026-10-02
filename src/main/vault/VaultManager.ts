@@ -34,7 +34,8 @@ import type {
 } from '@shared/vault/types'
 import { loadImages, loadPrintable, notesToPrint, printToPdf } from '../export/pdf'
 import { printableHtml, type PrintableNote } from '../export/printable'
-import { rememberServer, saveSettings } from '../settings'
+import { DEFAULTS, type Settings } from '@shared/settings/schema'
+import { rememberServer, saveState } from '../state'
 import { DAILY_TEMPLATE, DEFAULT_TEMPLATES } from './defaultTemplates'
 import { LocalFsProvider } from './LocalFsProvider'
 import { RemoteProvider } from './RemoteProvider'
@@ -60,7 +61,10 @@ export class VaultManager {
   /** Set for team vaults, where each person's notebook lives in its own folder. */
   private user: string | undefined
 
-  constructor(private readonly events: VaultEvents) {}
+  constructor(
+    private readonly events: VaultEvents,
+    private readonly settings: () => Settings = () => DEFAULTS
+  ) {}
 
   get current(): VaultProvider {
     if (!this.provider) throw new VaultError('NO_VAULT', 'No vault is open')
@@ -75,7 +79,7 @@ export class VaultManager {
     await this.attach(provider)
     this.user = undefined
     this.author = localUserName()
-    await saveSettings({ lastVault: root, lastServer: undefined })
+    await saveState({ lastVault: root, lastServer: undefined })
     return { name: provider.name, root, author: this.author }
   }
 
@@ -215,7 +219,8 @@ export class VaultManager {
       exportedBy: this.author,
       exportedAt: new Date(),
       appVersion: app.getVersion(),
-      embedImage: (p) => images.get(p) ?? null
+      embedImage: (p) => images.get(p) ?? null,
+      pageSize: this.settings()['export.pageSize'] === 'Letter' ? 'Letter' : 'A4'
     })
     const footer = notes.length === 1 ? notes[0].path : `${path || provider.name} · ${notes.length} entries`
     await printToPdf(html, file, footer)
@@ -296,7 +301,7 @@ export class VaultManager {
   /** Opens the daily entry for `day` (YYYY-MM-DD, in the user's own time zone), creating it on first use. */
   async openDaily(day: string): Promise<CreatedNote> {
     const provider = this.current
-    const path = dailyNotePath(day, this.user)
+    const path = dailyNotePath(day, this.user, this.settings()['notebook.folder'])
     if (await provider.exists(path)) return { path, cursor: null }
 
     const custom = `${TEMPLATES_FOLDER}/${DAILY_TEMPLATE}`

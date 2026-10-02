@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react'
 import { Group, Panel, Separator, usePanelRef } from 'react-resizable-panels'
-import { notebookFolder } from '@shared/notes/notebook'
 import { BacklinksPanel } from './components/Backlinks/BacklinksPanel'
 import { NoteEditor } from './components/Editor/NoteEditor'
 import { FileTree } from './components/FileTree/FileTree'
@@ -8,11 +7,13 @@ import { GraphView } from './components/Graph/GraphView'
 import { EditIcon, GraphIcon, SearchIcon, TemplateIcon, TodayIcon, VaultIcon } from './components/icons'
 import { CommandPalette, QuickSwitcher, ShortcutsSheet } from './components/Palette'
 import { SearchPalette } from './components/SearchPalette'
+import { SettingsView } from './components/Settings/SettingsView'
 import { handleKeyDown, keyFor, runCommand, useCommand } from './commands/registry'
 import { vaultClient } from './services/vaultClient'
 import { TemplatePicker } from './components/TemplatePicker'
 import { WelcomeScreen } from './components/WelcomeScreen'
 import { LinkIndexProvider } from './state/LinkIndexContext'
+import { SettingsProvider, useNotebookFolder, useSettings } from './state/SettingsContext'
 import { useVault, VaultProvider } from './state/VaultContext'
 import { useWorkspace, WorkspaceProvider } from './state/WorkspaceContext'
 
@@ -21,13 +22,15 @@ const ISSUES = 'https://github.com/cameronjtoy/Prem/issues/new/choose'
 
 export function App() {
   return (
-    <VaultProvider>
-      <LinkIndexProvider>
-        <WorkspaceProvider>
-          <Shell />
-        </WorkspaceProvider>
-      </LinkIndexProvider>
-    </VaultProvider>
+    <SettingsProvider>
+      <VaultProvider>
+        <LinkIndexProvider>
+          <WorkspaceProvider>
+            <Shell />
+          </WorkspaceProvider>
+        </LinkIndexProvider>
+      </VaultProvider>
+    </SettingsProvider>
   )
 }
 
@@ -35,8 +38,10 @@ function Shell() {
   const { info, openVault, canWrite } = useVault()
   const ws = useWorkspace()
   const canCreate = canWrite(ws.currentFolder())
-  const canKeepNotebook = canWrite(notebookFolder(info?.user))
-  const [overlay, setOverlay] = useState<'search' | 'commands' | 'notes' | 'shortcuts' | null>(null)
+  const canKeepNotebook = canWrite(useNotebookFolder(info?.user))
+  const [overlay, setOverlay] = useState<'search' | 'commands' | 'notes' | 'shortcuts' | 'settings' | null>(null)
+  const { snapshot: settingsSnapshot } = useSettings()
+  const settingsTrouble = !!settingsSnapshot.error || settingsSnapshot.problems.length > 0
   const filesPanel = usePanelRef()
   const linksPanel = usePanelRef()
   const vaultOpen = (): boolean => !!info
@@ -50,6 +55,7 @@ function Shell() {
 
   useCommand('app.commandPalette', toggle('commands'), vaultOpen)
   useCommand('app.shortcuts', toggle('shortcuts'))
+  useCommand('app.settings', toggle('settings'))
   useCommand('app.search', toggle('search'), vaultOpen)
   useCommand('app.quickSwitcher', toggle('notes'), vaultOpen)
   useCommand('nav.back', ws.goBack, ws.canGoBack)
@@ -107,7 +113,17 @@ function Shell() {
     }
   }, [])
 
-  if (!info) return <WelcomeScreen />
+  const settings = overlay === 'settings' && <SettingsView onClose={() => setOverlay(null)} />
+
+  if (!info) {
+    return (
+      <>
+        <WelcomeScreen />
+        {settings}
+        {overlay === 'shortcuts' && <ShortcutsSheet onClose={() => setOverlay(null)} />}
+      </>
+    )
+  }
 
   return (
     <div className="app">
@@ -168,6 +184,16 @@ function Shell() {
                 <VaultIcon /> Switch vault
               </button>
             </div>
+            {settingsTrouble && overlay !== 'settings' && (
+              <div className="banner warning settings-trouble">
+                <span>
+                  {settingsSnapshot.error
+                    ? `settings.json has a mistake at ${settingsSnapshot.error}. Your last good settings are in use.`
+                    : 'Some entries in settings.json were ignored.'}
+                </span>
+                <button onClick={() => setOverlay('settings')}>Show</button>
+              </div>
+            )}
             {ws.notice && (
               <div className={`banner ${ws.noticeKind}`}>
                 <span>{ws.notice}</span>
@@ -195,6 +221,7 @@ function Shell() {
       {overlay === 'commands' && <CommandPalette onClose={() => setOverlay(null)} />}
       {overlay === 'notes' && <QuickSwitcher onClose={() => setOverlay(null)} />}
       {overlay === 'shortcuts' && <ShortcutsSheet onClose={() => setOverlay(null)} />}
+      {settings}
     </div>
   )
 }
@@ -202,7 +229,7 @@ function Shell() {
 function EmptyState() {
   const ws = useWorkspace()
   const { info, canWrite } = useVault()
-  const notebook = notebookFolder(info?.user)
+  const notebook = useNotebookFolder(info?.user)
   const canKeepNotebook = canWrite(notebook)
   const canWriteProtocols = canWrite('Protocols')
   if (!canKeepNotebook && !canWriteProtocols) {

@@ -7,6 +7,7 @@ All notable changes to Prem are listed here. The format follows [Keep a Changelo
 Everything below will ship as **0.1.0**, the first pilot release.
 
 ### Added
+- **Settings** (⌘,): theme (system, light or dark), text size, line width, spelling, line numbers, autosave delay, the inserted date and time format, the notebook folder, confirming before moving to the trash, and PDF page size (A4 or US Letter). Each is also in `settings.json`, which holds only what you changed and applies as soon as it's saved; a mistake in it is reported with its line, and the last good settings stay in use. The last vault Prem opened is now kept separately in `state.json`, moved there automatically.
 - **Keyboard and menus**: a command palette (⇧⌘P) listing every command you can run, a note switcher (⌘E), back and forward through the notes you opened (⌘[ / ⌘]), and a shortcuts sheet (⌘/). New shortcuts for formatting (bold, italic, strikethrough, headings, links), ticking a step with its time (⌘↵), inserting the date and time, attaching a file, signing, starting a run, logging a deviation, history, and hiding the side panels. An application menu (File, Edit, View, Go, Note, Help) shows them all.
 - **Notebook**: daily entries (⌘T) filed by year; templates for Experiment, Protocol, Sample, Lab meeting, Reference and Daily entry, with `{{title}}`, `{{date}}`, `{{time}}`, `{{author}}` and `{{cursor}}`.
 - **Editor**: live-preview markdown (CodeMirror), KaTeX equations, tables, checkboxes, wikilinks with autocomplete, backlinks and a graph view.

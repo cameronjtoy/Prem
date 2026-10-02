@@ -18,6 +18,8 @@ export interface SessionCallbacks {
   onError(message: string | null): void
   /** The first save after starting an amendment went through, so the note is no longer locked. */
   onAmended?(): void
+  /** How long to wait after the last keystroke before saving, from settings. */
+  autosaveDelay?(): number
 }
 
 const AUTOSAVE_MS = 600
@@ -73,7 +75,7 @@ export class NoteSession {
     this.ui.onStatus('dirty')
     if (this.timer) clearTimeout(this.timer)
     if (this.conflict || this.discarded) return
-    this.timer = setTimeout(() => void this.save(), AUTOSAVE_MS)
+    this.timer = setTimeout(() => void this.save(), this.ui.autosaveDelay?.() ?? AUTOSAVE_MS)
   }
 
   async save(overwriteVersion?: string): Promise<void> {

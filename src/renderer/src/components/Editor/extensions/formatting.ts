@@ -113,7 +113,7 @@ export function insertAtCursor(view: EditorView, text: string): boolean {
   return true
 }
 
-/** "2026-10-02 14:05", the format run timestamps use. */
-export function nowStamp(now = new Date()): string {
-  return formatDate(now, 'YYYY-MM-DD HH:mm')
+/** "2026-10-02 14:05" by default; the format can be changed in settings. */
+export function nowStamp(now = new Date(), format = 'YYYY-MM-DD HH:mm'): string {
+  return formatDate(now, format)
 }

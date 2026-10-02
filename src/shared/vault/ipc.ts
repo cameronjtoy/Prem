@@ -1,4 +1,5 @@
 import type { IpcResult } from './errors'
+import type { SettingKey, SettingsSnapshot } from '../settings/schema'
 import type { HistoryEntry } from '../records/history'
 import type { SearchHit } from '../search/search'
 import type { RecordCheck } from '../records/signatures'
@@ -43,6 +44,10 @@ export const Channels = {
   search: 'search:query',
   openExternal: 'app:openExternal',
   command: 'app:command',
+  getSettings: 'settings:get',
+  setSetting: 'settings:set',
+  openSettingsFile: 'settings:openFile',
+  settingsChanged: 'settings:changed',
   vaultChanged: 'vault:changed',
   indexUpdated: 'index:updated'
 } as const
@@ -98,6 +103,14 @@ export interface Api {
   index: {
     get(): R<LinkIndexSnapshot | null>
     onUpdated(listener: (snapshot: LinkIndexSnapshot) => void): () => void
+  }
+  settings: {
+    get(): R<SettingsSnapshot>
+    /** Changes one setting and saves settings.json. Fails with a message if the value isn't allowed. */
+    set(key: SettingKey, value: unknown): R<SettingsSnapshot>
+    /** Opens settings.json in the person's editor, creating it if needed. */
+    openFile(): R<void>
+    onChanged(listener: (snapshot: SettingsSnapshot) => void): () => void
   }
   app: {
     openExternal(url: string): R<void>

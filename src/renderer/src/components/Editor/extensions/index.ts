@@ -4,16 +4,37 @@ import { markdown, markdownLanguage } from '@codemirror/lang-markdown'
 import { bracketMatching, indentOnInput, syntaxHighlighting } from '@codemirror/language'
 import { languages } from '@codemirror/language-data'
 import { highlightSelectionMatches, searchKeymap } from '@codemirror/search'
-import { EditorState, Prec, type Extension } from '@codemirror/state'
-import { drawSelection, dropCursor, EditorView, keymap } from '@codemirror/view'
+import { Compartment, EditorState, Prec, type Extension } from '@codemirror/state'
+import { drawSelection, dropCursor, EditorView, keymap, lineNumbers } from '@codemirror/view'
 import { wikilinkAutocomplete } from './autocomplete'
 import { hostFacet, type EditorHost } from './host'
 import { livePreview } from './livePreview'
 import { MathSyntax, WikiLinkSyntax } from './syntax'
 import { editorTheme, highlightStyle } from './theme'
 
-export function createExtensions(host: EditorHost, onSave: () => void, readOnly = false): Extension[] {
+export interface EditorOptions {
+  spellcheck: boolean
+  lineNumbers: boolean
+}
+
+/** The part of the editor that follows settings, so it can change without reopening the note. */
+export const optionsCompartment = new Compartment()
+
+export function optionExtensions(options: EditorOptions): Extension {
   return [
+    EditorView.contentAttributes.of({ spellcheck: options.spellcheck ? 'true' : 'false' }),
+    options.lineNumbers ? lineNumbers() : []
+  ]
+}
+
+export function createExtensions(
+  host: EditorHost,
+  onSave: () => void,
+  readOnly = false,
+  options: EditorOptions = { spellcheck: true, lineNumbers: false }
+): Extension[] {
+  return [
+    optionsCompartment.of(optionExtensions(options)),
     hostFacet.of(host),
     EditorState.readOnly.of(readOnly),
     Prec.highest(keymap.of([{ key: 'Mod-s', preventDefault: true, run: () => (onSave(), true) }])),
@@ -25,7 +46,6 @@ export function createExtensions(host: EditorHost, onSave: () => void, readOnly 
     closeBrackets(),
     highlightSelectionMatches(),
     EditorView.lineWrapping,
-    EditorView.contentAttributes.of({ spellcheck: 'true' }),
     markdown({
       base: markdownLanguage,
       codeLanguages: languages,
