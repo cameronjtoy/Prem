@@ -51,6 +51,10 @@ Saves, outside edits (from the watcher, or caught up before the next operation),
 
 Signatures are **attestations tied to the authenticated user** (team-server token, or the OS user locally); they are tamper-evident but not cryptographic yet.
 
+## Commands and shortcuts
+
+[`shared/commands.ts`](../src/shared/commands.ts) lists every command with its default shortcut, written once with `Mod` (⌘ on macOS, Ctrl elsewhere) and matched on the physical key. The keyboard dispatcher, the application menu ([`main/menu.ts`](../src/main/menu.ts)), the command palette, the shortcuts sheet and the README table all read it; a test fails if the README drifts. Components register what a command does while they're on screen with `useCommand(id, run, enabled)` ([`renderer/src/commands/registry.ts`](../src/renderer/src/commands/registry.ts)): the shell handles navigation, the open note handles formatting and signing. A command that can't run right now leaves its key to the editor, so ⌘[ still indents when there's nothing to go back to.
+
 ## Renames and links
 
 [`shared/notes/relink.ts`](../src/shared/notes/relink.ts) is a pure function from a note's text to its text after a move: it resolves each wikilink against the vault as it was before (the same resolver the editor uses) and rewrites the ones that pointed at something that moved, and recomputes relative markdown links. `VaultManager.rename` runs it over every note after the provider moves the files, writing with the version it read so a concurrent edit isn't overwritten. Locked and read-only notes are reported, not changed, so a rename never alters a signed record or bypasses permissions. On a team vault this happens in the renaming person's app, through the same permission checks as any other save.

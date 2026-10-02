@@ -7,8 +7,17 @@ import { EMPTY_STATUS, type RecordCheck } from '@shared/records/signatures'
 import { errorMessage, vaultClient } from '../../services/vaultClient'
 import { useVault } from '../../state/VaultContext'
 import { useWorkspace } from '../../state/WorkspaceContext'
+import { keyFor, useCommand } from '../../commands/registry'
 import { ExportIcon, HistoryIcon } from '../icons'
 import { createExtensions, refreshLinks, type EditorHost } from './extensions'
+import {
+  insertAtCursor,
+  insertWikilink,
+  nowStamp,
+  toggleHeading,
+  toggleTaskAtCursor,
+  toggleWrap
+} from './extensions/formatting'
 import { HistoryPanel } from './HistoryPanel'
 import { NoteSession, type Conflict, type SaveStatus } from './NoteSession'
 import { RecordBar } from './RecordBar'
@@ -23,7 +32,7 @@ const STATUS_LABEL: Record<SaveStatus, string> = {
 
 export function NoteEditor({ path, cursor }: { path: string; cursor: number | null }) {
   const { resolver, noteTitles, subscribe, canWrite } = useVault()
-  const { openLink, registerEditor, showNotice, exportPdf } = useWorkspace()
+  const { openLink, registerEditor, showNotice, exportPdf, startRun } = useWorkspace()
   const hostRef = useRef<HTMLDivElement>(null)
   const sessionRef = useRef<NoteSession | null>(null)
   const [status, setStatus] = useState<SaveStatus>('saved')
@@ -169,6 +178,68 @@ export function NoteEditor({ path, cursor }: { path: string; cursor: number | nu
     rewrite((text) => ({ text: completeRun(text, new Date()) }))
   }
 
+  const [signRequest, setSignRequest] = useState(0)
+  const view = (): EditorView | undefined => sessionRef.current?.view
+  const editable = (): boolean => !loading && !readOnly && !!view()
+  const onLine = (test: RegExp) => (): boolean => {
+    const v = view()
+    return !!v && editable() && test.test(v.state.doc.lineAt(v.state.selection.main.head).text)
+  }
+  const canSign =
+    !loading &&
+    canEdit &&
+    !!record &&
+    !record.locked &&
+    (record.timesSigned > 0 || ['experiment', 'run', 'daily', 'protocol'].includes(meta.type ?? ''))
+
+  useCommand(
+    'note.save',
+    () => void sessionRef.current?.save(),
+    () => !loading && !readOnly
+  )
+  useCommand(
+    'note.history',
+    () => setShowHistory(true),
+    () => !loading
+  )
+  useCommand(
+    'note.attach',
+    async () => {
+      try {
+        const added = await vaultClient.pickAttachments(path)
+        const v = view()
+        if (added.length && v) insertAtCursor(v, added.join('\n'))
+      } catch (err) {
+        showNotice(`Couldn't attach: ${errorMessage(err)}`)
+      }
+    },
+    editable
+  )
+  useCommand('note.insertDateTime', () => view() && insertAtCursor(view()!, nowStamp()), editable)
+  useCommand(
+    'note.sign',
+    () => setSignRequest((n) => n + 1),
+    () => canSign
+  )
+  useCommand(
+    'run.start',
+    () => void startRun(path),
+    () => !loading && meta.type === 'protocol'
+  )
+  useCommand(
+    'run.addDeviation',
+    () => rewrite((text) => addDeviation(text, new Date())),
+    () => editable() && meta.type === 'run' && meta.fields.status !== 'complete'
+  )
+  useCommand('format.task', () => view() && toggleTaskAtCursor(view()!), onLine(/^\s*(?:[-*+]|\d+[.)])\s+\[[ xX]\]/))
+  useCommand('format.bold', () => view() && toggleWrap(view()!, '**'), editable)
+  useCommand('format.italic', () => view() && toggleWrap(view()!, '*'), editable)
+  useCommand('format.strike', () => view() && toggleWrap(view()!, '~~'), editable)
+  useCommand('format.link', () => view() && insertWikilink(view()!), editable)
+  useCommand('format.heading1', () => view() && toggleHeading(view()!, 1), editable)
+  useCommand('format.heading2', () => view() && toggleHeading(view()!, 2), editable)
+  useCommand('format.heading3', () => view() && toggleHeading(view()!, 3), editable)
+
   const crumbs = path.replace(/\.md$/i, '').split('/')
 
   return (
@@ -184,7 +255,7 @@ export function NoteEditor({ path, cursor }: { path: string; cursor: number | nu
         {!loading && (
           <button
             className="icon-button"
-            title="Export as PDF, with signatures and history check (⌘P)"
+            title={`Export as PDF, with signatures and history check (${keyFor('note.exportPdf')})`}
             onClick={() => void exportPdf(path)}
           >
             <ExportIcon />
@@ -193,7 +264,7 @@ export function NoteEditor({ path, cursor }: { path: string; cursor: number | nu
         {!loading && (
           <button
             className="icon-button"
-            title="History: every saved version of this note"
+            title={`History: every saved version of this note (${keyFor('note.history')})`}
             onClick={() => setShowHistory(true)}
           >
             <HistoryIcon />
@@ -222,6 +293,7 @@ export function NoteEditor({ path, cursor }: { path: string; cursor: number | nu
           status={record}
           amending={amending}
           canEdit={canEdit}
+          signRequest={signRequest}
           onSign={async (statement) => {
             try {
               await sessionRef.current?.save()

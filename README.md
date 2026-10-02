@@ -35,15 +35,42 @@ Choose **Open a folder as a vault** and pick [`examples/sample-vault/`](examples
 
 ### Keyboard shortcuts
 
-| Shortcut | Action |
-| --- | --- |
-| ⌘T | Today's notebook entry |
+Press ⌘⇧P for the command palette, which lists every command, or ⌘/ for this list inside Prem.
+
+<!-- shortcuts:start -->
+| Shortcut (Ctrl on Windows and Linux) | Action |
+|---|---|
+| ⇧⌘P | Command palette |
+| ⌘/ | Keyboard shortcuts |
 | ⌘K | Search all notes |
-| ⌘N / ⌘⇧N | New note / new note from template |
-| ⌘G | Graph of how notes link |
-| ⌘S | Save now (notes also autosave) |
-| ⌘P | Export the open note as a PDF |
+| ⌘E | Go to note… |
+| ⌘[ | Back |
+| ⌘] | Forward |
+| ⌘T | Today's entry |
+| ⌘N | New note |
+| ⇧⌘N | New note from template |
 | ⌘O | Open another vault |
+| ⌘P | Export as PDF |
+| ⌘S | Save now |
+| ⇧⌘H | History of this note |
+| ⇧⌘E | Show in file list |
+| ⇧⌘A | Attach a file… |
+| ⇧⌘T | Insert date and time |
+| ⇧⌘S | Sign this record… |
+| ⇧⌘R | Start a run of this protocol |
+| ⇧⌘D | Add a deviation |
+| ⌘↵ | Tick or untick step |
+| ⌘B | Bold |
+| ⌘I | Italic |
+| ⇧⌘X | Strikethrough |
+| ⌘L | Insert link to a note |
+| ⌥⌘1 | Heading 1 |
+| ⌥⌘2 | Heading 2 |
+| ⌥⌘3 | Heading 3 |
+| ⌘G | Graph of links |
+| ⌘\\ | Show or hide the file list |
+| ⇧⌘\\ | Show or hide links |
+<!-- shortcuts:end -->
 
 ## Features
 

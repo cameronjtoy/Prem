@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
 import type { RecordCheck } from '@shared/records/signatures'
 import { useVault } from '../../state/VaultContext'
 
@@ -21,6 +21,7 @@ export function RecordBar({
   status,
   amending,
   canEdit,
+  signRequest = 0,
   onSign,
   onWitness,
   onAmend
@@ -30,6 +31,8 @@ export function RecordBar({
   status: RecordCheck | null
   amending: string | null
   canEdit: boolean
+  /** Increases when someone asks to sign from the keyboard or menu, which opens the sign form. */
+  signRequest?: number
   onSign(statement: string): Promise<void>
   onWitness(): Promise<void>
   onAmend(reason: string): void
@@ -37,6 +40,10 @@ export function RecordBar({
   const { info } = useVault()
   const [form, setForm] = useState<Form>(null)
   const [busy, setBusy] = useState(false)
+
+  useEffect(() => {
+    if (signRequest > 0) setForm({ kind: 'sign', text: '' })
+  }, [signRequest])
 
   if (!status) return null
   if (status.state === 'draft' && status.timesSigned === 0 && !SIGNABLE.has(type ?? '')) return null

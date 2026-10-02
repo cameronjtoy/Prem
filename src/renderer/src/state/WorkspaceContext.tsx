@@ -50,6 +50,11 @@ interface WorkspaceState {
   registerEditor(handle: EditorHandle | null): void
   /** Folder new notes go into: the open note's folder, or the vault root. */
   currentFolder(): VaultPath
+  /** Back and forward through the notes you've opened, like a browser. */
+  goBack(): void
+  goForward(): void
+  canGoBack(): boolean
+  canGoForward(): boolean
 }
 
 const WorkspaceContext = createContext<WorkspaceState | null>(null)
@@ -81,7 +86,7 @@ async function freePath(folder: VaultPath, name: string, ext: string): Promise<V
 }
 
 export function WorkspaceProvider({ children }: { children: ReactNode }) {
-  const { info, resolver, subscribe, refresh, canWrite } = useVault()
+  const { info, entries, resolver, subscribe, refresh, canWrite } = useVault()
   const [active, setActive] = useState<OpenNote | null>(null)
   const [view, setView] = useState<MainView>('editor')
   const [renamingPath, setRenamingPath] = useState<VaultPath | null>(null)
@@ -95,10 +100,15 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
   const editor = useRef<EditorHandle | null>(null)
   const activeRef = useRef(active)
   activeRef.current = active
+  // Notes you came from and went back from. Kept in refs: they change on every navigation but nothing renders them.
+  const trail = useRef<{ back: VaultPath[]; forward: VaultPath[] }>({ back: [], forward: [] })
+  const entriesRef = useRef(entries)
+  entriesRef.current = entries
 
   useEffect(() => {
     setActive(null)
     setView('editor')
+    trail.current = { back: [], forward: [] }
   }, [info])
 
   // If the open note disappears from disk, drop it without saving it back.
@@ -121,11 +131,43 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
     (path: VaultPath, cursor: number | null = null) => {
       // Attachments open in their own app; only notes open in the editor.
       if (!isMarkdown(path)) return void vaultClient.openFile(path).catch(fail)
+      const current = activeRef.current
+      if (current && current.path !== path) {
+        trail.current.back = [...trail.current.back.slice(-99), current.path]
+        trail.current.forward = []
+      }
       setActive({ path, cursor })
       setView('editor')
     },
     [fail]
   )
+
+  const exists = useCallback(
+    (path: VaultPath) => entriesRef.current.some((e) => e.kind === 'file' && e.path === path),
+    []
+  )
+
+  /** Moves one step along `from`, skipping notes that were deleted or moved, and records where you were in `to`. */
+  const step = useCallback(
+    (from: 'back' | 'forward') => {
+      const to = from === 'back' ? 'forward' : 'back'
+      const t = trail.current
+      let target: VaultPath | undefined
+      while ((target = t[from].pop()) && !exists(target)) {
+        // skip
+      }
+      if (!target) return
+      const current = activeRef.current
+      if (current) t[to].push(current.path)
+      setActive({ path: target, cursor: null })
+      setView('editor')
+    },
+    [exists]
+  )
+  const goBack = useCallback(() => step('back'), [step])
+  const goForward = useCallback(() => step('forward'), [step])
+  const canGoBack = useCallback(() => trail.current.back.some(exists), [exists])
+  const canGoForward = useCallback(() => trail.current.forward.some(exists), [exists])
 
   const createFromTemplate = useCallback(
     async (templatePath: VaultPath, title: string, folder: VaultPath) => {
@@ -231,6 +273,8 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
         const result = await vaultClient.rename(path, to)
         // Switch before the watcher reports the old path as deleted, which would close the note.
         if (affectsActive && current) setActive({ path: to + current.path.slice(path.length), cursor: null })
+        const moved = (p: VaultPath): VaultPath => (isInside(p, path) ? to + p.slice(path.length) : p)
+        trail.current = { back: trail.current.back.map(moved), forward: trail.current.forward.map(moved) }
         await refresh()
         const report = renameReport(result)
         if (report) setNotice(report.text, report.kind)
@@ -307,7 +351,11 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
       showTemplatePicker: setTemplatePickerFolder,
       showNotice: (message: string | null) => setNotice(message),
       registerEditor,
-      currentFolder
+      currentFolder,
+      goBack,
+      goForward,
+      canGoBack,
+      canGoForward
     }),
     [
       active,
@@ -328,7 +376,11 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
       remove,
       exportPdf,
       registerEditor,
-      currentFolder
+      currentFolder,
+      goBack,
+      goForward,
+      canGoBack,
+      canGoForward
     ]
   )
 

@@ -1,4 +1,5 @@
-import { join } from 'node:path'
+import { readFile, stat } from 'node:fs/promises'
+import { basename as baseNameOf, join } from 'node:path'
 import {
   app,
   dialog,
@@ -8,6 +9,7 @@ import {
   type OpenDialogOptions,
   type SaveDialogOptions
 } from 'electron'
+import { MAX_ATTACHMENT_BYTES } from '@shared/attachments/attachments'
 import { VaultError, type IpcResult } from '@shared/vault/errors'
 import { Channels } from '@shared/vault/ipc'
 import { basename, sanitizeFileName, stripMd } from '@shared/vault/paths'
@@ -110,6 +112,25 @@ export function registerIpc(vaults: VaultManager, getWindow: () => BrowserWindow
     return vaults.addAttachment(str(notePath, 'notePath'), str(fileName, 'fileName'), data)
   })
   handle(Channels.openFile, (path) => vaults.openFile(str(path, 'path')))
+  handle(Channels.pickAttachments, async (notePath) => {
+    const note = str(notePath, 'notePath')
+    const options: OpenDialogOptions = { title: 'Attach files', properties: ['openFile', 'multiSelections'] }
+    const win = getWindow()
+    const result = win ? await dialog.showOpenDialog(win, options) : await dialog.showOpenDialog(options)
+    if (result.canceled) return []
+    const added: string[] = []
+    for (const file of result.filePaths) {
+      if ((await stat(file)).size > MAX_ATTACHMENT_BYTES) {
+        throw new VaultError(
+          'INVALID_ARGUMENT',
+          `"${baseNameOf(file)}" is over ${MAX_ATTACHMENT_BYTES / 1024 / 1024} MB. Keep large raw data on shared storage and link to it.`
+        )
+      }
+      const data = await readFile(file)
+      added.push((await vaults.addAttachment(note, baseNameOf(file), new Uint8Array(data))).markdown)
+    }
+    return added
+  })
 
   handle(Channels.listTemplates, () => vaults.listTemplates())
   handle(Channels.createFromTemplate, (templatePath, title, folder) =>
