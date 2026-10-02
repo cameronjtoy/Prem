@@ -53,7 +53,6 @@ function PaletteList({
   const listRef = useRef<HTMLUListElement>(null)
   const shown = useMemo(() => rank(items, query).slice(0, 200), [items, query])
 
-  useEffect(() => setSelected(0), [query])
   useEffect(() => {
     listRef.current?.children[selected]?.scrollIntoView({ block: 'nearest' })
   }, [selected])
@@ -79,7 +78,7 @@ function PaletteList({
           } else if (e.key === 'ArrowUp') {
             e.preventDefault()
             setSelected((s) => Math.max(s - 1, 0))
-          } else if (e.key === 'Enter') pick(shown[selected])
+          } else if (e.key === 'Enter') pick(shown[Math.min(selected, shown.length - 1)])
         }}
       >
         <input
@@ -87,7 +86,11 @@ function PaletteList({
           className="text-input search-input"
           placeholder={placeholder}
           value={query}
-          onChange={(e) => setQuery(e.target.value)}
+          onChange={(e) => {
+            // Reset in the same update as the query, so Enter right after typing picks the new first match.
+            setQuery(e.target.value)
+            setSelected(0)
+          }}
           spellCheck={false}
         />
         {shown.length === 0 && <p className="empty">{empty}</p>}

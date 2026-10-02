@@ -20,6 +20,7 @@ test('the quick switcher opens a note by name, and back and forward retrace your
   await openNote(page, 'Welcome.md')
   await page.keyboard.press('ControlOrMeta+KeyE')
   await page.locator('.palette input').fill('ligation')
+  await expect(page.locator('.palette li').first()).toContainText('Ligation')
   await page.keyboard.press('Enter')
   await expect(page.locator('.breadcrumb')).toHaveAttribute('title', EXPERIMENT)
 
