@@ -112,6 +112,10 @@ jobs:
           case "$GITHUB_REF_NAME" in *-*) ;; *) tags="$tags,$image:latest" ;; esac
           echo "tags=$tags" >> "$GITHUB_OUTPUT"
       - uses: docker/build-push-action@v7
+        env:
+          # Otherwise the action uploads a build record as a workflow artifact, which the release job would
+          # attach to the release alongside the installers.
+          DOCKER_BUILD_RECORD_UPLOAD: 'false'
         with:
           context: .
           push: true
