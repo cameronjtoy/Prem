@@ -5,7 +5,7 @@ import { currentBindings, isMac } from '../../commands/registry'
 import { errorMessage } from '../../services/vaultClient'
 import { useKeybindings } from '../../state/KeybindingsContext'
 
-const CATEGORIES: Category[] = ['General', 'Navigate', 'Note', 'Format', 'Run', 'View']
+const CATEGORIES: Category[] = ['General', 'Navigate', 'Note', 'Format', 'Run', 'Analysis', 'View']
 const MODIFIER_CODES = /^(Shift|Control|Alt|Meta|OS)(Left|Right)?$/
 
 function matchesQuery(c: Command, key: string, query: string): boolean {

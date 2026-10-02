@@ -4,7 +4,7 @@
 // documented in one place and different in another. Keys are written once with `Mod`, which is ⌘ on
 // macOS and Ctrl elsewhere, and matched on the physical key, so Shift and Alt don't change what's typed.
 
-export type Category = 'General' | 'Navigate' | 'Note' | 'Format' | 'Run' | 'View'
+export type Category = 'General' | 'Navigate' | 'Note' | 'Format' | 'Run' | 'Analysis' | 'View'
 
 export interface Command {
   id: string
@@ -35,6 +35,10 @@ export const COMMANDS = [
   { id: 'note.sign', title: 'Sign this record…', category: 'Note', key: 'Mod+Shift+S' },
   { id: 'run.start', title: 'Start a run of this protocol', category: 'Run', key: 'Mod+Shift+R' },
   { id: 'run.addDeviation', title: 'Add a deviation', category: 'Run', key: 'Mod+Shift+D' },
+  { id: 'analysis.runCell', title: 'Run Python cell', category: 'Analysis', key: 'Shift+Enter' },
+  { id: 'analysis.runAll', title: 'Run all Python cells', category: 'Analysis', key: 'Mod+Alt+Enter' },
+  { id: 'analysis.stop', title: 'Stop running cell', category: 'Analysis' },
+  { id: 'analysis.restart', title: 'Restart Python for this note', category: 'Analysis' },
   { id: 'format.task', title: 'Tick or untick step', category: 'Format', key: 'Mod+Enter' },
   { id: 'format.bold', title: 'Bold', category: 'Format', key: 'Mod+B' },
   { id: 'format.italic', title: 'Italic', category: 'Format', key: 'Mod+I' },

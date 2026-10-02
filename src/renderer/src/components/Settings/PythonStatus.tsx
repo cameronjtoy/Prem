@@ -1,11 +1,13 @@
 import { useCallback, useEffect, useState } from 'react'
-import type { AnalysisStatus } from '@shared/analysis/environment'
+import { ENVIRONMENT_FILE, STARTER_ENVIRONMENT, type AnalysisStatus } from '@shared/analysis/environment'
 import { errorMessage, vaultClient } from '../../services/vaultClient'
 import { useSettings } from '../../state/SettingsContext'
+import { useVault } from '../../state/VaultContext'
 
 /** Which Python Prem found, and the state of the open vault's environment, with a button to set it up. */
 export function PythonStatus() {
   const pythonSetting = useSettings().values['analysis.python']
+  const { info, canWrite } = useVault()
   const [status, setStatus] = useState<AnalysisStatus | null>(null)
   const [busy, setBusy] = useState(false)
   const [progress, setProgress] = useState<string | null>(null)
@@ -33,6 +35,18 @@ export function PythonStatus() {
         setBusy(false)
         setProgress(null)
       })
+  }
+
+  const createFile = (): void => {
+    const ok = window.confirm(
+      `Create ${ENVIRONMENT_FILE} at the top of this vault, listing numpy, pandas and matplotlib? Everyone using the vault gets the same packages. You can edit the list afterwards.`
+    )
+    if (!ok) return
+    setError(null)
+    vaultClient
+      .write(ENVIRONMENT_FILE, STARTER_ENVIRONMENT, { createOnly: true })
+      .then(() => check(false))
+      .catch((e) => setError(errorMessage(e)))
   }
 
   const python = status?.python
@@ -68,6 +82,11 @@ export function PythonStatus() {
         {error && <p className="setting-error">{error}</p>}
       </div>
       <div className="setting-control">
+        {info && status && !status.requirements && canWrite(ENVIRONMENT_FILE) && (
+          <button className="text-button" onClick={createFile} disabled={busy}>
+            Create {ENVIRONMENT_FILE}
+          </button>
+        )}
         {status?.requirements && env?.state !== 'ready' && python?.python && (
           <button className="primary-button" onClick={prepare} disabled={busy}>
             {busy ? 'Setting up…' : 'Set up environment'}

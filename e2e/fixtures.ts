@@ -5,6 +5,15 @@ import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { _electron as electron, expect, test as base, type ElectronApplication, type Page } from '@playwright/test'
 
+import type { Api } from '../src/shared/vault/ipc'
+
+// Tests reach the app's API directly with page.evaluate, as the renderer does.
+declare global {
+  interface Window {
+    api: Api
+  }
+}
+
 export const ROOT = path.resolve(__dirname, '..')
 const SAMPLE_VAULT = path.join(ROOT, 'examples', 'sample-vault')
 

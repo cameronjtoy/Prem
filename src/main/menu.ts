@@ -50,7 +50,12 @@ const LAYOUT: Record<string, Entry[]> = {
     'note.sign',
     '-',
     'run.start',
-    'run.addDeviation'
+    'run.addDeviation',
+    '-',
+    // Not "Run Python cell": its Shift+Enter would be taken by the macOS menu even while typing elsewhere.
+    'analysis.runAll',
+    'analysis.stop',
+    'analysis.restart'
   ],
   Help: ['app.shortcuts', '-', 'help.website', 'help.reportIssue']
 }

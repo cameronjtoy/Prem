@@ -60,6 +60,8 @@ Press ⌘⇧P for the command palette, which lists every command, or ⌘/ for th
 | ⇧⌘S | Sign this record… |
 | ⇧⌘R | Start a run of this protocol |
 | ⇧⌘D | Add a deviation |
+| ⇧↵ | Run Python cell |
+| ⌥⌘↵ | Run all Python cells |
 | ⌘↵ | Tick or untick step |
 | ⌘B | Bold |
 | ⌘I | Italic |
@@ -88,6 +90,10 @@ Everything on that screen is also in `settings.json`, which lists only what you'
 ```
 
 **Open settings.json** on the Settings screen opens it in your editor. It lives in Prem's settings folder (`~/Library/Application Support/Prem` on macOS, `%APPDATA%\Prem` on Windows, `~/.config/Prem` on Linux), and changes apply as soon as you save. If the file has a mistake, Prem says where and keeps using your last good settings.
+
+### Python analysis in notes
+
+Put code in a `python {run}` block and choose **Run** (or ⇧↵). The output (text, tables, figures) is saved in the note under the cell, along with what produced it: the code, who ran it, the Python environment, and a checksum of every file it read. Add an `environment.txt` to the vault so every computer in the lab uses the same packages. See [`docs/analysis.md`](docs/analysis.md).
 
 ### Changing shortcuts
 

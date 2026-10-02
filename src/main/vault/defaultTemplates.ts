@@ -112,6 +112,32 @@ date: {{date}}
 ## Action items
 - [ ] Who — what — by when
 `,
+  'Analysis.md': `---
+type: analysis
+date: {{date}}
+author: {{author}}
+---
+
+# {{title}}
+
+## Question
+{{cursor}}
+
+## Data
+Attach the data files here, then read them below as \`attachments/<name>\`.
+
+## Analysis
+Choose Run (or press ⇧↵ in the code). The output is saved under the cell, with the files it read.
+
+\`\`\`python {run}
+import pandas as pd
+
+# df = pd.read_csv("attachments/your-data.csv")
+# df.describe()
+\`\`\`
+
+## Conclusion
+`,
   'Reference.md': `---
 type: reference
 last-reviewed: {{date}}
