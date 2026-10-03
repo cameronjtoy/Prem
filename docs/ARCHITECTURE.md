@@ -9,7 +9,7 @@ src/
   shared/      Plain TypeScript with no Electron, Node-only or React code, used by every process
     vault/       paths, per-folder access rules, error codes, IPC and HTTP contracts, core types
     notes/       templates, the daily notebook, frontmatter, wikilinks, link index and resolution
-    records/     history entries, signing status, protocol runs, line diff
+    records/     history entries, signing status, protocol runs, workflows and jobs, line diff
     search/      the in-memory full-text index
     attachments/ attachment naming and links, CSV parsing
   main/        Electron main process
@@ -46,6 +46,8 @@ Every read returns a `version` (derived from mtime and size); every write may ca
 - `.prem/objects/ab/<hash>.gz` holds each distinct version, compressed and shared between notes. Reads re-check the hash.
 
 Saves, outside edits (from the watcher, or caught up before the next operation), renames, deletions, **signatures, witnesses and amendments** are all entries in this log. [`shared/records/signatures.ts`](../src/shared/records/signatures.ts) folds a log into a `RecordStatus` (draft / signed / witnessed / amended, locked or not); the provider refuses writes and deletes to locked notes unless the save carries an amendment reason.
+
+**Runs, workflows and jobs** are notes told apart by their `type` field, with the logic in pure functions. [`shared/records/runs.ts`](../src/shared/records/runs.ts) copies a protocol's materials and steps into a run and timestamps ticked steps. [`shared/records/workflows.ts`](../src/shared/records/workflows.ts) reads a workflow's Stages table, creates a job with a copy of it, logs the run started for each stage and moves the job on (`completeStage`). Frontmatter stays flat `key: value`, so anything with rows (stages, the stage log) is a markdown table, read and written by [`shared/notes/tables.ts`](../src/shared/notes/tables.ts). The bar above the editor ([`RunBar.tsx`](../src/renderer/src/components/Editor/RunBar.tsx)) offers the next step for each type.
 
 **PDF export** ([`src/main/export`](../src/main/export)) prints a note, or every note in a folder, from a self-contained HTML page: [`printable.ts`](../src/main/export/printable.ts) turns markdown, metadata, the signing events and the history check into HTML (pure, unit-tested), and [`pdf.ts`](../src/main/export/pdf.ts) embeds vault images and prints it in a hidden window with scripts off. Raw HTML in a note is printed as text and the page's content security policy blocks every network load.
 

@@ -2,9 +2,11 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { Cell } from '@shared/analysis/cells'
 import { EditorView } from '@codemirror/view'
 import { resolveAttachment } from '@shared/attachments/attachments'
-import { isInside } from '@shared/vault/paths'
+import { isInside, noteTitle } from '@shared/vault/paths'
+import { parseFrontmatter } from '@shared/notes/frontmatter'
 import { addDeviation, completeRun } from '@shared/records/runs'
-import { EMPTY_STATUS, type RecordCheck } from '@shared/records/signatures'
+import { completeStage, logRunStarted } from '@shared/records/workflows'
+import { EMPTY_STATUS, SIGNABLE_TYPES, type RecordCheck } from '@shared/records/signatures'
 import { errorMessage, vaultClient } from '../../services/vaultClient'
 import { currentSettings, useSettings } from '../../state/SettingsContext'
 import { useVault } from '../../state/VaultContext'
@@ -36,7 +38,7 @@ const STATUS_LABEL: Record<SaveStatus, string> = {
 
 export function NoteEditor({ path, cursor }: { path: string; cursor: number | null }) {
   const { resolver, noteTitles, subscribe, canWrite, info } = useVault()
-  const { openLink, registerEditor, showNotice, exportPdf, startRun } = useWorkspace()
+  const { openLink, openNote, registerEditor, showNotice, exportPdf, startRun, newJob } = useWorkspace()
   const { values: settings } = useSettings()
   const spellcheck = settings['editor.spellcheck']
   const lineNumbers = settings['editor.lineNumbers']
@@ -216,6 +218,40 @@ export function NoteEditor({ path, cursor }: { path: string; cursor: number | nu
     rewrite((text) => ({ text: completeRun(text, new Date()) }))
   }
 
+  /** Starts the run for the job's current stage, logs it in the job, then opens it. */
+  const onStartStageRun = async (): Promise<void> => {
+    const stage = meta.job?.current
+    if (!stage?.protocol) return
+    const protocol = resolver(stage.protocol, path)
+    if (!protocol) return showNotice(`Couldn't find the protocol "${stage.protocol}" for the ${stage.name} stage.`)
+    const run = await startRun(protocol, { job: { title: noteTitle(path), stage: stage.name }, open: false })
+    if (!run) return
+    rewrite((text) => ({
+      text: logRunStarted(text, { stage: stage.name, run: noteTitle(run), by: info?.author ?? '', now: new Date() })
+    }))
+    await sessionRef.current?.save()
+    openNote(run)
+  }
+
+  /** Hands the job to its next stage, checking first that the stage's run was finished. */
+  const onCompleteStage = async (): Promise<void> => {
+    const job = meta.job
+    if (!job?.current) return
+    const run = job.openRow?.run ? resolver(job.openRow.run, path) : null
+    if (run) {
+      const runStatus = await vaultClient
+        .read(run)
+        .then((r) => parseFrontmatter(r.content).fields.status)
+        .catch(() => undefined)
+      if (
+        runStatus !== 'complete' &&
+        !window.confirm(`The ${job.current.name} run isn't complete. Complete the stage anyway?`)
+      )
+        return
+    }
+    rewrite((text) => ({ text: completeStage(text, { by: info?.author ?? '', now: new Date() }) }))
+  }
+
   const [signRequest, setSignRequest] = useState(0)
   const view = (): EditorView | undefined => sessionRef.current?.view
   const editable = (): boolean => !loading && !readOnly && !!view()
@@ -224,11 +260,7 @@ export function NoteEditor({ path, cursor }: { path: string; cursor: number | nu
     return !!v && editable() && test.test(v.state.doc.lineAt(v.state.selection.main.head).text)
   }
   const canSign =
-    !loading &&
-    canEdit &&
-    !!record &&
-    !record.locked &&
-    (record.timesSigned > 0 || ['experiment', 'run', 'daily', 'protocol'].includes(meta.type ?? ''))
+    !loading && canEdit && !!record && !record.locked && (record.timesSigned > 0 || SIGNABLE_TYPES.has(meta.type ?? ''))
 
   useCommand(
     'note.save',
@@ -301,6 +333,21 @@ export function NoteEditor({ path, cursor }: { path: string; cursor: number | nu
     'run.addDeviation',
     () => rewrite((text) => addDeviation(text, new Date())),
     () => editable() && meta.type === 'run' && meta.fields.status !== 'complete'
+  )
+  useCommand(
+    'job.new',
+    () => void newJob(path),
+    () => !loading && meta.type === 'workflow' && !!meta.job?.stages.length
+  )
+  useCommand(
+    'job.startRun',
+    () => void onStartStageRun(),
+    () => editable() && meta.type === 'job' && !!meta.job?.current?.protocol && !meta.job.openRow
+  )
+  useCommand(
+    'job.completeStage',
+    () => void onCompleteStage(),
+    () => editable() && meta.type === 'job' && !!meta.job?.current
   )
   useCommand('format.task', () => view() && toggleTaskAtCursor(view()!), onLine(/^\s*(?:[-*+]|\d+[.)])\s+\[[ xX]\]/))
   useCommand('format.bold', () => view() && toggleWrap(view()!, '**'), editable)
@@ -390,6 +437,8 @@ export function NoteEditor({ path, cursor }: { path: string; cursor: number | nu
           readOnly={readOnly}
           onAddDeviation={() => rewrite((text) => addDeviation(text, new Date()))}
           onComplete={onComplete}
+          onStartStageRun={() => void onStartStageRun()}
+          onCompleteStage={() => void onCompleteStage()}
         />
       )}
       {conflict && (
