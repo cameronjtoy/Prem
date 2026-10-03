@@ -82,3 +82,16 @@ def test_attachment_names_and_links():
 def test_paths_stay_in_the_vault(bad):
     with pytest.raises(md.InvalidPath):
         md.normalize_path(bad)
+
+
+def test_numpy_and_pandas_numbers_read_like_plain_ones():
+    numpy = pytest.importorskip("numpy")
+    assert md.format_value(numpy.float64(112.4)) == "112.4"
+    assert md.format_value(numpy.int64(84)) == "84"
+    assert md.format_value(numpy.float32(0.5)) == "0.5"
+    assert md.format_value(numpy.bool_(True)) == "yes"
+    assert md.format_value(1.86) == "1.86"
+    pandas = pytest.importorskip("pandas")
+    mean = pandas.Series([112.1, 112.9, 112.2]).mean().round(1)
+    text = md.record_result("# R\n", "Concentration", mean, unit="ng/µL")
+    assert "| Concentration | 112.4 | ng/µL |" in text

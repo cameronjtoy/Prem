@@ -257,10 +257,15 @@ RESULTS_HEADING = "Results"
 
 
 def format_value(value: object) -> str:
+    """A value as it reads in a table. NumPy and pandas numbers are written like plain Python ones
+    (``112.4``, not ``np.float64(112.4)``)."""
+    # NumPy scalars have .item(), which gives the plain Python value; 0-d arrays too.
+    if type(value).__module__ == "numpy" and hasattr(value, "item"):
+        value = value.item()  # type: ignore[union-attr]
     if isinstance(value, bool):
         return "yes" if value else "no"
     if isinstance(value, float):
-        return repr(value)
+        return repr(float(value))
     return str(value)
 
 
