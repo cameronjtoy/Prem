@@ -1,8 +1,10 @@
 import path from 'node:path'
 import { app, BrowserWindow, nativeTheme, shell } from 'electron'
+import { resolveBindings, type KeybindingsSnapshot } from '@shared/keybindings'
 import { DEFAULTS, type SettingsSnapshot } from '@shared/settings/schema'
 import { Channels } from '@shared/vault/ipc'
 import { registerIpc } from './ipc/handlers'
+import { KeybindingsStore } from './keybindings'
 import { installMenu } from './menu'
 import { SettingsStore } from './settings'
 import { migrateState } from './state'
@@ -20,6 +22,10 @@ function applySettings(snapshot: SettingsSnapshot): void {
 }
 
 let settings: SettingsStore | null = null
+let keybindings: KeybindingsStore | null = null
+
+const applyKeybindings = (snapshot: KeybindingsSnapshot): void =>
+  installMenu(() => mainWindow, resolveBindings(snapshot.entries))
 
 const vaults = new VaultManager(
   {
@@ -82,8 +88,13 @@ app.whenReady().then(async () => {
   })
   applySettings(await settings.load())
   settings.watch()
-  registerIpc(vaults, settings, () => mainWindow)
-  installMenu(() => mainWindow)
+  keybindings = new KeybindingsStore(path.join(app.getPath('userData'), 'keybindings.json'), (snapshot) => {
+    applyKeybindings(snapshot)
+    send(Channels.keybindingsChanged, snapshot)
+  })
+  applyKeybindings(await keybindings.load())
+  keybindings.watch()
+  registerIpc(vaults, settings, keybindings, () => mainWindow)
   createWindow()
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow()
@@ -96,5 +107,6 @@ app.on('window-all-closed', () => {
 
 app.on('before-quit', () => {
   settings?.close()
+  keybindings?.close()
   void vaults.close()
 })

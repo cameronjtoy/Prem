@@ -15,6 +15,7 @@ import { VaultError, type IpcResult } from '@shared/vault/errors'
 import { Channels } from '@shared/vault/ipc'
 import { basename, sanitizeFileName, stripMd } from '@shared/vault/paths'
 import type { WriteOptions } from '@shared/vault/types'
+import type { KeybindingsStore } from '../keybindings'
 import type { SettingsStore } from '../settings'
 import { loadState, recallToken } from '../state'
 import type { VaultManager } from '../vault/VaultManager'
@@ -51,6 +52,7 @@ function handle<T>(channel: string, fn: (...args: unknown[]) => Promise<T> | T):
 export function registerIpc(
   vaults: VaultManager,
   settings: SettingsStore,
+  keybindings: KeybindingsStore,
   getWindow: () => BrowserWindow | null
 ): void {
   handle(Channels.pickAndOpen, async () => {
@@ -157,6 +159,16 @@ export function registerIpc(
   handle(Channels.openSettingsFile, async () => {
     const error = await shell.openPath(await settings.ensureFile())
     if (error) throw new VaultError('UNKNOWN', `Couldn't open settings.json: ${error}`)
+  })
+
+  handle(Channels.getKeybindings, () => keybindings.current)
+  handle(Channels.setKeybinding, (command, key) =>
+    keybindings.set(str(command, 'command'), key === null ? null : str(key, 'key'))
+  )
+  handle(Channels.resetKeybinding, (command) => keybindings.reset(str(command, 'command')))
+  handle(Channels.openKeybindingsFile, async () => {
+    const error = await shell.openPath(await keybindings.ensureFile())
+    if (error) throw new VaultError('UNKNOWN', `Couldn't open keybindings.json: ${error}`)
   })
 
   handle(Channels.openExternal, async (url) => {

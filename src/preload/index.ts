@@ -55,6 +55,13 @@ const api: Api = {
     openFile: () => ipcRenderer.invoke(Channels.openSettingsFile),
     onChanged: (listener) => subscribe(Channels.settingsChanged, listener)
   },
+  keybindings: {
+    get: () => ipcRenderer.invoke(Channels.getKeybindings),
+    set: (command, key) => ipcRenderer.invoke(Channels.setKeybinding, command, key),
+    reset: (command) => ipcRenderer.invoke(Channels.resetKeybinding, command),
+    openFile: () => ipcRenderer.invoke(Channels.openKeybindingsFile),
+    onChanged: (listener) => subscribe(Channels.keybindingsChanged, listener)
+  },
   app: {
     openExternal: (url) => ipcRenderer.invoke(Channels.openExternal, url),
     onCommand: (listener) => subscribe(Channels.command, listener)

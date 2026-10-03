@@ -208,15 +208,98 @@ export function withSetting(raw: Record<string, unknown>, key: SettingKey, value
 /** Where a JSON syntax error is and what it is, as "line 3, column 1: Expected double-quoted property name". */
 export function syntaxErrorLocation(text: string, error: unknown): string {
   const message = error instanceof Error ? error.message : String(error)
-  const reason = message.replace(/\s*in JSON at position.*$/i, '').replace(/\s*\(line \d+ column \d+\)$/, '')
+  const reason = message
+    .replace(/\s*in JSON at position.*$/i, '')
+    .replace(/\s*\(line \d+ column \d+\)$/, '')
+    .replace(/,\s*"[\s\S]*" is not valid JSON$/, '')
   const lineCol = /line (\d+) column (\d+)/i.exec(message)
   if (lineCol) return `line ${lineCol[1]}, column ${lineCol[2]}: ${reason}`
   const position = /position (\d+)/i.exec(message)
-  const offset = position ? Number(position[1]) : /end of JSON/i.test(message) ? text.trimEnd().length : -1
-  if (offset < 0) return reason
+  const offset = position
+    ? Number(position[1])
+    : /end of JSON/i.test(message)
+      ? text.trimEnd().length
+      : jsonErrorOffset(text)
   const before = text.slice(0, offset)
   const line = before.split('\n').length
   return `line ${line}, column ${before.length - before.lastIndexOf('\n')}: ${reason}`
+}
+
+/**
+ * Where JSON stops being valid, for parser messages that don't say (V8 reports some errors only as
+ * 'Unexpected token X, "..." is not valid JSON'). A small strict JSON scanner; returns the offset of the
+ * first character that can't be there.
+ */
+export function jsonErrorOffset(text: string): number {
+  let i = 0
+  const fail = (): never => {
+    throw i
+  }
+  const space = (): void => {
+    while (/\s/.test(text[i] ?? '')) i++
+  }
+  const literal = (word: string): void => {
+    for (const ch of word) {
+      if (text[i] !== ch) fail()
+      i++
+    }
+  }
+  const string = (): void => {
+    if (text[i] !== '"') fail()
+    i++
+    while (text[i] !== '"') {
+      if (i >= text.length || text[i] < ' ') fail()
+      if (text[i] === '\\') i++
+      i++
+    }
+    i++
+  }
+  const number = (): void => {
+    const m = /^-?(0|[1-9]\d*)(\.\d+)?([eE][+-]?\d+)?/.exec(text.slice(i))
+    if (!m) fail()
+    i += m![0].length
+  }
+  const list = (close: string, item: () => void): void => {
+    i++
+    space()
+    if (text[i] === close) return void i++
+    for (;;) {
+      item()
+      space()
+      if (text[i] === ',') {
+        i++
+        space()
+        continue
+      }
+      if (text[i] === close) return void i++
+      fail()
+    }
+  }
+  const value = (): void => {
+    space()
+    const ch = text[i]
+    if (ch === '{')
+      list('}', () => {
+        string()
+        space()
+        if (text[i] !== ':') fail()
+        i++
+        value()
+      })
+    else if (ch === '[') list(']', value)
+    else if (ch === '"') string()
+    else if (ch === 't') literal('true')
+    else if (ch === 'f') literal('false')
+    else if (ch === 'n') literal('null')
+    else number()
+  }
+  try {
+    value()
+    space()
+    return i < text.length ? i : text.length
+  } catch (at) {
+    return Math.min(typeof at === 'number' ? at : 0, text.length)
+  }
 }
 
 /** What the app is using, and what's wrong with settings.json if anything. */

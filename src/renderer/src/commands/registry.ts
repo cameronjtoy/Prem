@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react'
 import {
-  commandForKey,
+  commandsForKey,
   defaultBindings,
   formatKey,
   type CommandId,
@@ -21,6 +21,7 @@ interface Handler {
 
 const handlers = new Map<string, Handler[]>()
 const listeners = new Set<() => void>()
+const bindingListeners = new Set<() => void>()
 
 export const isMac = /Mac|iPhone|iPad/.test(navigator.platform) || navigator.userAgent.includes('Mac OS')
 
@@ -33,6 +34,13 @@ export function currentBindings(): Map<string, KeyBinding> {
 export function setBindings(next: Map<string, KeyBinding>): void {
   bindings = next
   for (const listener of listeners) listener()
+  for (const listener of bindingListeners) listener()
+}
+
+/** Called when shortcuts change, e.g. after keybindings.json is edited. */
+export function onBindingsChanged(listener: () => void): () => void {
+  bindingListeners.add(listener)
+  return () => bindingListeners.delete(listener)
 }
 
 export function onCommandsChanged(listener: () => void): () => void {
@@ -74,6 +82,8 @@ export function runCommand(id: string, source: 'key' | 'menu' | 'palette' = 'pal
   // macOS sends menu shortcuts even while typing in a dialog, and the note stays open behind Settings;
   // only app-level commands apply there, so ⌘B in a settings box doesn't bold the note.
   const focus = document.activeElement
+  // Recording a new shortcut: the keys are the shortcut, not a command (macOS delivers menu shortcuts anyway).
+  if (focus?.closest('[data-recording]')) return false
   const appOnly = !!focus?.closest('.settings-page') || (source === 'menu' && !!focus?.closest('.modal'))
   if (appOnly && !/^(app|help)\./.test(id)) return false
   const now = Date.now()
@@ -87,10 +97,11 @@ export function runCommand(id: string, source: 'key' | 'menu' | 'palette' = 'pal
 export function handleKeyDown(e: KeyboardEvent): void {
   if (e.defaultPrevented || e.isComposing) return
   const target = e.target instanceof Element ? e.target : null
-  // While a dialog is open, its own keys apply; Esc closes it.
-  if (target?.closest('.modal, .context-menu')) return
-  const id = commandForKey(bindings, e as KeyEventLike, isMac)
-  if (!id || !runCommand(id, 'key')) return
+  // While a dialog is open, its own keys apply; Esc closes it. While a new shortcut is being recorded, every
+  // key goes to the recorder.
+  if (target?.closest('.modal, .context-menu, [data-recording]')) return
+  const ids = commandsForKey(bindings, e as KeyEventLike, isMac)
+  if (!ids.some((id) => runCommand(id, 'key'))) return
   e.preventDefault()
   e.stopPropagation()
 }

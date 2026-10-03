@@ -165,8 +165,16 @@ export function formatKey(binding: KeyBinding, mac: boolean): string {
 }
 
 /** An Electron menu accelerator, e.g. "CmdOrCtrl+Shift+P". */
+const ACCELERATOR_KEYS: Record<string, string> = {
+  Enter: 'Enter',
+  ArrowUp: 'Up',
+  ArrowDown: 'Down',
+  ArrowLeft: 'Left',
+  ArrowRight: 'Right'
+}
+
 export function accelerator(binding: KeyBinding): string {
-  const key = binding.code === 'Enter' ? 'Enter' : keyLabel(binding.code, false)
+  const key = ACCELERATOR_KEYS[binding.code] ?? keyLabel(binding.code, false)
   return [binding.mod && 'CmdOrCtrl', binding.alt && 'Alt', binding.shift && 'Shift', key].filter(Boolean).join('+')
 }
 
@@ -182,6 +190,13 @@ export function defaultBindings(): Map<string, KeyBinding> {
 
 /** Finds the command a key press is bound to. */
 export function commandForKey(bindings: Map<string, KeyBinding>, e: KeyEventLike, mac: boolean): string | undefined {
-  for (const [id, binding] of bindings) if (matches(binding, e, mac)) return id
-  return undefined
+  return commandsForKey(bindings, e, mac)[0]
+}
+
+/**
+ * Every command a key press is bound to. Someone may give two commands the same shortcut on purpose, e.g.
+ * one that only works in a run and one that works elsewhere; whichever can run at the time does.
+ */
+export function commandsForKey(bindings: Map<string, KeyBinding>, e: KeyEventLike, mac: boolean): string[] {
+  return [...bindings].filter(([, binding]) => matches(binding, e, mac)).map(([id]) => id)
 }

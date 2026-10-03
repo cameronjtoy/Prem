@@ -43,7 +43,12 @@ export const vaultClient = {
   getSettings: () => unwrap(window.api.settings.get()),
   setSetting: (key: SettingKey, value: unknown) => unwrap(window.api.settings.set(key, value)),
   openSettingsFile: () => unwrap(window.api.settings.openFile()),
-  onSettingsChanged: window.api.settings.onChanged
+  onSettingsChanged: window.api.settings.onChanged,
+  getKeybindings: () => unwrap(window.api.keybindings.get()),
+  setKeybinding: (command: string, key: string | null) => unwrap(window.api.keybindings.set(command, key)),
+  resetKeybinding: (command: string) => unwrap(window.api.keybindings.reset(command)),
+  openKeybindingsFile: () => unwrap(window.api.keybindings.openFile()),
+  onKeybindingsChanged: window.api.keybindings.onChanged
 }
 
 export function errorMessage(err: unknown): string {
