@@ -1,5 +1,6 @@
 import type { IpcResult } from './errors'
 import type { AnalysisStatus } from '../analysis/environment'
+import type { Reproduction } from '../analysis/reproduce'
 import type { CellResult } from '../analysis/results'
 import type { KeybindingsSnapshot } from '../keybindings'
 import type { SettingKey, SettingsSnapshot } from '../settings/schema'
@@ -62,6 +63,8 @@ export const Channels = {
   analysisInterrupt: 'analysis:interrupt',
   analysisRestart: 'analysis:restart',
   analysisProgress: 'analysis:progress',
+  analysisReproduce: 'analysis:reproduce',
+  analysisInputHashes: 'analysis:inputHashes',
   vaultChanged: 'vault:changed',
   indexUpdated: 'index:updated'
 } as const
@@ -148,6 +151,10 @@ export interface Api {
     restart(notePath: string): R<void>
     /** Progress while an environment is built, e.g. "Installing packages". */
     onProgress(listener: (message: string) => void): () => void
+    /** Reruns cells from the start in a fresh Python, in the recorded environment rebuilt. Writes nothing. */
+    reproduce(notePath: string, codes: string[], environment: string | null): R<Reproduction>
+    /** The sha256 of each file (null if it's gone), to flag outputs whose inputs changed. */
+    inputHashes(paths: string[]): R<Record<string, string | null>>
   }
   app: {
     openExternal(url: string): R<void>

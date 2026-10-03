@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto'
 import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
@@ -8,6 +9,7 @@ import {
   type EnvironmentStamp,
   type PythonFound
 } from '@shared/analysis/environment'
+import { formatLock, lockFileName, parseLock, type Reproduction } from '@shared/analysis/reproduce'
 import type { CellResult } from '@shared/analysis/results'
 import { attachmentFolder } from '@shared/attachments/attachments'
 import type { Settings } from '@shared/settings/schema'
@@ -102,7 +104,7 @@ export class AnalysisManager {
     if ((await this.options.vaults.recordStatus(notePath)).locked)
       throw new VaultError('LOCKED', 'This note is signed, so its cells can no longer be run. Amend it first.')
 
-    const { local } = this.vault()
+    this.vault()
     const found = await this.python()
     if (!found.python) throw new VaultError('UNKNOWN', found.problem ?? 'Python was not found')
 
@@ -117,6 +119,19 @@ export class AnalysisManager {
     }
 
     const entry = await this.runnerFor(notePath, python)
+    const result = await this.runIn(entry, notePath, code, environment)
+    if (environment && place.requirements) await this.saveLock(notePath, (await currentStamp(place, windows))!)
+    return result
+  }
+
+  /** Runs code in a runner, in the note's folder (or a copy of its attachments on a team vault). */
+  private async runIn(
+    entry: { runner: PythonRunner; scratch: string | null },
+    notePath: VaultPath,
+    code: string,
+    environment: string | null
+  ): Promise<CellResult> {
+    const { local } = this.vault()
     const folder = dirname(notePath)
     let cwd: string
     let root: string
@@ -127,9 +142,8 @@ export class AnalysisManager {
       cwd = await this.copyAttachments(notePath, entry)
       root = cwd
     }
-
     const ranAt = new Date().toISOString()
-    const timeout = settings['analysis.timeout'] * 1000
+    const timeout = this.options.settings()['analysis.timeout'] * 1000
     const pythonVersion = await entry.runner.start()
     const reply = await entry.runner.run(code, cwd, root, timeout)
     return {
@@ -140,6 +154,114 @@ export class AnalysisManager {
       pythonVersion,
       environment
     }
+  }
+
+  /**
+   * Saves the environment's full package list next to the note, once, so the output's `env=` can always be
+   * rebuilt exactly. A note in a folder you can't add files to just goes without; the run still counts.
+   */
+  private async saveLock(notePath: VaultPath, stamp: EnvironmentStamp): Promise<void> {
+    const provider = this.options.vaults.current
+    const file = joinPath(attachmentFolder(notePath), lockFileName(stamp.id))
+    try {
+      if (await provider.exists(file)) return
+      await provider.writeBinary(file, new TextEncoder().encode(formatLock(stamp)), { createOnly: true })
+    } catch {
+      // EXISTS from a race, or no permission: either way there's nothing more to do.
+    }
+  }
+
+  /** The sha256 of each file, or null for one that's gone. For flagging outputs whose inputs changed. */
+  async inputHashes(paths: VaultPath[]): Promise<Record<string, string | null>> {
+    const provider = this.options.vaults.current
+    const hashes: Record<string, string | null> = {}
+    for (const p of paths.slice(0, 500)) {
+      try {
+        hashes[p] = createHash('sha256')
+          .update(await provider.readBinary(p))
+          .digest('hex')
+      } catch {
+        hashes[p] = null
+      }
+    }
+    return hashes
+  }
+
+  /**
+   * Reruns a note's cells from the start in a fresh Python, in the environment their outputs recorded,
+   * rebuilt from the saved package list. Nothing is written to the note: the caller compares the results.
+   * Signed notes can be reproduced too, since nothing changes.
+   */
+  async reproduce(notePath: VaultPath, codes: string[], recorded: string | null): Promise<Reproduction> {
+    if (!this.options.settings()['analysis.enabled'])
+      throw new VaultError('FORBIDDEN', 'Running Python is turned off in Settings → Analysis.')
+    const found = await this.python()
+    if (!found.python) throw new VaultError('UNKNOWN', found.problem ?? 'Python was not found')
+    const { python, environment } = await this.environmentFor(notePath, recorded, found)
+    const entry = { runner: new PythonRunner(python, await this.options.script()), scratch: null as string | null }
+    try {
+      const results: CellResult[] = []
+      for (const code of codes) results.push(await this.runIn(entry, notePath, code, environment.used))
+      return { environment, results }
+    } finally {
+      entry.runner.kill()
+      if (entry.scratch) void rm(entry.scratch, { recursive: true, force: true })
+    }
+  }
+
+  /** The environment to reproduce in: the recorded one rebuilt from its saved list, else the best available. */
+  private async environmentFor(notePath: VaultPath, recorded: string | null, found: PythonFound) {
+    const provider = this.options.vaults.current
+    const lockPath = recorded ? joinPath(attachmentFolder(notePath), lockFileName(recorded)) : null
+    const lockText =
+      lockPath && (await provider.exists(lockPath))
+        ? new TextDecoder().decode(await provider.readBinary(lockPath))
+        : null
+
+    if (recorded && lockText) {
+      const lock = parseLock(lockText)
+      const dir = path.join(this.options.envRoot(), 'locked', recorded)
+      const place = { dir, requirements: lock.requirements }
+      let stamp: EnvironmentStamp
+      try {
+        // With uv, ask for the recorded Python version; uv uses one already on this computer.
+        const wanted = found.uv && lock.python ? { ...found, python: lock.python } : found
+        stamp = await ensureEnvironment(place, wanted, this.options.onProgress)
+      } catch (err) {
+        if (!found.uv || !lock.python) throw err
+        stamp = await ensureEnvironment(place, found, this.options.onProgress)
+      }
+      const exact = stamp.id === recorded
+      const summary = exact
+        ? `Rebuilt environment ${recorded} exactly (Python ${stamp.pythonVersion}, from ${lockFileName(recorded)}).`
+        : `Rebuilt from ${lockFileName(recorded)}, but it isn't identical: Python ${stamp.pythonVersion} here` +
+          (lock.python && lock.python !== stamp.pythonVersion ? ` (the original used ${lock.python})` : '') +
+          `, environment ${stamp.id}. Differences may come from that.`
+      return {
+        python: environmentPython(dir, windows),
+        environment: { recorded, used: stamp.id, exact, summary }
+      }
+    }
+
+    // No saved list: outputs from before Prem saved them, or no environment.txt when they ran.
+    const place = await this.place()
+    if (place.requirements) {
+      const stamp = await this.prepareFor(place, found)
+      const exact = stamp.id === recorded
+      const summary = recorded
+        ? exact
+          ? `Ran in the vault's environment, which is still ${recorded}.`
+          : `Environment ${recorded} wasn't saved with this note, so this ran in the vault's current environment (${stamp.id}).`
+        : `The outputs didn't record an environment, so this ran in the vault's current one (${stamp.id}).`
+      return {
+        python: environmentPython(place.dir, windows),
+        environment: { recorded, used: stamp.id, exact, summary }
+      }
+    }
+    const summary = recorded
+      ? `Environment ${recorded} wasn't saved with this note, and the vault has no environment.txt, so this ran in Python ${found.version ?? ''} on this computer.`
+      : `The vault has no environment.txt, so this ran in Python ${found.version ?? ''} on this computer, with whatever it has installed. Add an environment.txt to make reruns exact.`
+    return { python: found.python!, environment: { recorded, used: null, exact: !recorded, summary } }
   }
 
   /** The environment for environment.txt as it is now, building it first if needed. */

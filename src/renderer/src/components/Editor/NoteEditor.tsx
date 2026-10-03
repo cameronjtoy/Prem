@@ -14,8 +14,8 @@ import { useWorkspace } from '../../state/WorkspaceContext'
 import { keyFor, useCommand } from '../../commands/registry'
 import { ExportIcon, HistoryIcon } from '../icons'
 import { createExtensions, optionExtensions, optionsCompartment, refreshLinks, type EditorHost } from './extensions'
-import { analysisCells, cellAt, cellsField, refreshCells } from './extensions/analysisCells'
-import { createCellRunner } from './cellRunner'
+import { analysisCells, cellAt, cellsField, recordedInputs, refreshCells } from './extensions/analysisCells'
+import { createCellRunner, type ReproduceReport as ReproduceReportData } from './cellRunner'
 import {
   insertAtCursor,
   insertWikilink,
@@ -25,6 +25,7 @@ import {
   toggleWrap
 } from './extensions/formatting'
 import { HistoryPanel } from './HistoryPanel'
+import { ReproduceReport } from './ReproduceReport'
 import { NoteSession, type Conflict, type SaveStatus } from './NoteSession'
 import { RecordBar } from './RecordBar'
 import { readMeta, RunBar, type NoteMeta } from './RunBar'
@@ -45,13 +46,18 @@ export function NoteEditor({ path, cursor }: { path: string; cursor: number | nu
   const analysisOn = settings['analysis.enabled']
   const infoRef = useRef(info)
   infoRef.current = info
+  const [reproduction, setReproduction] = useState<ReproduceReportData | null>(null)
+  const noticeRef = useRef(showNotice)
+  noticeRef.current = showNotice
   // One per note, so the confirmation and the running state follow the note.
   const cells = useMemo(
     () =>
       createCellRunner({
         path,
         author: () => infoRef.current?.author ?? '',
-        shared: () => !!infoRef.current?.user
+        shared: () => !!infoRef.current?.user,
+        onReport: (report) =>
+          'error' in report ? noticeRef.current(`Couldn't reproduce: ${report.error}`) : setReproduction(report)
       }),
     [path]
   )
@@ -139,6 +145,7 @@ export function NoteEditor({ path, cursor }: { path: string; cursor: number | nu
         sessionRef.current = session
         if (amendingRef.current) session.amend(amendingRef.current)
         setMeta(readMeta(file.content))
+        void cells.refreshInputs(session.view)
         registerEditor({ path, flush: () => session.save(), discard: () => session.discard() })
         setLoading(false)
         // Don't steal focus from the file tree's rename box when a new note is being named.
@@ -164,8 +171,11 @@ export function NoteEditor({ path, cursor }: { path: string; cursor: number | nu
           // Someone may have signed or witnessed it.
           void refreshRecord()
         }
+        // A file an output read was replaced or removed: its output may no longer match.
+        const view = sessionRef.current?.view
+        if (view && changes.some((c) => recordedInputs(view.state).includes(c.path))) void cells.refreshInputs(view)
       }),
-    [path, subscribe, refreshRecord]
+    [path, subscribe, refreshRecord, cells]
   )
 
   useEffect(() => {
@@ -314,6 +324,22 @@ export function NoteEditor({ path, cursor }: { path: string; cursor: number | nu
     'analysis.stop',
     () => cells.stop(),
     () => !!view() && cells.running(view()!)
+  )
+  useCommand(
+    'analysis.reproduce',
+    () => {
+      const withOutput = view()!
+        .state.field(cellsField)
+        .filter((c) => c.output?.meta)
+      cells.reproduce(view()!, withOutput[withOutput.length - 1].from)
+    },
+    () =>
+      analysisOn &&
+      !!view() &&
+      view()!
+        .state.field(cellsField)
+        .some((c) => c.output?.meta) &&
+      !cells.running(view()!)
   )
   useCommand(
     'analysis.restart',
@@ -472,6 +498,7 @@ export function NoteEditor({ path, cursor }: { path: string; cursor: number | nu
       )}
       {error && <div className="banner error">{error}</div>}
       <div className="editor-host" ref={hostRef} />
+      {reproduction && <ReproduceReport report={reproduction} onClose={() => setReproduction(null)} />}
       {showHistory && (
         <HistoryPanel
           path={path}

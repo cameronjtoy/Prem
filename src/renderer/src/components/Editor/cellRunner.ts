@@ -1,8 +1,17 @@
 import type { EditorView } from '@codemirror/view'
-import { codeHash, outputChange, outputFiles, renderOutput } from '@shared/analysis/cells'
+import { codeHash, outputChange, outputFiles, parseOutputBody, renderOutput } from '@shared/analysis/cells'
+import { compareOutput, type CellComparison, type EnvironmentReport } from '@shared/analysis/reproduce'
+import { resolveAttachment } from '@shared/attachments/attachments'
 import { errorMessage, vaultClient } from '../../services/vaultClient'
 import { currentSettings } from '../../state/SettingsContext'
-import { cellsField, cellStates, setCellState, type AnalysisHost } from './extensions/analysisCells'
+import {
+  cellsField,
+  cellStates,
+  recordedInputs,
+  setCellState,
+  setInputHashes,
+  type AnalysisHost
+} from './extensions/analysisCells'
 
 let nextId = 1
 
@@ -11,9 +20,17 @@ const posOf = (view: EditorView, id: number): number | undefined =>
 /** Notes whose code, last changed by someone else, you've agreed to run this session. */
 const trusted = new Set<string>()
 
+/** What Reproduce found: how the environment compares, then each cell's rerun against its recorded output. */
+export interface ReproduceReport {
+  environment: EnvironmentReport
+  cells: { label: string; comparison: CellComparison | null }[]
+}
+
 export interface CellRunner extends AnalysisHost {
   /** Restarts Python for the note and runs every cell in order, stopping at the first that fails. */
   runAll(view: EditorView): Promise<void>
+  /** Looks up the files the note's outputs read, to flag outputs whose inputs changed since. */
+  refreshInputs(view: EditorView): Promise<void>
   restart(): Promise<void>
   running(view: EditorView): boolean
 }
@@ -28,6 +45,17 @@ function update(view: EditorView, id: number, state: 'running' | 'failed' | null
     })
   } catch {
     // The note was closed while the cell ran.
+  }
+}
+
+/** Looks up the files the note's outputs read, so outputs whose inputs changed since are flagged. */
+async function refreshInputs(view: EditorView): Promise<void> {
+  const paths = recordedInputs(view.state)
+  const hashes = paths.length ? await vaultClient.inputHashes(paths).catch(() => ({})) : {}
+  try {
+    view.dispatch({ effects: setInputHashes.of(hashes) })
+  } catch {
+    // The note was closed meanwhile.
   }
 }
 
@@ -48,6 +76,8 @@ export function createCellRunner(options: {
   author(): string
   /** True on a team vault, where others may have written the code. */
   shared(): boolean
+  /** Shows what Reproduce found, or why it couldn't run. */
+  onReport(report: ReproduceReport | { error: string }): void
 }): CellRunner {
   const { path } = options
 
@@ -100,6 +130,7 @@ export function createCellRunner(options: {
         changes: target ? outputChange(view.state.doc.toString(), target, block) : undefined,
         effects: setCellState.of({ id, state: null })
       })
+      void refreshInputs(view)
       return result.ok
     } catch (err) {
       update(view, id, 'failed', errorMessage(err))
@@ -109,8 +140,68 @@ export function createCellRunner(options: {
     }
   }
 
+  /** Reruns the cells up to `from` in a fresh Python and the recorded environment, and compares the outputs. */
+  const reproduce = async (view: EditorView, from: number): Promise<void> => {
+    const all = view.state.field(cellsField)
+    const upTo = all.findIndex((c) => c.from === from)
+    if (upTo < 0) return
+    const cells = all.slice(0, upTo + 1).filter((c) => c.code.trim())
+    const target = all[upTo]
+    const environment = target.output?.meta?.env ?? cells.find((c) => c.output?.meta?.env)?.output?.meta?.env ?? null
+    const id = nextId++
+    view.dispatch({
+      effects: setCellState.of({ id, state: { id, pos: from, state: 'running', message: 'Reproducing…' } })
+    })
+    const off = vaultClient.onAnalysisProgress((m) => update(view, id, 'running', `Rebuilding the environment: ${m}`))
+    try {
+      const recorded = cells.map((c) => (c.output ? view.state.sliceDoc(c.output.from, c.output.to) : null))
+      const { environment: env, results } = await vaultClient.reproduce(
+        path,
+        cells.map((c) => c.code),
+        environment
+      )
+      const files = new Map<string, Uint8Array | null>()
+      for (const block of recorded) {
+        for (const part of block ? parseOutputBody(block) : []) {
+          if (part.kind !== 'file' || files.has(part.url)) continue
+          const file = resolveAttachment(path, part.url)
+          files.set(part.url, file ? await vaultClient.readBinary(file).catch(() => null) : null)
+        }
+      }
+      options.onReport({
+        environment: env,
+        cells: cells.map((c, i) => ({
+          label:
+            c.code
+              .split('\n')
+              .find((l) => l.trim())
+              ?.trim() ?? '',
+          comparison:
+            recorded[i] && results[i]
+              ? compareOutput(
+                  recorded[i]!,
+                  c.output!.meta,
+                  (url) => files.get(url) ?? null,
+                  results[i],
+                  codeHash(c.code)
+                )
+              : null
+        }))
+      })
+      update(view, id, null)
+      void refreshInputs(view)
+    } catch (err) {
+      update(view, id, null)
+      options.onReport({ error: errorMessage(err) })
+    } finally {
+      off()
+    }
+  }
+
   return {
     enabled: () => currentSettings()['analysis.enabled'],
+    reproduce: (view, from) => void reproduce(view, from),
+    refreshInputs,
     blocked: () => null,
     formatTime,
     run: (view, from) => void runOne(view, from),

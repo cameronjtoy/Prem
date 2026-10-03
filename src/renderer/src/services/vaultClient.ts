@@ -54,7 +54,10 @@ export const vaultClient = {
   runCell: (notePath: string, code: string) => unwrap(window.api.analysis.run(notePath, code)),
   interruptCell: (notePath: string) => unwrap(window.api.analysis.interrupt(notePath)),
   restartAnalysis: (notePath: string) => unwrap(window.api.analysis.restart(notePath)),
-  onAnalysisProgress: window.api.analysis.onProgress
+  onAnalysisProgress: window.api.analysis.onProgress,
+  reproduce: (notePath: string, codes: string[], environment: string | null) =>
+    unwrap(window.api.analysis.reproduce(notePath, codes, environment)),
+  inputHashes: (paths: string[]) => unwrap(window.api.analysis.inputHashes(paths))
 }
 
 export function errorMessage(err: unknown): string {
