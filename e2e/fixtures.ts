@@ -50,7 +50,8 @@ export async function launch(
   const page = await app.firstWindow()
   await page.setViewportSize({ width: 1280, height: 860 })
   // Without a vault given, the settings folder may still remember one.
-  await page.waitForSelector(options.vault ? '.file-tree' : '.file-tree, .welcome-card')
+  // The file list may be hidden, so wait for the main pane.
+  await page.waitForSelector(options.vault ? '.main-pane' : '.main-pane, .welcome-card')
   return { app, page, userData }
 }
 

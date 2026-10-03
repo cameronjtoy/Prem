@@ -3,7 +3,9 @@ import { plainSnippet } from '@shared/notes/snippet'
 import { splitLinkText } from '@shared/notes/wikilinks'
 import { noteTitle } from '@shared/vault/paths'
 import { useLinkIndex } from '../../state/LinkIndexContext'
+import { keyFor } from '../../commands/registry'
 import { useWorkspace } from '../../state/WorkspaceContext'
+import { SidebarRightIcon } from '../icons'
 
 function linkLabel(inner: string): string {
   const { target, alias } = splitLinkText(inner)
@@ -21,7 +23,23 @@ function Snippet({ text }: { text: string }) {
   )
 }
 
-export function BacklinksPanel() {
+function PanelHeader({ onHide }: { onHide(): void }) {
+  return (
+    <div className="pane-toolbar">
+      <span className="pane-title">Links</span>
+      <button
+        className="icon-button pane-hide"
+        title={`Hide links (${keyFor('view.toggleLinks')})`}
+        aria-label="Hide links"
+        onClick={onHide}
+      >
+        <SidebarRightIcon />
+      </button>
+    </div>
+  )
+}
+
+export function BacklinksPanel({ onHide }: { onHide(): void }) {
   const snapshot = useLinkIndex()
   const { active, openNote, openLink } = useWorkspace()
   const path = active?.path
@@ -40,9 +58,7 @@ export function BacklinksPanel() {
   if (!path) {
     return (
       <div className="side-panel">
-        <div className="pane-toolbar">
-          <span className="pane-title">Links</span>
-        </div>
+        <PanelHeader onHide={onHide} />
         <p className="empty">Open a note to see what links to it.</p>
       </div>
     )
@@ -50,9 +66,7 @@ export function BacklinksPanel() {
 
   return (
     <div className="side-panel">
-      <div className="pane-toolbar">
-        <span className="pane-title">Links</span>
-      </div>
+      <PanelHeader onHide={onHide} />
       <div className="side-scroll">
         <section>
           <h3>
