@@ -35,7 +35,7 @@ export function setFrontmatterField(text: string, key: string, value: string): s
   const block = text.slice(0, end)
   const line = new RegExp(`^${key}:.*$`, 'm')
   const next = line.test(block)
-    ? block.replace(line, `${key}: ${value}`)
-    : block.replace(/\n(---|\.\.\.)[ \t]*(\r?\n|$)/, `\n${key}: ${value}\n$1$2`)
+    ? block.replace(line, `${key}:${value ? ` ${value}` : ''}`)
+    : block.replace(/\n(---|\.\.\.)[ \t]*(\r?\n|$)/, `\n${key}:${value ? ` ${value}` : ''}\n$1$2`)
   return next + text.slice(end)
 }

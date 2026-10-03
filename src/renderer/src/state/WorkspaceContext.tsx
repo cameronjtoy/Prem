@@ -1,8 +1,17 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { VaultError } from '@shared/vault/errors'
-import { basename, dirname, isInside, isMarkdown, joinPath, sanitizeFileName, stripMd } from '@shared/vault/paths'
+import {
+  basename,
+  dirname,
+  isInside,
+  isMarkdown,
+  joinPath,
+  noteTitle,
+  sanitizeFileName,
+  stripMd
+} from '@shared/vault/paths'
 import { createRun, runPath } from '@shared/records/runs'
-import { createJob, jobPath, tagRun } from '@shared/records/workflows'
+import { createJob, jobPath, jobWorkflow, rerunJob as rerunJobText, tagRun } from '@shared/records/workflows'
 import { formatDate } from '@shared/notes/templates'
 import type { RenameResult, VaultPath } from '@shared/vault/types'
 import { errorMessage, vaultClient } from '../services/vaultClient'
@@ -50,6 +59,8 @@ interface WorkspaceState {
   ): Promise<VaultPath | null>
   /** Starts a job of a workflow, filed under Jobs/, and opens it. */
   newJob(workflowPath: VaultPath): Promise<void>
+  /** Starts a new job with a job's stages and samples, linked back to it, and opens it. */
+  rerunJob(jobPath: VaultPath): Promise<void>
   startRename(path: VaultPath | null): void
   rename(path: VaultPath, newName: string): Promise<void>
   remove(path: VaultPath): Promise<void>
@@ -256,6 +267,22 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
     [info, writeNew, openNote, fail]
   )
 
+  const rerunJob = useCallback(
+    async (path: VaultPath) => {
+      try {
+        await editor.current?.flush()
+        const now = new Date()
+        const job = await vaultClient.read(path)
+        const content = rerunJobText(path, job.content, { now, author: info?.author ?? '' })
+        const workflow = jobWorkflow(job.content) ?? noteTitle(path)
+        openNote(await writeNew(jobPath(`${workflow}.md`, now), content))
+      } catch (err) {
+        fail(err)
+      }
+    },
+    [info, writeNew, openNote, fail]
+  )
+
   const openLink = useCallback(
     async (target: string, fromPath?: VaultPath) => {
       const resolved = resolver(target, fromPath)
@@ -383,6 +410,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
       openToday,
       startRun,
       newJob,
+      rerunJob,
       startRename: setRenamingPath,
       rename,
       remove,
@@ -412,6 +440,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
       openToday,
       startRun,
       newJob,
+      rerunJob,
       rename,
       remove,
       exportPdf,

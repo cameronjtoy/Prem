@@ -5,7 +5,7 @@ import { resolveAttachment } from '@shared/attachments/attachments'
 import { isInside, noteTitle } from '@shared/vault/paths'
 import { parseFrontmatter } from '@shared/notes/frontmatter'
 import { addDeviation, completeRun } from '@shared/records/runs'
-import { completeStage, logRunStarted } from '@shared/records/workflows'
+import { completeStage, logRunStarted, redoableStages, redoStage } from '@shared/records/workflows'
 import { EMPTY_STATUS, SIGNABLE_TYPES, type RecordCheck } from '@shared/records/signatures'
 import { errorMessage, vaultClient } from '../../services/vaultClient'
 import { currentSettings, useSettings } from '../../state/SettingsContext'
@@ -38,7 +38,7 @@ const STATUS_LABEL: Record<SaveStatus, string> = {
 
 export function NoteEditor({ path, cursor }: { path: string; cursor: number | null }) {
   const { resolver, noteTitles, subscribe, canWrite, info } = useVault()
-  const { openLink, openNote, registerEditor, showNotice, exportPdf, startRun, newJob } = useWorkspace()
+  const { openLink, openNote, registerEditor, showNotice, exportPdf, startRun, newJob, rerunJob } = useWorkspace()
   const { values: settings } = useSettings()
   const spellcheck = settings['editor.spellcheck']
   const lineNumbers = settings['editor.lineNumbers']
@@ -252,6 +252,15 @@ export function NoteEditor({ path, cursor }: { path: string; cursor: number | nu
     rewrite((text) => ({ text: completeStage(text, { by: info?.author ?? '', now: new Date() }) }))
   }
 
+  const [redoRequest, setRedoRequest] = useState(0)
+  const onRedoStage = (stage: string, reason: string): void => {
+    try {
+      rewrite((text) => ({ text: redoStage(text, stage, { by: info?.author ?? '', now: new Date(), reason }) }))
+    } catch (err) {
+      showNotice(errorMessage(err))
+    }
+  }
+
   const [signRequest, setSignRequest] = useState(0)
   const view = (): EditorView | undefined => sessionRef.current?.view
   const editable = (): boolean => !loading && !readOnly && !!view()
@@ -349,6 +358,16 @@ export function NoteEditor({ path, cursor }: { path: string; cursor: number | nu
     () => void onCompleteStage(),
     () => editable() && meta.type === 'job' && !!meta.job?.current
   )
+  useCommand(
+    'job.redoStage',
+    () => setRedoRequest((n) => n + 1),
+    () => editable() && meta.type === 'job' && !!meta.job && redoableStages(meta.job).length > 0
+  )
+  useCommand(
+    'job.rerun',
+    () => void rerunJob(path),
+    () => !loading && meta.type === 'job' && !!meta.job?.stages.length && canWrite('Jobs')
+  )
   useCommand('format.task', () => view() && toggleTaskAtCursor(view()!), onLine(/^\s*(?:[-*+]|\d+[.)])\s+\[[ xX]\]/))
   useCommand('format.bold', () => view() && toggleWrap(view()!, '**'), editable)
   useCommand('format.italic', () => view() && toggleWrap(view()!, '*'), editable)
@@ -439,6 +458,8 @@ export function NoteEditor({ path, cursor }: { path: string; cursor: number | nu
           onComplete={onComplete}
           onStartStageRun={() => void onStartStageRun()}
           onCompleteStage={() => void onCompleteStage()}
+          onRedoStage={onRedoStage}
+          redoRequest={redoRequest}
         />
       )}
       {conflict && (

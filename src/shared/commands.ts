@@ -38,6 +38,8 @@ export const COMMANDS = [
   { id: 'job.new', title: 'Start a job of this workflow', category: 'Run' },
   { id: 'job.startRun', title: "Start the run for this job's stage", category: 'Run' },
   { id: 'job.completeStage', title: "Complete this job's stage", category: 'Run' },
+  { id: 'job.redoStage', title: 'Send this job back to a stage…', category: 'Run' },
+  { id: 'job.rerun', title: 'Run this job again', category: 'Run' },
   { id: 'analysis.runCell', title: 'Run Python cell', category: 'Analysis', key: 'Shift+Enter' },
   { id: 'analysis.runAll', title: 'Run all Python cells', category: 'Analysis', key: 'Mod+Alt+Enter' },
   { id: 'analysis.stop', title: 'Stop running cell', category: 'Analysis' },
