@@ -40,6 +40,7 @@ import { DAILY_TEMPLATE, DEFAULT_TEMPLATES } from './defaultTemplates'
 import { LocalFsProvider } from './LocalFsProvider'
 import { RemoteProvider } from './RemoteProvider'
 import type { VaultProvider } from './VaultProvider'
+import serifFont from '@fontsource-variable/source-serif-4/files/source-serif-4-latin-wght-normal.woff2?inline'
 
 export interface VaultEvents {
   onChanged(changes: VaultChange[]): void
@@ -224,7 +225,8 @@ export class VaultManager {
       exportedAt: new Date(),
       appVersion: app.getVersion(),
       embedImage: (p) => images.get(p) ?? null,
-      pageSize: this.settings()['export.pageSize'] === 'Letter' ? 'Letter' : 'A4'
+      pageSize: this.settings()['export.pageSize'] === 'Letter' ? 'Letter' : 'A4',
+      headingFont: serifFont
     })
     const footer = notes.length === 1 ? notes[0].path : `${path || provider.name} · ${notes.length} entries`
     await printToPdf(html, file, footer)

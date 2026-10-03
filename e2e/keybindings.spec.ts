@@ -35,7 +35,7 @@ test('a shortcut changed on the Settings screen is saved and works straight away
   await page.keyboard.press('Escape')
   await expect(page.locator('.settings-page')).toBeHidden()
 
-  await page.locator('.cm-content').click()
+  await page.locator('.cm-content').focus()
   await expect(page.locator('.cm-content')).toBeFocused()
   await page.keyboard.press('ControlOrMeta+End')
   await page.keyboard.type('\nsee ')

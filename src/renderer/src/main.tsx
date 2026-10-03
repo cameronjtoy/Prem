@@ -4,6 +4,8 @@ import 'katex/dist/katex.min.css'
 // Bundled fonts for Windows and Linux. macOS uses its own San Francisco (SF Pro and SF Mono) first.
 import '@fontsource-variable/inter/opsz.css'
 import '@fontsource-variable/inter/opsz-italic.css'
+import '@fontsource-variable/source-serif-4/opsz.css'
+import '@fontsource-variable/source-serif-4/opsz-italic.css'
 import '@fontsource-variable/jetbrains-mono/index.css'
 import '@fontsource-variable/jetbrains-mono/wght-italic.css'
 import './styles/app.css'
