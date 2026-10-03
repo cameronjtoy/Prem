@@ -1,0 +1,48 @@
+# Publishes the prem-notebook Python package to PyPI when a GitHub release tagged py-v* is published.
+#
+# It uses PyPI trusted publishing: no API token is stored here. Once, on pypi.org, add a publisher for
+# this repository with workflow "python-release.yml" and environment "pypi" (see docs/python.md).
+name: Python release
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    if: startsWith(github.event.release.tag_name, 'py-v')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+      - name: Check the tag matches the package version
+        run: |
+          version=$(sed -n 's/^__version__ = "\(.*\)"$/\1/p' python/src/prem/__init__.py)
+          test "py-v$version" = "${{ github.event.release.tag_name }}" || {
+            echo "Tag ${{ github.event.release.tag_name }} doesn't match __version__ $version"; exit 1; }
+      - run: pip install build
+      - run: python -m build python --outdir dist
+      - uses: actions/upload-artifact@v7
+        with:
+          name: python-dist
+          path: dist/
+
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/project/prem-notebook/
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          name: python-dist
+          path: dist/
+      - uses: pypa/gh-action-pypi-publish@release/v1

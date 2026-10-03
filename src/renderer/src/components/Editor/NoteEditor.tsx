@@ -387,7 +387,8 @@ export function NoteEditor({ path, cursor }: { path: string; cursor: number | nu
   const crumbs = path.replace(/\.md$/i, '').split('/')
 
   return (
-    <div className="note-editor">
+    // Ready once the note and its signing status have loaded, so its commands (sign, start run…) can run.
+    <div className="note-editor" data-ready={!loading && recordLoaded ? '' : undefined}>
       <div className="note-header">
         <div className="breadcrumb" title={path}>
           {crumbs.map((c, i) => (
