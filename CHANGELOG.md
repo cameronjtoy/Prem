@@ -8,6 +8,7 @@ Everything below will ship as **0.1.0**, the first pilot release.
 
 ### Added
 - **A warmer look**: warm paper backgrounds and soft charcoal in dark mode, with the logo's teal as the accent, chosen so text and buttons meet WCAG AA contrast. Headings are set in Source Serif 4 and the interface in Inter, both open fonts bundled with the app, so Prem looks the same on every computer. **Settings → Font in notes** switches the text you write to the serif. PDF exports use the serif for headings, and the website matches the app.
+- **Hide and show the side panels from the screen**: each side panel has a hide button, and a button in the toolbar brings it back (as do ⌘\ and ⌘⇧\). Whether they're shown, and their widths, are kept between launches.
 - **New logo**: a ring molecule whose atoms are also the nodes of a graph, branching out like linked notes. It's the app icon on every platform, on the welcome screen and on the website.
 - **Analysis cells**: a `python {run}` block in a note gets a Run button (⇧↵ in the code, ⌥⌘↵ for all cells). Its output (printed text, the last value, pandas tables, matplotlib figures and errors) is written under the cell as plain markdown, with figures and tables stored as attachments. A record line says what produced it: code fingerprint, time, who, Python, environment and the SHA-256 of every file read. Outputs are saved in history, covered by signing and printed in PDF exports. Changed code is flagged, signed notes can't be run, and on a team vault Prem asks before running code someone else changed. New **Analysis** template.
 - **Python for analyses** (groundwork for analysis cells): Prem finds Python on your computer (or the one uv manages) and builds one environment per vault from its `environment.txt`, with uv or `venv` + pip, kept outside the vault. Settings → Analysis shows what it found and sets the environment up. Each note gets its own Python process; results record the Python version, the environment and the SHA-256 of every file the code read. See `docs/analysis.md`.
@@ -31,6 +32,7 @@ Everything below will ship as **0.1.0**, the first pilot release.
 - **Project**: Apache-2.0 license, CI, Prettier and oxlint, end-to-end tests of the app and team server in CI, contributor guide, security policy, code of conduct, issue and pull request templates, Dependabot and CodeQL, `docs/ARCHITECTURE.md`, a release workflow, `THIRD_PARTY_NOTICES.md` in every installer, a website on GitHub Pages, and a lab sample vault in `examples/sample-vault/`.
 
 ### Changed
+- **New note and New folder ask for the name first**: nothing is created until you type a name and press Enter. Esc or clicking away drops it, so no more stray "Untitled" notes. A name that's already taken is refused.
 - **Typography**: San Francisco (SF Pro and SF Mono) on macOS as before, and now **Inter** and **JetBrains Mono**, bundled, on Windows and Linux instead of whatever the system had. The website uses Inter too.
 - A new or empty vault suggests where to start: today's entry, a new experiment, or a protocol, depending on what you can write.
 - Backlinks show readable text instead of raw markdown.
