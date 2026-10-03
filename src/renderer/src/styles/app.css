@@ -561,6 +561,11 @@ kbd {
   text-align: center;
 }
 
+.welcome-logo {
+  display: block;
+  margin: 0 auto 4px;
+}
+
 .welcome-card h1 {
   margin: 0 0 8px;
   font-size: 28px;

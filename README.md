@@ -1,3 +1,5 @@
+<p align="center"><img src="build/logo.svg" alt="" width="112" /></p>
+
 # Prem
 
 **An open-source lab notebook that runs on your own machines.**

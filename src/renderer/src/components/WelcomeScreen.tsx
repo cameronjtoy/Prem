@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { useVault } from '../state/VaultContext'
+import logo from '../assets/logo.svg'
 import { VaultIcon } from './icons'
 
 export function WelcomeScreen() {
@@ -19,6 +20,7 @@ export function WelcomeScreen() {
   return (
     <div className="welcome">
       <div className="welcome-card">
+        <img className="welcome-logo" src={logo} alt="" width="88" height="88" />
         <h1>Prem</h1>
         <p>
           A lab notebook that stays on your own machines: experiments, protocols, runs and samples, as plain files you
