@@ -1,10 +1,19 @@
 import { useEffect, useState } from 'react'
-import { Group, Panel, Separator, usePanelRef } from 'react-resizable-panels'
+import { Group, Panel, Separator, useDefaultLayout, usePanelRef } from 'react-resizable-panels'
 import { BacklinksPanel } from './components/Backlinks/BacklinksPanel'
 import { NoteEditor } from './components/Editor/NoteEditor'
 import { FileTree } from './components/FileTree/FileTree'
 import { GraphView } from './components/Graph/GraphView'
-import { EditIcon, GraphIcon, SearchIcon, TemplateIcon, TodayIcon, VaultIcon } from './components/icons'
+import {
+  EditIcon,
+  GraphIcon,
+  SearchIcon,
+  SidebarLeftIcon,
+  SidebarRightIcon,
+  TemplateIcon,
+  TodayIcon,
+  VaultIcon
+} from './components/icons'
 import { CommandPalette, QuickSwitcher, ShortcutsSheet } from './components/Palette'
 import { SearchPalette } from './components/SearchPalette'
 import { SettingsView } from './components/Settings/SettingsView'
@@ -52,6 +61,10 @@ function Shell() {
   const settingsOpen = overlay === 'settings' || overlay === 'keybindings'
   const filesPanel = usePanelRef()
   const linksPanel = usePanelRef()
+  // Panel widths, and whether each side panel is hidden, are kept between launches.
+  const layout = useDefaultLayout({ id: 'prem-panels', storage: localStorage })
+  const [filesHidden, setFilesHidden] = useState(false)
+  const [linksHidden, setLinksHidden] = useState(false)
   const vaultOpen = (): boolean => !!info
   const toggle = (which: NonNullable<typeof overlay>) => () => setOverlay((open) => (open === which ? null : which))
   const togglePanel = (ref: typeof filesPanel) => () => {
@@ -60,6 +73,11 @@ function Shell() {
     if (panel.isCollapsed()) panel.expand()
     else panel.collapse()
   }
+
+  // Naming a new note or folder happens in the file list, so show it if it's hidden.
+  useEffect(() => {
+    if (ws.draft && filesPanel.current?.isCollapsed()) filesPanel.current.expand()
+  }, [ws.draft, filesPanel])
 
   useCommand('app.commandPalette', toggle('commands'), vaultOpen)
   useCommand('app.shortcuts', toggle('shortcuts'))
@@ -146,14 +164,39 @@ function Shell() {
 
   return (
     <div className="app">
-      <Group orientation="horizontal" className="panels">
-        <Panel defaultSize="20%" minSize="160px" maxSize="45%" collapsible collapsedSize={0} panelRef={filesPanel}>
-          <FileTree />
+      <Group
+        orientation="horizontal"
+        className="panels"
+        id="prem-panels"
+        defaultLayout={layout.defaultLayout}
+        onLayoutChanged={layout.onLayoutChanged}
+      >
+        <Panel
+          id="files"
+          defaultSize="20%"
+          minSize="160px"
+          maxSize="45%"
+          collapsible
+          collapsedSize={0}
+          panelRef={filesPanel}
+          onResize={() => setFilesHidden(!!filesPanel.current?.isCollapsed())}
+        >
+          <FileTree onHide={togglePanel(filesPanel)} />
         </Panel>
         <Separator className="resize-handle" />
-        <Panel minSize="30%">
+        <Panel id="main" minSize="30%">
           <main className="main-pane">
             <div className="main-toolbar">
+              {filesHidden && (
+                <button
+                  className="icon-button panel-toggle"
+                  onClick={togglePanel(filesPanel)}
+                  title={`Show the file list (${keyFor('view.toggleFiles')})`}
+                  aria-label="Show the file list"
+                >
+                  <SidebarLeftIcon />
+                </button>
+              )}
               <div className="segmented" role="tablist">
                 <button
                   role="tab"
@@ -202,6 +245,16 @@ function Shell() {
               >
                 <VaultIcon /> Switch vault
               </button>
+              {linksHidden && (
+                <button
+                  className="icon-button panel-toggle"
+                  onClick={togglePanel(linksPanel)}
+                  title={`Show links (${keyFor('view.toggleLinks')})`}
+                  aria-label="Show links"
+                >
+                  <SidebarRightIcon />
+                </button>
+              )}
             </div>
             {trouble && !settingsOpen && (
               <div className="banner warning settings-trouble">
@@ -227,8 +280,17 @@ function Shell() {
           </main>
         </Panel>
         <Separator className="resize-handle" />
-        <Panel defaultSize="22%" minSize="180px" maxSize="40%" collapsible collapsedSize={0} panelRef={linksPanel}>
-          <BacklinksPanel />
+        <Panel
+          id="links"
+          defaultSize="22%"
+          minSize="180px"
+          maxSize="40%"
+          collapsible
+          collapsedSize={0}
+          panelRef={linksPanel}
+          onResize={() => setLinksHidden(!!linksPanel.current?.isCollapsed())}
+        >
+          <BacklinksPanel onHide={togglePanel(linksPanel)} />
         </Panel>
       </Group>
       {ws.templatePickerFolder !== null && <TemplatePicker folder={ws.templatePickerFolder} />}
