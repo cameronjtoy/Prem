@@ -7,6 +7,11 @@ All notable changes to Prem are listed here. The format follows [Keep a Changelo
 Everything below will ship as **0.1.0**, the first pilot release.
 
 ### Added
+- **Python package `prem-notebook`** (`import prem`): write to the notebook from scripts, Jupyter and Python cells.
+  - `entry.attach(fig)` saves a matplotlib figure, a DataFrame or any file next to the note and adds it to the note.
+  - `entry.record("Colonies", 84)` fills in the Results table, and `entry.tables()` reads every table back as DataFrames.
+  - It works with a vault folder or a team server. On a server, your permissions apply and changes are recorded under your name. In a local vault, Prem records them as changes made outside Prem.
+  - Signed notes are never changed. It has no required dependencies, works on Python 3.9 and later, and is released to PyPI from GitHub with trusted publishing. See `docs/python.md`.
 - **A warmer look**: warm paper backgrounds and soft charcoal in dark mode, with the logo's teal as the accent, chosen so text and buttons meet WCAG AA contrast. Headings are set in Source Serif 4 and the interface in Inter, both open fonts bundled with the app, so Prem looks the same on every computer. **Settings → Font in notes** switches the text you write to the serif. PDF exports use the serif for headings, and the website matches the app.
 - **Workflows and jobs**: a `type: workflow` note lists a process's stages in a table, each with a protocol (or none), a default assignee and its outputs; a new **Workflow** template starts one. **New job** files a job under `Jobs/<workflow>/` with a copy of the stages. The job's bar shows its stage and assignee, starts the stage's run (linked both ways), and **Complete stage** logs the time and hands the job to the next stage's assignee, asking first if the run isn't complete. Finished jobs can be signed to lock their stage log. The sample vault has a Plasmid prep workflow and a job in progress.
 - **Hide and show the side panels from the screen**: each side panel has a hide button, and a button in the toolbar brings it back (as do ⌘\ and ⌘⇧\). Whether they're shown, and their widths, are kept between launches.

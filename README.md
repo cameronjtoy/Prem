@@ -97,6 +97,8 @@ Everything on that screen is also in `settings.json`, which lists only what you'
 
 Put code in a `python {run}` block and choose **Run** (or ⇧↵). The output (text, tables, figures) is saved in the note under the cell, along with what produced it: the code, who ran it, the Python environment, and a checksum of every file it read. Add an `environment.txt` to the vault so every computer in the lab uses the same packages. See [`docs/analysis.md`](docs/analysis.md).
 
+From your own scripts and Jupyter notebooks, the [`prem-notebook`](python) package writes to an entry directly: `entry.attach(fig)`, `entry.record("Colonies", 84)`, `entry.tables()`. It works with a vault folder or a team server, and never changes signed notes. See [`docs/python.md`](docs/python.md).
+
 ### Changing shortcuts
 
 Settings → **Keyboard shortcuts** lists every command. Choose **Change** and press the new keys; if another command already uses them, Prem asks whether to move the shortcut or let both share it (whichever can run at the time does). **Remove** and **Reset** undo a change.
@@ -165,6 +167,7 @@ npm run server -- add carol        # add a person while it runs
 npm run dev            # run the app with hot reload
 npm test               # unit tests
 npm run e2e            # end-to-end tests of the built app (npm run build first)
+pytest python/tests    # the Python package (pip install -e "python[pandas]" pytest; npm run server:build first)
 npm run lint           # oxlint
 npm run format         # prettier
 npm run typecheck      # main, preload, renderer and server
