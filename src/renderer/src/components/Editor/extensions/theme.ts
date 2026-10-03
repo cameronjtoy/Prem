@@ -4,7 +4,7 @@ import { tags as t } from '@lezer/highlight'
 
 // Colors come from CSS variables in styles/app.css, so light and dark mode both work.
 export const highlightStyle = HighlightStyle.define([
-  { tag: t.heading, fontWeight: '700', color: 'var(--text-strong)' },
+  { tag: t.heading, fontWeight: '600', color: 'var(--text-strong)' },
   { tag: t.strong, fontWeight: '700' },
   { tag: t.emphasis, fontStyle: 'italic' },
   { tag: t.strikethrough, textDecoration: 'line-through' },
@@ -28,7 +28,7 @@ export const highlightStyle = HighlightStyle.define([
 export const editorTheme = EditorView.theme({
   '&': { height: '100%', backgroundColor: 'transparent', color: 'var(--text)' },
   '&.cm-focused': { outline: 'none' },
-  '.cm-scroller': { fontFamily: 'var(--font-text)', lineHeight: '1.65', overflow: 'auto' },
+  '.cm-scroller': { fontFamily: 'var(--font-note)', lineHeight: '1.7', overflow: 'auto' },
   '.cm-content': {
     maxWidth: 'var(--editor-width)',
     margin: '0 auto',
@@ -55,7 +55,7 @@ export const editorTheme = EditorView.theme({
     boxShadow: 'var(--shadow)'
   },
   '.cm-tooltip-autocomplete > ul > li': { padding: '4px 10px' },
-  '.cm-tooltip-autocomplete > ul > li[aria-selected]': { backgroundColor: 'var(--accent)', color: 'white' },
+  '.cm-tooltip-autocomplete > ul > li[aria-selected]': { backgroundColor: 'var(--accent)', color: 'var(--on-accent)' },
   '.cm-panels': { backgroundColor: 'var(--bg-elevated)', color: 'var(--text)' },
   '.cm-panels.cm-panels-top': { borderBottom: '1px solid var(--border)' },
   '.cm-searchMatch': { backgroundColor: 'var(--search-match)' }

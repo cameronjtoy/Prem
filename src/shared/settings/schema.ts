@@ -42,6 +42,18 @@ export const SETTINGS = [
     default: 16
   },
   {
+    key: 'appearance.noteFont',
+    section: 'Appearance',
+    title: 'Font in notes',
+    description: 'The typeface of the text you write. Headings are always in the serif.',
+    type: 'enum',
+    options: [
+      { value: 'sans', label: 'Sans serif (Inter)' },
+      { value: 'serif', label: 'Serif (Source Serif)' }
+    ],
+    default: 'sans'
+  },
+  {
     key: 'appearance.editorWidth',
     section: 'Appearance',
     title: 'Line width',

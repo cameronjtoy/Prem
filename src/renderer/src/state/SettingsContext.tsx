@@ -26,6 +26,7 @@ function applyToPage(values: Settings): void {
   const root = document.documentElement.style
   root.setProperty('--editor-width', WIDTHS[values['appearance.editorWidth']] ?? WIDTHS.wide)
   root.setProperty('--editor-font-size', `${values['appearance.textSize']}px`)
+  root.setProperty('--font-note', values['appearance.noteFont'] === 'serif' ? 'var(--font-serif)' : 'var(--font-text)')
 }
 
 const SettingsContext = createContext<SettingsState | null>(null)

@@ -117,13 +117,17 @@ rmSync(outDir, { recursive: true, force: true })
 mkdirSync(outDir)
 cpSync(path.join(siteDir, 'assets'), path.join(outDir, 'assets'), { recursive: true })
 for (const file of ['style.css', 'download.js']) cpSync(path.join(siteDir, file), path.join(outDir, file))
-// The same Inter the app bundles, for visitors whose system font isn't San Francisco.
+// The same fonts the app bundles: Inter for text and Source Serif 4 for headings.
 for (const subset of ['latin', 'latin-ext']) {
-  const font = `inter-${subset}-opsz-normal.woff2`
-  cpSync(
-    path.join(root, 'node_modules/@fontsource-variable/inter/files', font),
-    path.join(outDir, 'assets/fonts', font)
-  )
+  for (const [pkg, font] of [
+    ['inter', `inter-${subset}-opsz-normal.woff2`],
+    ['source-serif-4', `source-serif-4-${subset}-opsz-normal.woff2`]
+  ]) {
+    cpSync(
+      path.join(root, 'node_modules/@fontsource-variable', pkg, 'files', font),
+      path.join(outDir, 'assets/fonts', font)
+    )
+  }
 }
 writeFileSync(path.join(outDir, '.nojekyll'), '')
 
