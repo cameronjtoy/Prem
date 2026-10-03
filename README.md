@@ -95,7 +95,7 @@ Everything on that screen is also in `settings.json`, which lists only what you'
 
 ### Python analysis in notes
 
-Put code in a `python {run}` block and choose **Run** (or ⇧↵). The output (text, tables, figures) is saved in the note under the cell, along with what produced it: the code, who ran it, the Python environment, and a checksum of every file it read. Add an `environment.txt` to the vault so every computer in the lab uses the same packages. See [`docs/analysis.md`](docs/analysis.md).
+Put code in a `python {run}` block and choose **Run** (or ⇧↵). The output (text, tables, figures) is saved in the note under the cell, along with what produced it: the code, who ran it, the Python environment, and a checksum of every file it read. Add an `environment.txt` to the vault so every computer in the lab uses the same packages. Prem saves the exact package list with each output, flags outputs whose input files changed, and **↻ Reproduce** reruns a note in the recorded environment and reports what still matches. See [`docs/analysis.md`](docs/analysis.md).
 
 ### Changing shortcuts
 

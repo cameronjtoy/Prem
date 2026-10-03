@@ -39,6 +39,7 @@ export const COMMANDS = [
   { id: 'analysis.runAll', title: 'Run all Python cells', category: 'Analysis', key: 'Mod+Alt+Enter' },
   { id: 'analysis.stop', title: 'Stop running cell', category: 'Analysis' },
   { id: 'analysis.restart', title: 'Restart Python for this note', category: 'Analysis' },
+  { id: 'analysis.reproduce', title: "Reproduce this note's outputs", category: 'Analysis' },
   { id: 'format.task', title: 'Tick or untick step', category: 'Format', key: 'Mod+Enter' },
   { id: 'format.bold', title: 'Bold', category: 'Format', key: 'Mod+B' },
   { id: 'format.italic', title: 'Italic', category: 'Format', key: 'Mod+I' },

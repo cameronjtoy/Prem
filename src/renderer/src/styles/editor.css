@@ -680,6 +680,21 @@
   color: var(--danger);
 }
 
+.cm-cell-reproduce {
+  padding: 2px 8px;
+  border: none;
+  border-radius: 5px;
+  background: none;
+  color: var(--text-muted);
+  font: inherit;
+  cursor: pointer;
+}
+
+.cm-cell-reproduce:hover {
+  background: var(--bg-hover);
+  color: var(--accent);
+}
+
 .cm-cell-status.failed {
   color: var(--danger);
 }

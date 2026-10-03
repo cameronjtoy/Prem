@@ -13,7 +13,7 @@ import { MAX_ATTACHMENT_BYTES } from '@shared/attachments/attachments'
 import { settingDef, type SettingKey } from '@shared/settings/schema'
 import { VaultError, type IpcResult } from '@shared/vault/errors'
 import { Channels } from '@shared/vault/ipc'
-import { basename, sanitizeFileName, stripMd } from '@shared/vault/paths'
+import { basename, normalizeVaultPath, sanitizeFileName, stripMd } from '@shared/vault/paths'
 import type { WriteOptions } from '@shared/vault/types'
 import type { AnalysisManager } from '../analysis/AnalysisManager'
 import type { KeybindingsStore } from '../keybindings'
@@ -178,6 +178,20 @@ export function registerIpc(
   handle(Channels.analysisRun, (notePath, code) => analysis.run(str(notePath, 'notePath'), str(code, 'code')))
   handle(Channels.analysisInterrupt, (notePath) => analysis.interrupt(str(notePath, 'notePath')))
   handle(Channels.analysisRestart, (notePath) => analysis.stop(str(notePath, 'notePath')))
+  handle(Channels.analysisReproduce, (notePath, codes, environment) => {
+    if (!Array.isArray(codes) || !codes.every((c) => typeof c === 'string'))
+      throw new VaultError('INVALID_ARGUMENT', 'codes must be a list of strings')
+    return analysis.reproduce(
+      str(notePath, 'notePath'),
+      codes as string[],
+      environment === null ? null : str(environment, 'environment')
+    )
+  })
+  handle(Channels.analysisInputHashes, (paths) => {
+    if (!Array.isArray(paths) || !paths.every((p) => typeof p === 'string'))
+      throw new VaultError('INVALID_ARGUMENT', 'paths must be a list of strings')
+    return analysis.inputHashes((paths as string[]).map((p) => normalizeVaultPath(p)))
+  })
 
   handle(Channels.openExternal, async (url) => {
     const target = new URL(str(url, 'url'))

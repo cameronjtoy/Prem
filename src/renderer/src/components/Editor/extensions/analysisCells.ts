@@ -1,6 +1,7 @@
 import { EditorState, Facet, Prec, StateEffect, StateField, type Extension, type Range } from '@codemirror/state'
 import { Decoration, EditorView, WidgetType, type DecorationSet } from '@codemirror/view'
 import { codeHash, describeMeta, findCells, parseOutputBody, type Cell, type OutputMeta } from '@shared/analysis/cells'
+import { changedInputs, describeChangedInputs } from '@shared/analysis/reproduce'
 import { AttachmentWidget } from './attachments'
 import { hostFacet } from './host'
 
@@ -11,6 +12,8 @@ export interface AnalysisHost {
   /** Why cells can't run in this note right now, or null if they can. */
   blocked(): string | null
   run(view: EditorView, cellFrom: number): void
+  /** Reruns the cells up to this one in the recorded environment and compares with their outputs. */
+  reproduce(view: EditorView, cellFrom: number): void
   stop(): void
   formatTime(iso: string): string
 }
@@ -35,6 +38,24 @@ export const setCellState = StateEffect.define<{ id: number; state: CellState | 
 
 /** Settings changed (e.g. Run turned off), so redraw the toolbars. */
 export const refreshCells = StateEffect.define<null>()
+
+/** The current sha256 of files the note's outputs read (null when gone), to flag outputs whose inputs changed. */
+export const setInputHashes = StateEffect.define<Record<string, string | null>>()
+
+export const inputHashes = StateField.define<Record<string, string | null>>({
+  create: () => ({}),
+  update: (hashes, tr) => {
+    for (const e of tr.effects) if (e.is(setInputHashes)) return e.value
+    return hashes
+  }
+})
+
+/** Every file the note's outputs say they read. */
+export function recordedInputs(state: EditorState): string[] {
+  const paths = new Set<string>()
+  for (const cell of state.field(cellsField)) for (const i of cell.output?.meta?.inputs ?? []) paths.add(i.path)
+  return [...paths]
+}
 
 export const cellStates = StateField.define<CellState[]>({
   create: () => [],
@@ -67,7 +88,8 @@ class ToolbarWidget extends WidgetType {
     readonly running: boolean,
     readonly failed: boolean,
     readonly stale: boolean,
-    readonly blocked: string | null
+    readonly blocked: string | null,
+    readonly reproducible: boolean
   ) {
     super()
   }
@@ -79,7 +101,8 @@ class ToolbarWidget extends WidgetType {
       other.running === this.running &&
       other.failed === this.failed &&
       other.stale === this.stale &&
-      other.blocked === this.blocked
+      other.blocked === this.blocked &&
+      other.reproducible === this.reproducible
     )
   }
 
@@ -99,6 +122,18 @@ class ToolbarWidget extends WidgetType {
       else if (!this.blocked) host?.run(view, this.from)
     })
     bar.append(button)
+    if (this.reproducible && !this.running) {
+      const again = document.createElement('button')
+      again.className = 'cm-cell-reproduce'
+      again.textContent = '↻ Reproduce'
+      again.title =
+        'Rerun the cells up to here in the environment they recorded, and compare with these outputs. Nothing in the note changes.'
+      again.addEventListener('mousedown', (e) => {
+        e.preventDefault()
+        host?.reproduce(view, this.from)
+      })
+      bar.append(again)
+    }
     const label = document.createElement('span')
     label.className = `cm-cell-status${this.failed ? ' failed' : ''}${this.stale ? ' stale' : ''}`
     label.textContent = this.status
@@ -182,23 +217,38 @@ function build(state: EditorState): DecorationSet {
   if (!host?.enabled()) return Decoration.none
   const blocked = state.readOnly ? 'This note is read-only, so its cells can’t run.' : host.blocked()
   const states = state.field(cellStates)
+  const hashes = state.field(inputHashes)
+  let upstream = false
   // A cursor at the very start of an output (e.g. where it was just written) leaves it rendered.
   const touches = (from: number, to: number): boolean => state.selection.ranges.some((r) => r.from <= to && r.to > from)
   const decos: Range<Decoration>[] = []
   for (const cell of state.field(cellsField)) {
     const own = states.find((s) => s.pos === cell.from)
     const meta = cell.output?.meta ?? null
-    const stale = !!meta && meta.code !== codeHash(cell.code)
+    const codeChanged = !!meta && meta.code !== codeHash(cell.code)
+    const ownInputs = meta && !codeChanged ? describeChangedInputs(changedInputs(meta, hashes)) : ''
+    // Later cells use what earlier ones computed, so a changed input upstream affects them too.
+    const inputsChanged =
+      ownInputs ||
+      (meta && !codeChanged && upstream ? 'An earlier cell read a file that changed since this output.' : '')
+    if (ownInputs) upstream = true
+    const stale = codeChanged || !!inputsChanged
     const status = own
       ? own.message
-      : stale
+      : codeChanged
         ? 'The code changed since this output. Run it again to update it.'
-        : meta
-          ? ''
-          : 'Not run yet'
+        : inputsChanged || (meta ? '' : 'Not run yet')
     decos.push(
       Decoration.widget({
-        widget: new ToolbarWidget(cell.from, status, own?.state === 'running', own?.state === 'failed', stale, blocked),
+        widget: new ToolbarWidget(
+          cell.from,
+          status,
+          own?.state === 'running',
+          own?.state === 'failed',
+          stale,
+          blocked,
+          !!meta && !codeChanged
+        ),
         block: true,
         side: -1
       }).range(cell.from)
@@ -225,7 +275,7 @@ const cellDecorations = StateField.define<DecorationSet>({
     if (
       tr.docChanged ||
       tr.selection ||
-      tr.effects.some((e) => e.is(setCellState) || e.is(refreshCells)) ||
+      tr.effects.some((e) => e.is(setCellState) || e.is(refreshCells) || e.is(setInputHashes)) ||
       tr.startState.readOnly !== tr.state.readOnly
     ) {
       return build(tr.state)
@@ -237,5 +287,5 @@ const cellDecorations = StateField.define<DecorationSet>({
 
 /** Run cells: a toolbar on each ```python {run} block, and its output shown below. */
 export function analysisCells(host: AnalysisHost): Extension {
-  return [analysisHostFacet.of(host), cellsField, cellStates, Prec.high(cellDecorations)]
+  return [analysisHostFacet.of(host), cellsField, cellStates, inputHashes, Prec.high(cellDecorations)]
 }

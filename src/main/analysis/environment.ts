@@ -45,7 +45,10 @@ export async function currentStamp(place: EnvironmentPlace, windows: boolean): P
 
 function run(command: string, args: string[], onLine: (line: string) => void): Promise<string> {
   return new Promise((resolve, reject) => {
-    const child = spawn(command, args, { windowsHide: true, env: { ...process.env, PIP_NO_INPUT: '1' } })
+    const child = spawn(command, args, {
+      windowsHide: true, // uv may only use a Python already on this computer: Prem never downloads tools itself.
+      env: { ...process.env, PIP_NO_INPUT: '1', UV_PYTHON_DOWNLOADS: 'never' }
+    })
     let output = ''
     const take = (chunk: Buffer): void => {
       const text = chunk.toString()
