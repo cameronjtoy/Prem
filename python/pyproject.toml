@@ -1,0 +1,37 @@
+[build-system]
+requires = ["hatchling>=1.24"]
+build-backend = "hatchling.build"
+
+[project]
+name = "prem-notebook"
+dynamic = ["version"]
+description = "Write figures, tables and results to your Prem lab notebook from Python."
+readme = "README.md"
+license = "Apache-2.0"
+requires-python = ">=3.9"
+authors = [{ name = "Prem contributors" }]
+keywords = ["lab notebook", "eln", "markdown", "science", "jupyter"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Science/Research",
+  "Programming Language :: Python :: 3",
+  "Topic :: Scientific/Engineering",
+]
+dependencies = []
+
+[project.optional-dependencies]
+pandas = ["pandas>=1.3"]
+
+[project.urls]
+Homepage = "https://github.com/cameronjtoy/Prem"
+Documentation = "https://github.com/cameronjtoy/Prem/blob/main/docs/python.md"
+Issues = "https://github.com/cameronjtoy/Prem/issues"
+
+[tool.hatch.version]
+path = "src/prem/__init__.py"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/prem"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

@@ -87,6 +87,8 @@ export async function openNote(page: Page, vaultPath: string): Promise<void> {
   await page.locator(`.file-tree [title="${vaultPath}"]`).click()
   await expect(page.locator('.breadcrumb')).toHaveAttribute('title', vaultPath)
   await expect(page.locator('.cm-content')).toBeVisible()
+  // The editor shows before its commands are enabled; a shortcut pressed in between would do nothing.
+  await expect(page.locator('.note-editor[data-ready]')).toBeVisible()
 }
 
 export async function rename(page: Page, vaultPath: string, newName: string): Promise<void> {

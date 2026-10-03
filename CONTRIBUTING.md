@@ -63,6 +63,8 @@ Maintainers release from `main`:
 3. The [release workflow](.github/workflows/release.yml) builds the installers, the server file and the Docker image, and opens a **draft** release with checksums and the changelog section as notes.
 4. Install at least one build, then publish the draft.
 
+The Python package (`python/`) is released separately. Set `__version__` in `python/src/prem/__init__.py`, then publish a GitHub release tagged `py-v<version>`. The [Python release workflow](.github/workflows/python-release.yml) uploads it to PyPI through trusted publishing; the one-time PyPI setup is in [`docs/python.md`](docs/python.md#publishing-the-package-maintainers).
+
 To try packaging locally, `npm run package:dir` builds an unpacked app in `dist/` for your platform.
 
 ## The website
