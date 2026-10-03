@@ -87,7 +87,7 @@ test('a signature and witness appear live in the other person’s window', async
   try {
     await alice.page.keyboard.press('ControlOrMeta+t')
     const entry = (await alice.page.locator('.breadcrumb').getAttribute('title'))!
-    await alice.page.locator('.cm-content').click()
+    await alice.page.locator('.cm-content').focus()
     await alice.page.keyboard.press('ControlOrMeta+End')
     await alice.page.keyboard.type('\nColony count: 84.')
     await savedStatus(alice.page)

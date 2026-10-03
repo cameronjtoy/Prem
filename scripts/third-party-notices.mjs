@@ -18,6 +18,7 @@ const RUNTIME_ROOTS = [
   'dompurify',
   '@fontsource-variable/inter',
   '@fontsource-variable/jetbrains-mono',
+  '@fontsource-variable/source-serif-4',
   'katex',
   'marked',
   'react',

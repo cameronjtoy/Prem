@@ -57,6 +57,17 @@ describe('printableHtml', () => {
     expect(printableHtml([note('Text')], { ...options, pageSize: 'Letter' })).toContain('@page { size: letter; }')
   })
 
+  it('embeds the heading font only when it is a woff2 data URI', () => {
+    const font = 'data:font/woff2;base64,AAAA'
+    expect(printableHtml([note('Text')], { ...options, headingFont: font })).toContain(
+      `@font-face { font-family: 'Prem Serif'; src: url(${font})`
+    )
+    expect(printableHtml([note('Text')], options)).not.toContain('@font-face')
+    expect(printableHtml([note('Text')], { ...options, headingFont: 'https://example.com/f.woff2' })).not.toContain(
+      '@font-face'
+    )
+  })
+
   it('uses the first heading as the title, or the file name when there is none', () => {
     expect(printableHtml([note('# Ligation of insert\nText')], options).match(/<h1/g)).toHaveLength(1)
     expect(printableHtml([note('Just text')], options)).toContain('<h1>Ligation</h1>')

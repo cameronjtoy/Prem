@@ -24,6 +24,7 @@ describe('settings schema', () => {
     expect(problems).toEqual([])
     expect(values['appearance.theme']).toBe('dark')
     expect(values['appearance.textSize']).toBe(16)
+    expect(values['appearance.noteFont']).toBe('sans')
     expect(values['editor.spellcheck']).toBe(true)
   })
 
