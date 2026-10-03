@@ -32,8 +32,15 @@ interface OpenNote {
   cursor: number | null
 }
 
+/** A note or folder being named in the file list. Nothing exists on disk until it's committed. */
+export interface Draft {
+  kind: 'note' | 'folder'
+  folder: VaultPath
+}
+
 interface WorkspaceState {
   active: OpenNote | null
+  draft: Draft | null
   view: MainView
   renamingPath: VaultPath | null
   templatePickerFolder: VaultPath | null
@@ -43,8 +50,13 @@ interface WorkspaceState {
   setView(view: MainView): void
   openNote(path: VaultPath, cursor?: number | null): void
   openLink(target: string, fromPath?: VaultPath): Promise<void>
+  /** Starts naming a new note in the file list. It's created only when the name is confirmed with Enter. */
   createNote(folder: VaultPath): Promise<void>
+  /** Starts naming a new folder in the file list. It's created only when the name is confirmed with Enter. */
   createFolder(parent: VaultPath): Promise<void>
+  /** Creates the note or folder being named. Returns why it couldn't, e.g. the name is taken, or null. */
+  commitDraft(name: string): Promise<string | null>
+  cancelDraft(): void
   createFromTemplate(templatePath: VaultPath, title: string, folder: VaultPath): Promise<void>
   /** Opens today's notebook entry, creating it from the daily template the first time. */
   openToday(): Promise<void>
@@ -98,14 +110,6 @@ function renameReport({ updated, locked, readOnly }: RenameResult): { text: stri
   return { text: parts.join(' '), kind: locked.length || readOnly.length ? 'error' : 'info' }
 }
 
-async function freePath(folder: VaultPath, name: string, ext: string): Promise<VaultPath> {
-  const existing = new Set((await vaultClient.list()).map((e) => e.path.toLowerCase()))
-  for (let n = 0; ; n++) {
-    const path = joinPath(folder, `${n === 0 ? name : `${name} ${n}`}${ext}`)
-    if (!existing.has(path.toLowerCase())) return path
-  }
-}
-
 export function WorkspaceProvider({ children }: { children: ReactNode }) {
   const { info, entries, resolver, subscribe, refresh, canWrite } = useVault()
   const notebook = useNotebookFolder(info?.user)
@@ -113,6 +117,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
   const [active, setActive] = useState<OpenNote | null>(null)
   const [view, setView] = useState<MainView>('editor')
   const [renamingPath, setRenamingPath] = useState<VaultPath | null>(null)
+  const [draft, setDraft] = useState<Draft | null>(null)
   const [templatePickerFolder, setTemplatePickerFolder] = useState<VaultPath | null>(null)
   const [notice, setNoticeText] = useState<string | null>(null)
   const [noticeKind, setNoticeKind] = useState<'error' | 'info'>('error')
@@ -295,32 +300,50 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
     [resolver, openNote, createFromTemplate, canWrite, setNotice]
   )
 
-  const createNote = useCallback(
-    async (folder: VaultPath) => {
-      try {
-        const created = await vaultClient.createFromTemplate('', 'Untitled', folder)
-        await refresh()
-        openNote(created.path)
-        setRenamingPath(created.path)
-      } catch (err) {
-        fail(err)
-      }
-    },
-    [refresh, openNote, fail]
-  )
+  const createNote = useCallback((folder: VaultPath) => {
+    setRenamingPath(null)
+    setDraft({ kind: 'note', folder })
+    return Promise.resolve()
+  }, [])
 
-  const createFolder = useCallback(
-    async (parent: VaultPath) => {
+  const createFolder = useCallback((parent: VaultPath) => {
+    setRenamingPath(null)
+    setDraft({ kind: 'folder', folder: parent })
+    return Promise.resolve()
+  }, [])
+
+  const cancelDraft = useCallback(() => setDraft(null), [])
+
+  const commitDraft = useCallback(
+    async (rawName: string): Promise<string | null> => {
+      const current = draft
+      if (!current) return null
+      const name = sanitizeFileName(rawName.trim().replace(/\.md$/i, ''))
+      if (!name) {
+        setDraft(null)
+        return null
+      }
+      const path = joinPath(current.folder, current.kind === 'note' ? `${name}.md` : name)
+      if (entries.some((e) => e.path.toLowerCase() === path.toLowerCase())) {
+        return `A ${current.kind === 'note' ? 'note' : 'folder'} called "${name}" is already here.`
+      }
       try {
-        const path = await freePath(parent, 'New folder', '')
-        await vaultClient.mkdir(path)
-        await refresh()
-        setRenamingPath(path)
+        if (current.kind === 'note') {
+          const created = await vaultClient.createFromTemplate('', name, current.folder)
+          setDraft(null)
+          await refresh()
+          openNote(created.path)
+        } else {
+          await vaultClient.mkdir(path)
+          setDraft(null)
+          await refresh()
+        }
+        return null
       } catch (err) {
-        fail(err)
+        return errorMessage(err)
       }
     },
-    [refresh, fail]
+    [draft, entries, refresh, openNote]
   )
 
   const rename = useCallback(
@@ -396,6 +419,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
   const value = useMemo<WorkspaceState>(
     () => ({
       active,
+      draft,
       view,
       renamingPath,
       templatePickerFolder,
@@ -406,12 +430,17 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
       openLink,
       createNote,
       createFolder,
+      commitDraft,
+      cancelDraft,
       createFromTemplate,
       openToday,
       startRun,
       newJob,
       rerunJob,
-      startRename: setRenamingPath,
+      startRename: (path: VaultPath | null) => {
+        setDraft(null)
+        setRenamingPath(path)
+      },
       rename,
       remove,
       exportPdf,
@@ -426,6 +455,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
     }),
     [
       active,
+      draft,
       view,
       renamingPath,
       templatePickerFolder,
@@ -436,6 +466,8 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
       openLink,
       createNote,
       createFolder,
+      commitDraft,
+      cancelDraft,
       createFromTemplate,
       openToday,
       startRun,
