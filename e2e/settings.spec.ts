@@ -51,12 +51,24 @@ test('editing settings.json applies straight away', async ({ prem: { app, page, 
 
   await writeFile(file, JSON.stringify({ 'appearance.theme': 'dark' }))
   await expect.poll(dark).toBe(true)
-  await expect(page.locator('body')).toHaveCSS('background-color', 'rgb(30, 30, 30)')
+  await expect(page.locator('body')).toHaveCSS('background-color', 'rgb(38, 38, 36)')
   expect(await app.evaluate(({ nativeTheme }) => nativeTheme.themeSource)).toBe('dark')
 
   await writeFile(file, JSON.stringify({ 'appearance.theme': 'light' }))
   await expect.poll(dark).toBe(false)
-  await expect(page.locator('body')).toHaveCSS('background-color', 'rgb(255, 255, 255)')
+  await expect(page.locator('body')).toHaveCSS('background-color', 'rgb(250, 249, 245)')
+})
+
+test('the font in notes can be the serif, while headings always are', async ({ prem: { page, userData } }) => {
+  await openNote(page, 'Welcome.md')
+  const scroller = page.locator('.cm-scroller')
+  await expect(scroller).toHaveCSS('font-family', /^"Inter Variable"/)
+  await expect(page.locator('.cm-md-h1').first()).toHaveCSS('font-family', /^"Source Serif 4 Variable"/)
+
+  await writeFile(path.join(userData, 'settings.json'), JSON.stringify({ 'appearance.noteFont': 'serif' }))
+  await expect(scroller).toHaveCSS('font-family', /^"Source Serif 4 Variable"/)
+  // The bundled font is the one that's drawn, not a system fallback.
+  expect(await page.evaluate(() => document.fonts.check('16px "Source Serif 4 Variable"'))).toBe(true)
 })
 
 test('a mistake in settings.json is reported, and the last good settings stay in use', async ({

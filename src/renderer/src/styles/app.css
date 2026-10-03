@@ -1,41 +1,53 @@
 :root {
   color-scheme: light;
-  --bg: #ffffff;
-  --bg-side: #f6f6f7;
+  /* Warm paper neutrals, with the teal of the logo (#89a5ab) as the accent. */
+  --bg: #faf9f5;
+  --bg-side: #f2f0e9;
   --bg-elevated: #ffffff;
-  --bg-hover: rgba(0, 0, 0, 0.05);
-  --bg-active: rgba(94, 92, 230, 0.12);
-  --border: #e3e3e6;
-  --text: #2b2b2f;
-  --text-strong: #111114;
-  --text-muted: #6b6b73;
-  --text-faint: #a3a3ab;
-  --accent: #5e5ce6;
-  --accent-soft: rgba(94, 92, 230, 0.14);
-  --danger: #d43c3c;
-  --warning-bg: #fff6db;
-  --warning-border: #f0d68a;
-  --error-bg: #fdecec;
-  --error-border: #f1b5b5;
-  --selection: rgba(94, 92, 230, 0.22);
-  --search-match: rgba(255, 196, 0, 0.35);
-  --code-bg: #f3f3f5;
-  --shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
-  --syn-keyword: #a626a4;
-  --syn-string: #50a14f;
-  --syn-comment: #a0a1a7;
-  --syn-number: #b76b01;
-  --syn-function: #4078f2;
-  --syn-type: #c18401;
-  --syn-property: #e45649;
-  --syn-math: #0f7b8a;
-  --graph-node: #8a8a94;
-  --graph-unresolved: #cfcfd6;
-  --graph-link: rgba(0, 0, 0, 0.14);
-  /* SF Pro on macOS; Inter (bundled, the closest open font) everywhere else. */
-  --font-text: -apple-system, BlinkMacSystemFont, 'Inter Variable', 'Segoe UI', system-ui, sans-serif;
+  --bg-hover: rgba(60, 50, 30, 0.06);
+  --bg-active: rgba(76, 111, 119, 0.13);
+  --border: #e5e2d9;
+  --text: #2e2c27;
+  --text-strong: #1a1915;
+  --text-muted: #6e6a5f;
+  --text-faint: #a29e92;
+  --accent: #4c6f77;
+  --accent-hover: #3f5e65;
+  --accent-soft: rgba(76, 111, 119, 0.14);
+  --on-accent: #ffffff;
+  --danger: #b5412f;
+  --success: #3f7d4e;
+  --success-soft: rgba(63, 125, 78, 0.08);
+  --success-border: rgba(63, 125, 78, 0.4);
+  --added: rgba(63, 125, 78, 0.16);
+  --removed: rgba(181, 65, 47, 0.14);
+  --warning-bg: #fbf1d9;
+  --warning-border: #e8d29a;
+  --error-bg: #fbeae5;
+  --error-border: #ecbcb1;
+  --selection: rgba(76, 111, 119, 0.22);
+  --search-match: rgba(232, 178, 40, 0.35);
+  --code-bg: #f0eee6;
+  --overlay: rgba(30, 25, 15, 0.3);
+  --shadow: 0 8px 28px rgba(60, 45, 20, 0.1);
+  --shadow-small: 0 1px 2px rgba(60, 45, 20, 0.12);
+  --syn-keyword: #8a4d8c;
+  --syn-string: #4f7a3a;
+  --syn-comment: #9a9586;
+  --syn-number: #a5612a;
+  --syn-function: #3d6a8a;
+  --syn-type: #946c1c;
+  --syn-property: #b0523d;
+  --syn-math: #2f7570;
+  --graph-node: #8d887b;
+  --graph-unresolved: #d4d0c4;
+  --graph-link: rgba(60, 50, 30, 0.16);
+  /* Inter (bundled) for the interface, the same on every platform; Source Serif 4 (bundled) for headings. */
+  --font-text: 'Inter Variable', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  --font-serif: 'Source Serif 4 Variable', 'Iowan Old Style', Georgia, 'Times New Roman', serif;
   --font-mono: 'SF Mono', ui-monospace, 'JetBrains Mono Variable', Menlo, Consolas, monospace;
-  /* Both follow settings; see SettingsContext. */
+  /* These follow settings; see SettingsContext. */
+  --font-note: var(--font-text);
   --editor-width: 760px;
   --editor-font-size: 16px;
 }
@@ -43,38 +55,47 @@
 @media (prefers-color-scheme: dark) {
   :root {
     color-scheme: dark;
-    --bg: #1e1e1e;
-    --bg-side: #252526;
-    --bg-elevated: #2d2d30;
-    --bg-hover: rgba(255, 255, 255, 0.06);
-    --bg-active: rgba(139, 137, 255, 0.18);
-    --border: #3a3a3e;
-    --text: #dcdcde;
-    --text-strong: #f4f4f6;
-    --text-muted: #a0a0a8;
-    --text-faint: #6c6c74;
-    --accent: #8b89ff;
-    --accent-soft: rgba(139, 137, 255, 0.18);
-    --danger: #ff6b6b;
-    --warning-bg: #3a3320;
-    --warning-border: #6b5a26;
-    --error-bg: #3d2224;
-    --error-border: #6e3336;
-    --selection: rgba(139, 137, 255, 0.3);
-    --search-match: rgba(255, 196, 0, 0.3);
-    --code-bg: #2a2a2d;
-    --shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
-    --syn-keyword: #c678dd;
-    --syn-string: #98c379;
-    --syn-comment: #7f848e;
-    --syn-number: #d19a66;
-    --syn-function: #61afef;
-    --syn-type: #e5c07b;
-    --syn-property: #e06c75;
-    --syn-math: #56c8d8;
-    --graph-node: #9a9aa4;
-    --graph-unresolved: #55555c;
-    --graph-link: rgba(255, 255, 255, 0.14);
+    --bg: #262624;
+    --bg-side: #1f1e1c;
+    --bg-elevated: #302f2c;
+    --bg-hover: rgba(255, 250, 235, 0.06);
+    --bg-active: rgba(157, 188, 194, 0.16);
+    --border: #3d3c38;
+    --text: #e9e6dd;
+    --text-strong: #f7f5ef;
+    --text-muted: #a7a398;
+    --text-faint: #6f6c64;
+    --accent: #9dbcc2;
+    --accent-hover: #b4cfd4;
+    --accent-soft: rgba(157, 188, 194, 0.16);
+    --on-accent: #1a1d1d;
+    --danger: #e8806c;
+    --success: #8dc49a;
+    --success-soft: rgba(141, 196, 154, 0.08);
+    --success-border: rgba(141, 196, 154, 0.4);
+    --added: rgba(141, 196, 154, 0.16);
+    --removed: rgba(232, 128, 108, 0.16);
+    --warning-bg: #3a3322;
+    --warning-border: #6b5a2b;
+    --error-bg: #3d2622;
+    --error-border: #6e3a32;
+    --selection: rgba(157, 188, 194, 0.28);
+    --search-match: rgba(232, 178, 40, 0.3);
+    --code-bg: #2d2c29;
+    --overlay: rgba(0, 0, 0, 0.45);
+    --shadow: 0 8px 28px rgba(0, 0, 0, 0.45);
+    --shadow-small: 0 1px 2px rgba(0, 0, 0, 0.4);
+    --syn-keyword: #d19ad3;
+    --syn-string: #a7c98a;
+    --syn-comment: #85817a;
+    --syn-number: #e0a46e;
+    --syn-function: #8fb8d6;
+    --syn-type: #e2c27f;
+    --syn-property: #e8957f;
+    --syn-math: #7fc7c0;
+    --graph-node: #a19d93;
+    --graph-unresolved: #57554f;
+    --graph-link: rgba(255, 250, 235, 0.16);
   }
 }
 
@@ -179,13 +200,13 @@ button {
   border: none;
   border-radius: 6px;
   background: var(--accent);
-  color: #fff;
+  color: var(--on-accent);
   font-weight: 500;
   cursor: pointer;
 }
 
 .primary-button:hover {
-  filter: brightness(1.08);
+  background: var(--accent-hover);
 }
 
 .segmented {
@@ -211,7 +232,7 @@ button {
 .segmented button.on {
   background: var(--bg);
   color: var(--text-strong);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
+  box-shadow: var(--shadow-small);
 }
 
 .toolbar-spacer {
@@ -387,7 +408,7 @@ button {
 
 .context-menu button:hover {
   background: var(--accent);
-  color: #fff;
+  color: var(--on-accent);
 }
 
 .context-menu button.danger {
@@ -396,7 +417,7 @@ button {
 
 .context-menu button.danger:hover {
   background: var(--danger);
-  color: #fff;
+  color: var(--on-accent);
 }
 
 .menu-separator {
@@ -446,7 +467,7 @@ kbd {
   margin-left: 6px;
   padding: 0 4px;
   border-radius: 4px;
-  background: rgba(255, 255, 255, 0.2);
+  background: color-mix(in srgb, var(--on-accent) 20%, transparent);
   font: inherit;
   font-size: 0.85em;
   opacity: 0.85;
@@ -568,7 +589,10 @@ kbd {
 
 .welcome-card h1 {
   margin: 0 0 8px;
-  font-size: 28px;
+  font-family: var(--font-serif);
+  font-size: 32px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
   color: var(--text-strong);
 }
 
@@ -613,7 +637,7 @@ kbd {
   justify-content: center;
   align-items: flex-start;
   padding-top: 12vh;
-  background: rgba(0, 0, 0, 0.35);
+  background: var(--overlay);
 }
 
 .modal {
@@ -657,7 +681,7 @@ kbd {
 
 .template-list li.selected {
   background: var(--accent);
-  color: #fff;
+  color: var(--on-accent);
 }
 
 .modal .hint {
@@ -837,7 +861,7 @@ kbd {
 }
 
 .search-results mark {
-  background: rgba(255, 200, 0, 0.35);
+  background: var(--search-match);
   color: inherit;
   border-radius: 2px;
 }
@@ -945,12 +969,12 @@ kbd {
 
 .diff-added,
 .diff-added-key {
-  background: rgba(46, 160, 67, 0.16);
+  background: var(--added);
 }
 
 .diff-removed,
 .diff-removed-key {
-  background: rgba(248, 81, 73, 0.16);
+  background: var(--removed);
 }
 
 .diff-same {
