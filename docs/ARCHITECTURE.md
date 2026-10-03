@@ -19,6 +19,7 @@ src/
   preload/     exposes a narrow, typed `window.api` to the renderer through contextBridge
   renderer/    React UI: file tree, CodeMirror editor and extensions, panels, modals
   server/      the team server: config and tokens, HTTP API, change stream, access checks
+python/        the prem-notebook package, for writing to a vault from Python (its own pytest suite)
 ```
 
 The rule that keeps this maintainable: **logic goes in `shared/` as pure functions with tests**; `main/` and `server/` wire it to storage; `renderer/` only calls `window.api`. If you find yourself writing business logic in a React component or an IPC handler, it probably belongs in `shared/`.
@@ -70,6 +71,12 @@ People's own shortcuts are in `keybindings.json`. [`shared/keybindings.ts`](../s
 - [`runner.ts`](../src/main/analysis/runner.ts) manages one process: queueing, timeouts and SIGINT for Stop.
 - [`shared/analysis/cells.ts`](../src/shared/analysis/cells.ts) finds `python {run}` cells and reads and writes their `prem:output` blocks, as pure functions. In the editor, [`analysisCells.ts`](../src/renderer/src/components/Editor/extensions/analysisCells.ts) draws each cell's toolbar and output from a StateField, and [`cellRunner.ts`](../src/renderer/src/components/Editor/cellRunner.ts) runs a cell, stores its figures and tables with `addAttachment`, and writes the output as an ordinary edit. That edit is autosaved, so history and signing cover it.
 - [`AnalysisManager.ts`](../src/main/analysis/AnalysisManager.ts) keeps one runner per note. It refuses locked notes, and on team vaults copies a note's attachments to a scratch folder so code never talks to the server.
+
+[`python/`](../python) is the `prem-notebook` package ([`docs/python.md`](python.md)). It has no dependencies and two backends:
+- **Team server:** it talks to the server's HTTP API, so permissions, attribution and the signed-note lock are the server's own.
+- **Local vault:** it writes files atomically and leaves history to the app, which records the change as an outside edit. It never writes `.prem`, because `NoteHistory` caches each log's last entry, and a second writer would break the chain. It reads the history log only to refuse signed notes, folding entries the way `applyEntry` does.
+
+[`_markdown.py`](../python/src/prem/_markdown.py) ports the few note rules it needs: frontmatter, sections, tables, attachment names and links. Change the TypeScript and Python versions together. `e2e/python.spec.ts` checks that a write from Python reaches the open editor and shows as an outside change.
 
 ## Renames and links
 

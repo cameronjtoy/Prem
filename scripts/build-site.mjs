@@ -31,6 +31,12 @@ const DOCS = [
       'Setting up the Prem server for a lab: people and permissions, HTTPS with Tailscale or Caddy, and backups.'
   },
   {
+    source: 'docs/python.md',
+    page: 'docs/python.html',
+    title: 'Writing to Prem from Python',
+    description: 'The prem-notebook package: attach figures, record results and read tables from scripts and Jupyter.'
+  },
+  {
     source: 'docs/ARCHITECTURE.md',
     page: 'docs/architecture.html',
     title: 'Architecture',

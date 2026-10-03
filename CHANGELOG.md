@@ -7,6 +7,11 @@ All notable changes to Prem are listed here. The format follows [Keep a Changelo
 Everything below will ship as **0.1.0**, the first pilot release.
 
 ### Added
+- **Python package `prem-notebook`** (`import prem`): write to the notebook from scripts, Jupyter and Python cells.
+  - `entry.attach(fig)` saves a matplotlib figure, a DataFrame or any file next to the note and adds it to the note.
+  - `entry.record("Colonies", 84)` fills in the Results table, and `entry.tables()` reads every table back as DataFrames.
+  - It works with a vault folder or a team server. On a server, your permissions apply and changes are recorded under your name. In a local vault, Prem records them as changes made outside Prem.
+  - Signed notes are never changed. It has no required dependencies, works on Python 3.9 and later, and is released to PyPI from GitHub with trusted publishing. See `docs/python.md`.
 - **New logo**: a ring molecule whose atoms are also the nodes of a graph, branching out like linked notes. It's the app icon on every platform, on the welcome screen and on the website.
 - **Analysis cells**: a `python {run}` block in a note gets a Run button (⇧↵ in the code, ⌥⌘↵ for all cells). Its output (printed text, the last value, pandas tables, matplotlib figures and errors) is written under the cell as plain markdown, with figures and tables stored as attachments. A record line says what produced it: code fingerprint, time, who, Python, environment and the SHA-256 of every file read. Outputs are saved in history, covered by signing and printed in PDF exports. Changed code is flagged, signed notes can't be run, and on a team vault Prem asks before running code someone else changed. New **Analysis** template.
 - **Python for analyses** (groundwork for analysis cells): Prem finds Python on your computer (or the one uv manages) and builds one environment per vault from its `environment.txt`, with uv or `venv` + pip, kept outside the vault. Settings → Analysis shows what it found and sets the environment up. Each note gets its own Python process; results record the Python version, the environment and the SHA-256 of every file the code read. See `docs/analysis.md`.

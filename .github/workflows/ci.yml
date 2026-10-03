@@ -41,6 +41,38 @@ jobs:
       - run: npm run notices -- --check
       - run: npm run site
 
+  python:
+    name: Python package (${{ matrix.python }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        # The oldest Python the package supports, and a current one.
+        python: ['3.9', '3.13']
+    env:
+      ELECTRON_SKIP_BINARY_DOWNLOAD: '1'
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python }}
+      # The team-server tests run against the real server.
+      - run: npm ci
+      - run: npm run server:build
+      - run: pip install -e "python[pandas]" matplotlib pytest build
+      - run: pytest python/tests
+      - name: Build the wheel and install it on its own
+        run: |
+          python -m build python --outdir dist-python
+          python -m venv /tmp/clean
+          /tmp/clean/bin/pip install dist-python/*.whl
+          /tmp/clean/bin/python -c "import prem; print(prem.__version__)"
+
   e2e:
     name: End-to-end tests
     runs-on: ubuntu-latest
