@@ -97,3 +97,32 @@ export const ExportIcon = (p: IconProps) => (
     <path d="M14 3v6h6M12 11v7M9 15l3 3 3-3" />
   </svg>
 )
+
+export const FileIcon = (p: IconProps) => (
+  <svg {...base(p)}>
+    <path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z" />
+    <path d="M14 3v6h6" />
+  </svg>
+)
+
+export const FolderIcon = (p: IconProps) => (
+  <svg {...base(p)}>
+    <path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+  </svg>
+)
+
+/** A window with its left panel marked: shows or hides the file list. */
+export const SidebarLeftIcon = (p: IconProps) => (
+  <svg {...base(p)}>
+    <rect x="3" y="4" width="18" height="16" rx="2" />
+    <path d="M9 4v16" />
+  </svg>
+)
+
+/** A window with its right panel marked: shows or hides the Links panel. */
+export const SidebarRightIcon = (p: IconProps) => (
+  <svg {...base(p)}>
+    <rect x="3" y="4" width="18" height="16" rx="2" />
+    <path d="M15 4v16" />
+  </svg>
+)

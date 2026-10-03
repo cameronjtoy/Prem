@@ -1292,3 +1292,44 @@ kbd {
   color: var(--text);
   cursor: pointer;
 }
+
+/* Side panels: hide from their own toolbar, show again from the main toolbar */
+
+.panel-toggle {
+  color: var(--text-muted);
+}
+
+/* A new note or folder being named in the file list */
+
+.tree-row.draft {
+  height: auto;
+  min-height: 26px;
+  align-items: flex-start;
+  padding-top: 3px;
+  padding-bottom: 3px;
+  cursor: default;
+}
+
+.tree-row.draft .draft-icon {
+  margin-top: 3px;
+}
+
+.draft-icon {
+  flex-shrink: 0;
+  margin-right: 4px;
+  color: var(--text-muted);
+}
+
+.name-input {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  flex-direction: column;
+}
+
+.name-error {
+  margin-top: 2px;
+  font-size: 11.5px;
+  color: var(--danger);
+  white-space: normal;
+}
