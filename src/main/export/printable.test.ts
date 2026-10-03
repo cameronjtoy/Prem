@@ -38,6 +38,20 @@ describe('printableHtml', () => {
     expect(html).not.toContain('---')
   })
 
+  it('prints what produced a Python cell’s output instead of the raw comment', () => {
+    const html = printableHtml(
+      [
+        note(
+          '```python {run}\n1 + 1\n```\n<!-- prem:output code=abc ran=2026-10-02T14:05:00Z by=Cam took=0.2 python=3.12.4 env=9b1e inputs=data/a.csv@a41c0e12f3b4 -->\n```text\n2\n```\n<!-- /prem:output -->\n'
+        )
+      ],
+      options
+    )
+    expect(html).toContain('Output of the code above · Ran')
+    expect(html).toContain('Python 3.12.4 · environment 9b1e · code abc · read data/a.csv (sha256 a41c0e12f3b4…)')
+    expect(html).not.toContain('prem:output')
+  })
+
   it('prints on A4 unless US Letter is chosen', () => {
     expect(printableHtml([note('Text')], options)).toContain('@page { size: A4; }')
     expect(printableHtml([note('Text')], { ...options, pageSize: 'Letter' })).toContain('@page { size: letter; }')

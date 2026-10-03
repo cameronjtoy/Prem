@@ -6,6 +6,7 @@
 // are embedded, equations are MathML (no fonts needed), and raw HTML in a note is shown as text.
 import katex from 'katex'
 import { Marked, type Tokens } from 'marked'
+import { describeMeta, parseMeta } from '@shared/analysis/cells'
 import { attachmentKind, resolveAttachment } from '@shared/attachments/attachments'
 import { parseFrontmatter } from '@shared/notes/frontmatter'
 import { mathExtensions } from '@shared/notes/markedMath'
@@ -88,7 +89,19 @@ function markdownRenderer(note: PrintableNote, options: PrintOptions): Marked {
     ],
     renderer: {
       // A note's HTML is shown, not interpreted: nothing in a record should run or load when printed.
-      html: ({ text }: Tokens.HTML | Tokens.Tag) => escapeHtml(text),
+      html: ({ text }: Tokens.HTML | Tokens.Tag) => {
+        // The record of a Python cell's run prints as a line saying what produced the output below it.
+        const output = /^<!--\s*prem:output\b(.*?)--!?>\s*$/s.exec(text.trim())
+        const meta = output ? parseMeta(output[1]) : null
+        if (meta) {
+          const inputs = meta.inputs.map((i) => `${i.path} (sha256 ${i.sha256}…)`).join(', ')
+          return `<p class="cell-meta">Output of the code above${meta.ok ? '' : ' (failed)'} · ${escapeHtml(
+            describeMeta({ ...meta, inputs: [] }, formatTime)
+          )} · code ${escapeHtml(meta.code)}${inputs ? ` · read ${escapeHtml(inputs)}` : ''}</p>`
+        }
+        if (/^<!--\s*\/prem:output\s*--!?>\s*$/.test(text.trim())) return ''
+        return escapeHtml(text)
+      },
       // Disabled checkboxes print faintly; characters print as clearly as the text around them.
       checkbox: ({ checked }: Tokens.Checkbox) => `<span class="box">${checked ? '☑' : '☐'}</span> `,
       image({ href, text }: Tokens.Image) {
@@ -212,6 +225,7 @@ ${notes.map((n) => noteSection(n, options)).join('\n')}
 
 const PRINT_CSS = `
 @page { margin: 18mm 16mm 20mm; }
+.cell-meta { font-size: 8pt; color: #666; margin: 2px 0 4px; }
 body { font: 10.5pt/1.5 -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; color: #1a1a1a; margin: 0; }
 .exported { font-size: 8.5pt; color: #666; border-bottom: 1px solid #ddd; padding-bottom: 6px; margin: 0 0 14px; }
 .note + .note { break-before: page; }

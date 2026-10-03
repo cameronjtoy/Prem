@@ -68,6 +68,7 @@ People's own shortcuts are in `keybindings.json`. [`shared/keybindings.ts`](../s
 - [`environment.ts`](../src/main/analysis/environment.ts) builds one environment per vault from `environment.txt` under `<userData>/envs/<vault id>` and stamps it with `pip freeze`.
 - [`prem_runner.py`](../src/main/analysis/prem_runner.py) is a stdlib-only script that runs a note's cells over JSON lines on stdin/stdout. It keeps a namespace per process, displays the last expression, captures figures and tables, and records files read via an audit hook. It is bundled into main with `?raw` and written to `<userData>/runner` at startup.
 - [`runner.ts`](../src/main/analysis/runner.ts) manages one process: queueing, timeouts and SIGINT for Stop.
+- [`shared/analysis/cells.ts`](../src/shared/analysis/cells.ts) finds `python {run}` cells and reads and writes their `prem:output` blocks, as pure functions. In the editor, [`analysisCells.ts`](../src/renderer/src/components/Editor/extensions/analysisCells.ts) draws each cell's toolbar and output from a StateField, and [`cellRunner.ts`](../src/renderer/src/components/Editor/cellRunner.ts) runs a cell, stores its figures and tables with `addAttachment`, and writes the output as an ordinary edit. That edit is autosaved, so history and signing cover it.
 - [`AnalysisManager.ts`](../src/main/analysis/AnalysisManager.ts) keeps one runner per note. It refuses locked notes, and on team vaults copies a note's attachments to a scratch folder so code never talks to the server.
 
 ## Renames and links

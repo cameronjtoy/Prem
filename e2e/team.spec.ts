@@ -122,3 +122,39 @@ test('someone added while the server runs can join without a restart', async () 
   await reveal(carol.page, 'Notebooks/carol')
   await carol.close()
 })
+
+test('on a team vault, cells run on your computer against the note’s attachments, after asking about others’ code', async () => {
+  const pat = await join('pat')
+  const alice = await join('alice')
+  try {
+    const note = 'Samples/Plate run.md'
+    const written = await pat.page.evaluate(async (p) => {
+      const csv = new TextEncoder().encode('well,od\nA1,0.41\nA2,0.43\n')
+      await window.api.attachments.add(p, 'plate.csv', csv)
+      return window.api.vault.write(
+        p,
+        '# Plate run\n\n```python {run}\nrows = open("attachments/plate.csv").read().splitlines()\nlen(rows) - 1\n```\n',
+        { createOnly: true }
+      )
+    }, note)
+    expect(written.ok).toBe(true)
+
+    const questions: string[] = []
+    alice.page.on('dialog', (dialog) => {
+      questions.push(dialog.message())
+      void dialog.accept()
+    })
+    await reveal(alice.page, note)
+    await openNote(alice.page, note)
+    await alice.page.locator('.cm-cell-run').dispatchEvent('mousedown')
+    await expect(alice.page.locator('.cm-cell-output .cm-cell-text')).toHaveText('2')
+    expect(questions).toEqual([expect.stringContaining('pat changed this note last')])
+    await savedStatus(alice.page)
+
+    const saved = await pat.page.evaluate((p) => window.api.vault.read(p), note)
+    expect(saved.ok && saved.value.content).toMatch(/by=alice .*inputs=Samples\/attachments\/plate\.csv@[0-9a-f]{12}/)
+  } finally {
+    await pat.close()
+    await alice.close()
+  }
+})

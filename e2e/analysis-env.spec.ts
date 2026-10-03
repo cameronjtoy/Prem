@@ -2,14 +2,7 @@ import { execFileSync } from 'node:child_process'
 import path from 'node:path'
 import { writeFile } from 'node:fs/promises'
 import type { Page } from '@playwright/test'
-import type { Api } from '../src/shared/vault/ipc'
 import { expect, tempDir, test } from './fixtures'
-
-declare global {
-  interface Window {
-    api: Api
-  }
-}
 
 const NOTE = 'Notebook/2026/Ligation of insert into pUC19.md'
 

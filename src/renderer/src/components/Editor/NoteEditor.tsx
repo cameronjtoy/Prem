@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import type { Cell } from '@shared/analysis/cells'
 import { EditorView } from '@codemirror/view'
 import { resolveAttachment } from '@shared/attachments/attachments'
 import { isInside } from '@shared/vault/paths'
@@ -11,6 +12,8 @@ import { useWorkspace } from '../../state/WorkspaceContext'
 import { keyFor, useCommand } from '../../commands/registry'
 import { ExportIcon, HistoryIcon } from '../icons'
 import { createExtensions, optionExtensions, optionsCompartment, refreshLinks, type EditorHost } from './extensions'
+import { analysisCells, cellAt, cellsField, refreshCells } from './extensions/analysisCells'
+import { createCellRunner } from './cellRunner'
 import {
   insertAtCursor,
   insertWikilink,
@@ -32,11 +35,24 @@ const STATUS_LABEL: Record<SaveStatus, string> = {
 }
 
 export function NoteEditor({ path, cursor }: { path: string; cursor: number | null }) {
-  const { resolver, noteTitles, subscribe, canWrite } = useVault()
+  const { resolver, noteTitles, subscribe, canWrite, info } = useVault()
   const { openLink, registerEditor, showNotice, exportPdf, startRun } = useWorkspace()
   const { values: settings } = useSettings()
   const spellcheck = settings['editor.spellcheck']
   const lineNumbers = settings['editor.lineNumbers']
+  const analysisOn = settings['analysis.enabled']
+  const infoRef = useRef(info)
+  infoRef.current = info
+  // One per note, so the confirmation and the running state follow the note.
+  const cells = useMemo(
+    () =>
+      createCellRunner({
+        path,
+        author: () => infoRef.current?.author ?? '',
+        shared: () => !!infoRef.current?.user
+      }),
+    [path]
+  )
   const hostRef = useRef<HTMLDivElement>(null)
   const sessionRef = useRef<NoteSession | null>(null)
   const [status, setStatus] = useState<SaveStatus>('saved')
@@ -103,6 +119,7 @@ export function NoteEditor({ path, cursor }: { path: string; cursor: number | nu
               spellcheck: currentSettings()['editor.spellcheck'],
               lineNumbers: currentSettings()['editor.lineNumbers']
             }),
+            analysisCells(cells),
             EditorView.updateListener.of((u) => u.docChanged && setMeta(readMeta(u.state.doc.toString())))
           ],
           {
@@ -158,6 +175,13 @@ export function NoteEditor({ path, cursor }: { path: string; cursor: number | nu
       effects: optionsCompartment.reconfigure(optionExtensions({ spellcheck, lineNumbers }))
     })
   }, [spellcheck, lineNumbers])
+
+  useEffect(() => {
+    sessionRef.current?.view.dispatch({ effects: refreshCells.of(null) })
+  }, [analysisOn])
+
+  // A note's Python ends when the note closes, so it doesn't hold memory for notes you've left.
+  useEffect(() => () => void vaultClient.restartAnalysis(path).catch(() => {}), [path])
 
   /** Applies a whole-note rewrite as the smallest edit, so undo and the cursor behave naturally. */
   const rewrite = (fn: (text: string) => { text: string; cursor?: number }): void => {
@@ -228,6 +252,35 @@ export function NoteEditor({ path, cursor }: { path: string; cursor: number | nu
       }
     },
     editable
+  )
+  /** The run cell the cursor is in, fences included (not its output). */
+  const codeCell = (): Cell | undefined => {
+    const v = view()
+    return v ? cellAt(v.state, v.state.selection.main.head) : undefined
+  }
+  const canRunCells = (): boolean => editable() && analysisOn
+  useCommand(
+    'analysis.runCell',
+    () => cells.run(view()!, codeCell()!.from),
+    () => canRunCells() && !!codeCell()
+  )
+  useCommand(
+    'analysis.runAll',
+    () => void cells.runAll(view()!),
+    () => canRunCells() && view()!.state.field(cellsField).length > 0
+  )
+  useCommand(
+    'analysis.stop',
+    () => cells.stop(),
+    () => !!view() && cells.running(view()!)
+  )
+  useCommand(
+    'analysis.restart',
+    () =>
+      void cells
+        .restart()
+        .then(() => showNotice('Python restarted for this note. Variables from earlier cells are gone.')),
+    () => !!view() && view()!.state.field(cellsField).length > 0
   )
   useCommand(
     'note.insertDateTime',
