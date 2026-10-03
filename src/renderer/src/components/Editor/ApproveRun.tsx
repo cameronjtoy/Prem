@@ -11,11 +11,12 @@ export interface RunApprovalRequest {
   you: string
 }
 
-function who(changedBy: string | null, you: string, what: string): string | null {
+/** Who changed it last, unless it was you. `what` names it mid-sentence, `subject` at the start of one. */
+function who(changedBy: string | null, you: string, what: string, subject = what): string | null {
   if (changedBy === null || (changedBy && changedBy === you)) return null
   return changedBy
     ? `${changedBy} changed ${what} last.`
-    : `${what[0].toUpperCase()}${what.slice(1)} was changed outside Prem, for example by a sync service or another program.`
+    : `${subject} was changed outside Prem, for example by a sync service or another program.`
 }
 
 function PackageLine({ line, change }: { line: string; change?: 'added' | 'removed' }) {
@@ -42,7 +43,7 @@ export function ApproveRun({ request, onAnswer }: { request: RunApprovalRequest;
   const diff = environment?.previous ? diffRequirements(environment.previous, environment.text) : null
   const lines = environment ? requirementLines(environment.text) : []
   const action = environment && code.length ? 'Install and run' : environment ? 'Install' : 'Run'
-  const noteWho = code.length ? who(request.changedBy, request.you, 'this note') : null
+  const noteWho = code.length ? who(request.changedBy, request.you, 'this note', 'This note') : null
   const envWho = environment ? who(environment.changedBy, request.you, environment.file) : null
 
   return (
@@ -69,7 +70,7 @@ export function ApproveRun({ request, onAnswer }: { request: RunApprovalRequest;
                     ...diff.added.map((l) => <PackageLine key={`+${l}`} line={l} change="added" />),
                     ...diff.removed.map((l) => <PackageLine key={`-${l}`} line={l} change="removed" />)
                   ]
-                : lines.map((l) => <PackageLine key={l} line={l} />)}
+                : lines.map((l, i) => <PackageLine key={`${i}:${l}`} line={l} />)}
             </ul>
           </section>
         )}
