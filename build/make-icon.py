@@ -16,10 +16,10 @@ import os
 
 from PIL import Image, ImageDraw
 
-# Tile: the standard macOS icon margin and corner radius, with an indigo gradient.
+# Tile: the standard macOS icon margin and corner radius, with a grey-teal gradient around #89a5ab.
 TILE = (100, 924)
 RADIUS = 185
-TOP, BOTTOM = (110, 108, 245), (72, 70, 200)
+TOP, BOTTOM = (156, 182, 188), (111, 139, 146)  # around #89a5ab
 
 # The ring: a hexagon with a point at the top, left of and below centre to leave room for the branch.
 CX, CY, R = 404, 566, 165
