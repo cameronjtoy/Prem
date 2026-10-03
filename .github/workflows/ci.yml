@@ -61,8 +61,9 @@ jobs:
       - uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python }}
-      # The team-server tests run against the real server.
-      - run: npm ci
+      # The team-server tests run against the real server. Building it needs no Electron, so skip
+      # install scripts (the Electron download) and that download can't fail this job.
+      - run: npm ci --ignore-scripts
       - run: npm run server:build
       - run: pip install -e "python[pandas]" matplotlib pytest build
       - run: pytest python/tests
