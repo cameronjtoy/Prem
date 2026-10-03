@@ -66,6 +66,10 @@ export class VaultManager {
     private readonly settings: () => Settings = () => DEFAULTS
   ) {}
 
+  get isOpen(): boolean {
+    return !!this.provider
+  }
+
   get current(): VaultProvider {
     if (!this.provider) throw new VaultError('NO_VAULT', 'No vault is open')
     return this.provider

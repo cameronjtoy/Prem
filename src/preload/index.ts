@@ -62,6 +62,14 @@ const api: Api = {
     openFile: () => ipcRenderer.invoke(Channels.openKeybindingsFile),
     onChanged: (listener) => subscribe(Channels.keybindingsChanged, listener)
   },
+  analysis: {
+    status: (refresh) => ipcRenderer.invoke(Channels.analysisStatus, refresh),
+    prepare: () => ipcRenderer.invoke(Channels.analysisPrepare),
+    run: (notePath, code) => ipcRenderer.invoke(Channels.analysisRun, notePath, code),
+    interrupt: (notePath) => ipcRenderer.invoke(Channels.analysisInterrupt, notePath),
+    restart: (notePath) => ipcRenderer.invoke(Channels.analysisRestart, notePath),
+    onProgress: (listener) => subscribe(Channels.analysisProgress, listener)
+  },
   app: {
     openExternal: (url) => ipcRenderer.invoke(Channels.openExternal, url),
     onCommand: (listener) => subscribe(Channels.command, listener)

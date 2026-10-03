@@ -48,7 +48,13 @@ export const vaultClient = {
   setKeybinding: (command: string, key: string | null) => unwrap(window.api.keybindings.set(command, key)),
   resetKeybinding: (command: string) => unwrap(window.api.keybindings.reset(command)),
   openKeybindingsFile: () => unwrap(window.api.keybindings.openFile()),
-  onKeybindingsChanged: window.api.keybindings.onChanged
+  onKeybindingsChanged: window.api.keybindings.onChanged,
+  analysisStatus: (refresh?: boolean) => unwrap(window.api.analysis.status(refresh)),
+  prepareAnalysis: () => unwrap(window.api.analysis.prepare()),
+  runCell: (notePath: string, code: string) => unwrap(window.api.analysis.run(notePath, code)),
+  interruptCell: (notePath: string) => unwrap(window.api.analysis.interrupt(notePath)),
+  restartAnalysis: (notePath: string) => unwrap(window.api.analysis.restart(notePath)),
+  onAnalysisProgress: window.api.analysis.onProgress
 }
 
 export function errorMessage(err: unknown): string {
