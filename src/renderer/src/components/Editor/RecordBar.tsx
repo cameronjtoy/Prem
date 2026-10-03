@@ -1,9 +1,6 @@
 import { useEffect, useState, type FormEvent } from 'react'
-import type { RecordCheck } from '@shared/records/signatures'
+import { SIGNABLE_TYPES, type RecordCheck } from '@shared/records/signatures'
 import { useVault } from '../../state/VaultContext'
-
-/** Note types that are records someone signs off. Any note that's already been signed shows the bar too. */
-const SIGNABLE = new Set(['experiment', 'run', 'daily', 'protocol'])
 
 function when(iso: string): string {
   return new Date(iso).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })
@@ -46,7 +43,7 @@ export function RecordBar({
   }, [signRequest])
 
   if (!status) return null
-  if (status.state === 'draft' && status.timesSigned === 0 && !SIGNABLE.has(type ?? '')) return null
+  if (status.state === 'draft' && status.timesSigned === 0 && !SIGNABLE_TYPES.has(type ?? '')) return null
 
   const me = info?.author ?? ''
   const canWitness =

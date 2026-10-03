@@ -102,7 +102,7 @@ test('renaming a protocol updates the links to it, but never a signed note', asy
   const signed = await read(EXPERIMENT)
 
   await rename(page, PROTOCOL, 'Miniprep (Qiagen)')
-  await expect(page.locator('.banner')).toContainText('Updated links in 2 notes')
+  await expect(page.locator('.banner')).toContainText('Updated links in 4 notes')
   await expect(page.locator('.banner')).toContainText(
     '1 signed note still links to the old name: Ligation of insert into pUC19'
   )
