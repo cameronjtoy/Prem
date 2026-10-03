@@ -32,7 +32,7 @@ test('the quick switcher opens a note by name, and back and forward retrace your
 
 test('formatting shortcuts edit the note', async ({ prem: { page, read } }) => {
   await openNote(page, 'Samples/S-0001.md')
-  await page.locator('.cm-content').click()
+  await page.locator('.cm-content').focus()
   await page.keyboard.press('ControlOrMeta+End')
   await page.keyboard.type('\nbuffer')
   await page.keyboard.press('Shift+Home')
@@ -86,7 +86,7 @@ test('attaching from the keyboard stores the chosen file and links it', async ({
     dialog.showOpenDialog = async () => ({ canceled: false, filePaths: [chosen] })
   }, file)
   await openNote(page, 'Notebook/2026/2026-09-30.md')
-  await page.locator('.cm-content').click()
+  await page.locator('.cm-content').focus()
   await page.keyboard.press('ControlOrMeta+End')
   await page.keyboard.press('ControlOrMeta+Shift+KeyA')
   await savedStatus(page)

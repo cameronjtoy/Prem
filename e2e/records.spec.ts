@@ -32,7 +32,7 @@ test('runs a protocol: timestamps steps and completes the run', async ({ prem: {
 test('keeps every version and restores an old one', async ({ prem: { page, read } }) => {
   await openNote(page, 'Samples/S-0001.md')
   const original = await read('Samples/S-0001.md')
-  await page.locator('.cm-content').click()
+  await page.locator('.cm-content').focus()
   await page.keyboard.press('ControlOrMeta+End')
   await page.keyboard.type('\nMoved to box 4.')
   await savedStatus(page)
@@ -56,7 +56,7 @@ test('signs a record, locks it, and only changes it through an amendment', async
   await expect(page.locator('.record-bar')).toContainText('Gel reviewed')
 
   const signed = await read(EXPERIMENT)
-  await page.locator('.cm-content').click()
+  await page.locator('.cm-content').focus()
   await page.keyboard.type('sneaky edit')
   await page.waitForTimeout(1000)
   expect(await read(EXPERIMENT)).toBe(signed)
@@ -64,7 +64,7 @@ test('signs a record, locks it, and only changes it through an amendment', async
   await page.locator('.record-bar').getByRole('button', { name: 'Amend…' }).click()
   await page.locator('.record-form input').fill('Lane 4 was primer dimer')
   await page.getByRole('button', { name: 'Unlock to amend' }).click()
-  await page.locator('.cm-content').click()
+  await page.locator('.cm-content').focus()
   await page.keyboard.press('ControlOrMeta+End')
   await page.keyboard.type(' Correction: lane 4 is primer dimer.')
   await savedStatus(page)

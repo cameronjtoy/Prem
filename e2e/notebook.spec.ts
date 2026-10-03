@@ -57,7 +57,7 @@ test('finds text across the vault and opens the match', async ({ prem: { page } 
 test('attaches a dropped file next to the note and shows it', async ({ prem: { page, vault, read } }) => {
   await openNote(page, 'Notebook/2026/2026-09-30.md')
   const png = await readFile(path.join(vault, 'Notebook/2026/attachments/gel 2026-09-30.png'))
-  await page.locator('.cm-content').click()
+  await page.locator('.cm-content').focus()
   await page.keyboard.press('ControlOrMeta+End')
   // Drop a file the way the operating system would.
   await page.locator('.cm-content').evaluate(

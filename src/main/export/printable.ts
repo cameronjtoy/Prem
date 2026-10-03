@@ -35,6 +35,8 @@ export interface PrintOptions {
   embedImage(path: VaultPath): string | null
   /** Paper size. A4 unless the person chose US Letter in settings. */
   pageSize?: 'A4' | 'Letter'
+  /** A data: URI of a woff2 font for headings (the app's serif). Without it, headings use the system serif. */
+  headingFont?: string
 }
 
 export function escapeHtml(text: string): string {
@@ -201,6 +203,11 @@ ${recordBlock(note)}
 </article>`
 }
 
+function headingFontFace(font: string | undefined): string {
+  if (!font?.startsWith('data:font/woff2;base64,')) return ''
+  return `@font-face { font-family: 'Prem Serif'; src: url(${font}) format('woff2'); font-weight: 200 900; }`
+}
+
 export function printableHtml(notes: PrintableNote[], options: PrintOptions): string {
   const title = notes.length === 1 ? noteTitle(notes[0].path) : `${notes.length} entries from ${options.vaultName}`
   const cover = `<p class="exported">Exported from Prem ${escapeHtml(options.appVersion)} by ${escapeHtml(
@@ -212,9 +219,9 @@ export function printableHtml(notes: PrintableNote[], options: PrintOptions): st
 <html lang="en">
 <head>
 <meta charset="utf-8" />
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src data:; style-src 'unsafe-inline'" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src data:; font-src data:; style-src 'unsafe-inline'" />
 <title>${escapeHtml(title)}</title>
-<style>@page { size: ${options.pageSize === 'Letter' ? 'letter' : 'A4'}; }${PRINT_CSS}</style>
+<style>@page { size: ${options.pageSize === 'Letter' ? 'letter' : 'A4'}; }${headingFontFace(options.headingFont)}${PRINT_CSS}</style>
 </head>
 <body>
 ${cover}
@@ -233,7 +240,7 @@ body { font: 10.5pt/1.5 -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Ari
 h1 { font-size: 18pt; margin: 4px 0 10px; }
 h2 { font-size: 13.5pt; margin: 18px 0 6px; }
 h3 { font-size: 11.5pt; margin: 14px 0 4px; }
-h1, h2, h3 { break-after: avoid; }
+h1, h2, h3 { break-after: avoid; font-family: 'Prem Serif', Georgia, 'Times New Roman', serif; font-weight: 600; }
 table { border-collapse: collapse; margin: 8px 0; font-size: 9.5pt; break-inside: avoid; }
 th, td { border: 1px solid #ccc; padding: 3px 7px; text-align: left; vertical-align: top; }
 th { background: #f3f3f6; }
