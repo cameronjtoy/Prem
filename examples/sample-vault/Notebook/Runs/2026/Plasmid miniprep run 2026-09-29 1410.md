@@ -6,6 +6,8 @@ operator: alice
 started: 2026-09-29 14:10
 finished: 2026-09-29 14:58
 status: complete
+job: "[[Plasmid prep job 2026-09-28 0900]]"
+stage: Miniprep
 tags: [run]
 ---
 

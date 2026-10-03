@@ -2,6 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 import { VaultError } from '@shared/vault/errors'
 import { basename, dirname, isInside, isMarkdown, joinPath, sanitizeFileName, stripMd } from '@shared/vault/paths'
 import { createRun, runPath } from '@shared/records/runs'
+import { createJob, jobPath, tagRun } from '@shared/records/workflows'
 import { formatDate } from '@shared/notes/templates'
 import type { RenameResult, VaultPath } from '@shared/vault/types'
 import { errorMessage, vaultClient } from '../services/vaultClient'
@@ -51,7 +52,16 @@ interface WorkspaceState {
   /** Opens today's notebook entry, creating it from the daily template the first time. */
   openToday(): Promise<void>
   /** Starts a run of a protocol in your notebook and opens it. */
-  startRun(protocolPath: VaultPath): Promise<void>
+  /**
+   * Starts a run of a protocol and returns its path. With `job`, the run is linked to that job's stage;
+   * with `open: false` it isn't opened, so the caller can update the job first.
+   */
+  startRun(
+    protocolPath: VaultPath,
+    options?: { job?: { title: string; stage: string }; open?: boolean }
+  ): Promise<VaultPath | null>
+  /** Starts a job of a workflow, filed under Jobs/, and opens it. */
+  newJob(workflowPath: VaultPath): Promise<void>
   startRename(path: VaultPath | null): void
   rename(path: VaultPath, newName: string): Promise<void>
   remove(path: VaultPath): Promise<void>
@@ -199,30 +209,56 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
     }
   }, [refresh, openNote, fail])
 
+  /** Writes a new note at `base`, or at `base 1`, `base 2`… if that's taken, and returns where it went. */
+  const writeNew = useCallback(
+    async (base: VaultPath, content: string): Promise<VaultPath> => {
+      for (let n = 0; ; n++) {
+        const path = n === 0 ? base : base.replace(/\.md$/, ` ${n}.md`)
+        try {
+          await vaultClient.write(path, content, { createOnly: true })
+          await refresh()
+          return path
+        } catch (err) {
+          if (!(err instanceof VaultError && err.code === 'EXISTS') || n >= 20) throw err
+        }
+      }
+    },
+    [refresh]
+  )
+
   const startRun = useCallback(
-    async (protocolPath: VaultPath) => {
+    async (protocolPath: VaultPath, options: { job?: { title: string; stage: string }; open?: boolean } = {}) => {
       try {
-        // Save pending edits to the protocol first, so the run copies what's on screen.
+        // Save pending edits to the open note first, so the run copies what's on screen.
         await editor.current?.flush()
         const now = new Date()
         const protocol = await vaultClient.read(protocolPath)
-        const content = createRun(protocolPath, protocol.content, { now, operator: info?.author ?? '' })
-        const base = runPath(notebook, protocolPath, now)
-        for (let n = 0; ; n++) {
-          const path = n === 0 ? base : base.replace(/\.md$/, ` ${n}.md`)
-          try {
-            await vaultClient.write(path, content, { createOnly: true })
-            await refresh()
-            return openNote(path)
-          } catch (err) {
-            if (!(err instanceof VaultError && err.code === 'EXISTS') || n >= 20) throw err
-          }
-        }
+        let content = createRun(protocolPath, protocol.content, { now, operator: info?.author ?? '' })
+        if (options.job) content = tagRun(content, options.job.title, options.job.stage)
+        const path = await writeNew(runPath(notebook, protocolPath, now), content)
+        if (options.open !== false) openNote(path)
+        return path
+      } catch (err) {
+        fail(err)
+        return null
+      }
+    },
+    [info, notebook, writeNew, openNote, fail]
+  )
+
+  const newJob = useCallback(
+    async (workflowPath: VaultPath) => {
+      try {
+        await editor.current?.flush()
+        const now = new Date()
+        const workflow = await vaultClient.read(workflowPath)
+        const content = createJob(workflowPath, workflow.content, { now, author: info?.author ?? '' })
+        openNote(await writeNew(jobPath(workflowPath, now), content))
       } catch (err) {
         fail(err)
       }
     },
-    [info, notebook, refresh, openNote, fail]
+    [info, writeNew, openNote, fail]
   )
 
   const openLink = useCallback(
@@ -372,6 +408,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
       createFromTemplate,
       openToday,
       startRun,
+      newJob,
       startRename: (path: VaultPath | null) => {
         setDraft(null)
         setRenamingPath(path)
@@ -406,6 +443,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
       createFromTemplate,
       openToday,
       startRun,
+      newJob,
       rename,
       remove,
       exportPdf,

@@ -8,6 +8,16 @@ export type RecordState =
   /** Changed with a recorded reason after it was signed; needs signing again. */
   | 'amended'
 
+/** Note types that are records someone signs off. Any note that's already been signed can be signed again too. */
+export const SIGNABLE_TYPES: ReadonlySet<string> = new Set([
+  'experiment',
+  'run',
+  'daily',
+  'protocol',
+  'workflow',
+  'job'
+])
+
 export interface Signature {
   by: string
   at: string

@@ -250,6 +250,15 @@
   cursor: pointer;
 }
 
+.run-job {
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: 35%;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
 .run-progress {
   position: relative;
   width: 110px;
