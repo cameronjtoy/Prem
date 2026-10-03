@@ -7,6 +7,10 @@ All notable changes to Prem are listed here. The format follows [Keep a Changelo
 Everything below will ship as **0.1.0**, the first pilot release.
 
 ### Added
+- **Reproducible analyses**:
+  - **Environment saved:** when a cell runs, the environment's full package list and Python version are saved next to the note (`attachments/environment-<env>.txt`).
+  - **Changed inputs flagged:** outputs whose input files have changed since are flagged, and so are the cells after them.
+  - **↻ Reproduce:** rebuilds the recorded environment and reruns the cells in a fresh Python. It reports which outputs are the same and which parts differ: text, figures and tables, byte for byte. It never edits the note, so signed records can be checked too.
 - **Python package `prem-notebook`** (`import prem`): write to the notebook from scripts, Jupyter and Python cells.
   - `entry.attach(fig)` saves a matplotlib figure, a DataFrame or any file next to the note and adds it to the note.
   - `entry.record("Colonies", 84)` fills in the Results table, and `entry.tables()` reads every table back as DataFrames.

@@ -68,7 +68,10 @@ const api: Api = {
     run: (notePath, code) => ipcRenderer.invoke(Channels.analysisRun, notePath, code),
     interrupt: (notePath) => ipcRenderer.invoke(Channels.analysisInterrupt, notePath),
     restart: (notePath) => ipcRenderer.invoke(Channels.analysisRestart, notePath),
-    onProgress: (listener) => subscribe(Channels.analysisProgress, listener)
+    onProgress: (listener) => subscribe(Channels.analysisProgress, listener),
+    reproduce: (notePath, codes, environment) =>
+      ipcRenderer.invoke(Channels.analysisReproduce, notePath, codes, environment),
+    inputHashes: (paths) => ipcRenderer.invoke(Channels.analysisInputHashes, paths)
   },
   app: {
     openExternal: (url) => ipcRenderer.invoke(Channels.openExternal, url),

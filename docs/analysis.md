@@ -34,7 +34,7 @@ The first line records what produced the output:
 |---|---|
 | `code` | A fingerprint of the cell's code. When the code changes, Prem says the output is out of date until you run it again. |
 | `ran`, `by`, `took` | When it ran, who ran it, and how many seconds it took. |
-| `python`, `env` | The Python version and the vault environment (`-` when there's no `environment.txt`). |
+| `python`, `env` | The Python version and the vault environment (`-` when there's no `environment.txt`). The environment's full package list is saved as `attachments/environment-<env>.txt`. |
 | `inputs` | Every file the code read, with the start of its SHA-256. |
 | `ok=no` | The cell raised an error or was stopped; the traceback is in the output. |
 
@@ -42,6 +42,31 @@ The first line records what produced the output:
 - Figures and tables are stored as attachments next to the note. Running a cell again replaces its output; the old attachment files are kept, so earlier versions in the note's history still show their figures.
 - Because outputs are ordinary text in the note, they're saved in its history and covered by signing.
 - A PDF export prints each output with a line saying what produced it.
+
+## Reproducing an analysis
+
+The point of keeping analyses in the notebook is that anyone can check them later. Prem keeps what a rerun needs.
+
+**What Prem saves:**
+- **The exact environment.** When a cell runs in the vault's environment, Prem saves that environment's full package list next to the note, as `attachments/environment-<env>.txt`. It lists every package at the version that was installed (`pip freeze`) plus the Python version. The output's `env=` names it, so it can always be found again. The file is plain pip requirements, so `pip install -r environment-<env>.txt` works outside Prem too.
+- **What the code read.** Every file a cell reads is recorded with its SHA-256.
+
+**Inputs that change.** If a file an output read changes or disappears afterwards, the cell says so, for example "plate.csv changed since this output". Cells further down are flagged too, since they use what the earlier cells computed.
+
+**Reproduce.** Choose **↻ Reproduce** on a cell, or **Reproduce this note's outputs** from the command palette or the Note menu.
+- **What it does:**
+  - rebuilds the environment the outputs recorded from its saved package list, even if the vault's `environment.txt` has moved on since;
+  - reruns the cells from the top in a fresh Python;
+  - compares each output with the one in the note: printed text, warnings, errors, and figures and tables byte for byte.
+- **The report says:**
+  - which outputs are the same;
+  - which parts differ;
+  - whether the files the code read have changed;
+  - whether the environment was rebuilt exactly.
+- **When it can't be rebuilt exactly:** the report says why. For example, a different Python version is installed, or the package list wasn't saved for outputs made before Prem saved them.
+- **Nothing changes:** Reproduce never edits the note, so it also works on signed records. To replace an output, run the cell.
+
+Outputs made without an `environment.txt` ran in whatever Python the computer had, so they can only be rerun, not rebuilt. Add an `environment.txt` and pin versions (`pandas==2.2.3`) for analyses you'll need to reproduce.
 
 ## Python on your computer
 

@@ -58,7 +58,8 @@ const LAYOUT: Record<string, Entry[]> = {
     // Not "Run Python cell": its Shift+Enter would be taken by the macOS menu even while typing elsewhere.
     'analysis.runAll',
     'analysis.stop',
-    'analysis.restart'
+    'analysis.restart',
+    'analysis.reproduce'
   ],
   Help: ['app.shortcuts', '-', 'help.website', 'help.reportIssue']
 }
