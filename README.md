@@ -33,7 +33,7 @@ npm install
 npm run dev
 ```
 
-Choose **Open a folder as a vault** and pick [`examples/sample-vault/`](examples/sample-vault) to explore a small lab notebook with a protocol, a completed run, an experiment with a gel image, and samples. Start with its `Welcome` note.
+Choose **Open a folder as a vault** and pick [`examples/sample-vault/`](examples/sample-vault) to explore a small lab notebook with a protocol, a workflow with a job in progress, a completed run, an experiment with a gel image, and samples. Start with its `Welcome` note.
 
 ### Keyboard shortcuts
 
@@ -125,6 +125,11 @@ The command ids are listed on the Keyboard shortcuts tab. Like settings, the fil
 **Protocols and runs**
 - A `type: protocol` note gets a **Start run** button. A run copies the protocol's materials and steps into a new note in your notebook, records who ran it and when, **timestamps each step as you tick it**, logs **deviations**, and marks when it was completed.
 - Protocols list their runs under Backlinks, so you can see every time a method was used.
+
+**Workflows and jobs**
+- A `type: workflow` note lists a process's **stages** in a table: each stage's protocol (or none, for a step done without one), who does it by default, and what it should produce. The **Workflow** template starts one.
+- **New job** starts one pass through the workflow, filed under `Jobs/<workflow>/` with a copy of its stages, so later edits to the workflow don't change jobs already under way.
+- The job's bar shows the stage it's at and who has it. **Start run** starts that stage's protocol run, linked both ways with the job; **Complete stage** logs when it finished and hands the job to the next stage's assignee. After the last stage, sign the job to lock its stage log.
 
 **Records you can trust**
 - **History**: every save of every note is kept, including edits made in other apps, with who and when. View what changed, restore any version (as a normal, undoable edit).
