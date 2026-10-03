@@ -1,7 +1,7 @@
 import path from 'node:path'
 import { readdir, writeFile } from 'node:fs/promises'
 import type { Page } from '@playwright/test'
-import { expect, openNote, savedStatus, test } from './fixtures'
+import { approve, expect, openNote, savedStatus, test } from './fixtures'
 
 const NOTE = 'Notebook/2026/Plate analysis.md'
 
@@ -22,6 +22,8 @@ test('Run writes the output under the cell, with what produced it', async ({ pre
   await openNote(page, NOTE)
   await expect(page.locator('.cm-cell-status')).toHaveText('Not run yet')
   await run(page)
+  // The code was written to the note outside Prem, so it's shown before it runs, once.
+  await approve(page)
 
   const output = page.locator('.cm-cell-output')
   await expect(output.locator('.cm-cell-text')).toHaveText('2 wells')
@@ -45,6 +47,7 @@ test('figures and tables are saved as attachments and shown', async ({ prem: { p
   )
   await openNote(page, NOTE)
   await run(page)
+  await approve(page)
   const output = page.locator('.cm-cell-output')
   await expect(output.locator('img')).toBeVisible({ timeout: 30_000 })
   await expect(output.locator('table')).toContainText('S2')
@@ -63,9 +66,11 @@ test('cells share variables, ⇧↵ runs the cell you are in, and changed code i
   await writeNote(vault, 'x = 20', 'x * 2')
   await openNote(page, NOTE)
   await run(page, 0)
+  await approve(page)
   await expect(page.locator('.cm-cell-output')).toHaveCount(1)
   await page.locator('.cm-line', { hasText: 'x * 2' }).click()
   await page.keyboard.press('Shift+Enter')
+  await approve(page)
   await expect(page.locator('.cm-cell-output').nth(1).locator('.cm-cell-text')).toHaveText('40')
   await savedStatus(page)
   expect(await read(NOTE)).toContain('x * 2\n```\n<!-- prem:output')
@@ -80,11 +85,13 @@ test('errors are recorded, and Stop and Run all work', async ({ prem: { page, re
   await writeNote(vault, 'n = 1', 'import time\ntime.sleep(30)', '1 / 0')
   await openNote(page, NOTE)
   await run(page, 2)
+  await approve(page)
   await expect(page.locator('.cm-cell-text.error')).toContainText('ZeroDivisionError')
   await savedStatus(page)
   expect(await read(NOTE)).toMatch(/ ok=no [\s\S]*```text \{error\}\nTraceback/)
 
   await run(page, 1)
+  await approve(page)
   await expect(page.locator('.cm-cell-stop')).toBeVisible()
   await page.locator('.cm-cell-stop').dispatchEvent('mousedown')
   await expect(page.locator('.cm-cell-output').filter({ hasText: 'Stopped before it finished' })).toBeVisible()
@@ -95,6 +102,9 @@ test('Run all starts Python afresh and runs every cell in order', async ({ prem:
   await openNote(page, NOTE)
   await page.locator('.cm-line', { hasText: 'Plate analysis' }).click()
   await page.keyboard.press('ControlOrMeta+Alt+Enter')
+  // Run all asks once, for every cell.
+  await expect(page.locator('.approve-cell')).toHaveCount(3)
+  await approve(page)
   await expect(page.locator('.cm-cell-output')).toHaveCount(3)
   await expect(page.locator('.cm-cell-output').nth(2).locator('.cm-cell-text')).toHaveText('3')
   await savedStatus(page)
@@ -108,6 +118,7 @@ test('signed notes cannot run their cells, and a cell that runs too long is stop
   await writeNote(vault, 'import time\ntime.sleep(60)')
   await openNote(page, NOTE)
   await run(page)
+  await approve(page)
   await expect(page.locator('.cm-cell-status.failed')).toContainText('Stopped after 5 s', { timeout: 15_000 })
 
   expect((await page.evaluate((p) => window.api.record.sign(p), NOTE)).ok).toBe(true)

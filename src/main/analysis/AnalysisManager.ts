@@ -11,6 +11,7 @@ import {
 } from '@shared/analysis/environment'
 import { formatLock, lockFileName, parseLock, type Reproduction } from '@shared/analysis/reproduce'
 import type { CellResult } from '@shared/analysis/results'
+import type { Approval, EnvironmentApproval, RunCheck } from '@shared/analysis/trust'
 import { attachmentFolder } from '@shared/attachments/attachments'
 import type { Settings } from '@shared/settings/schema'
 import { VaultError } from '@shared/vault/errors'
@@ -21,6 +22,7 @@ import type { VaultManager } from '../vault/VaultManager'
 import { currentStamp, ensureEnvironment, readStamp, sha256, type EnvironmentPlace } from './environment'
 import { findPython } from './python'
 import { PythonRunner } from './runner'
+import { environmentApprovalHash, type TrustStore } from './trust'
 
 export interface AnalysisOptions {
   vaults: VaultManager
@@ -29,6 +31,8 @@ export interface AnalysisOptions {
   envRoot(): string
   /** prem_runner.py on disk. */
   script(): Promise<string>
+  /** What this computer has approved to install and run. */
+  trust: TrustStore
   onProgress(message: string): void
 }
 
@@ -43,6 +47,8 @@ export class AnalysisManager {
   private runners = new Map<VaultPath, { runner: PythonRunner; python: string; scratch: string | null }>()
   private space: string | null = null
   private preparing: Promise<unknown> | null = null
+  /** Environment lists shown for approval, by hash, so approving one can remember the vault's list. */
+  private shown = new Map<string, EnvironmentApproval>()
 
   constructor(private readonly options: AnalysisOptions) {}
 
@@ -96,6 +102,75 @@ export class AnalysisManager {
     return this.status()
   }
 
+  /**
+   * What has to be approved before these cells can run: code not approved on this computer, and the
+   * environment list if it would be installed and hasn't been. With `reproduce`, the environment is the one
+   * Reproduce would rebuild for that note.
+   */
+  async check(codes: string[], reproduce?: { notePath: VaultPath; recorded: string | null }): Promise<RunCheck> {
+    const { id } = this.vault()
+    const code: number[] = []
+    for (const [i, c] of codes.entries()) if (c.trim() && !(await this.options.trust.hasCode(id, c))) code.push(i)
+    const lock = reproduce ? await this.savedLock(reproduce.notePath, reproduce.recorded) : null
+    const environment = lock
+      ? await this.approvalFor(lock.place, lock.file, false)
+      : await this.approvalFor(await this.place(), ENVIRONMENT_FILE, true)
+    if (environment) this.shown.set(environment.hash, environment)
+    return { environment, code }
+  }
+
+  /** Records what was approved in the dialog. */
+  async approve(approval: Approval): Promise<void> {
+    const { id } = this.vault()
+    const shown = approval.environment ? this.shown.get(approval.environment) : undefined
+    await this.options.trust.approve(id, {
+      environment: approval.environment,
+      environmentText: shown?.file === ENVIRONMENT_FILE ? shown.text : undefined,
+      code: approval.code
+    })
+  }
+
+  /** The approval an environment list needs before it's installed, or null if it's built already or approved. */
+  private async approvalFor(place: EnvironmentPlace, file: string, vaultList: boolean) {
+    if (!place.requirements || (await currentStamp(place, windows))) return null
+    const { id } = this.vault()
+    const hash = environmentApprovalHash(place.requirements)
+    if (await this.options.trust.hasEnvironment(id, hash)) return null
+    const approval: EnvironmentApproval = {
+      file,
+      hash,
+      text: place.requirements,
+      previous: vaultList ? await this.options.trust.lastEnvironment(id) : null,
+      changedBy: await this.lastAuthor(file)
+    }
+    return approval
+  }
+
+  /** Refuses to install an environment list that wasn't approved on this computer. */
+  private async requireApproved(place: EnvironmentPlace, file: string): Promise<void> {
+    if (!place.requirements?.trim()) return
+    if (!(await this.options.trust.hasEnvironment(this.vault().id, environmentApprovalHash(place.requirements))))
+      throw new VaultError('NEEDS_APPROVAL', `${file} has changed, so it needs approving before it's installed.`)
+  }
+
+  /** Refuses to run code that wasn't approved on this computer. */
+  private async requireCode(codes: string[]): Promise<void> {
+    const { id } = this.vault()
+    for (const code of codes)
+      if (code.trim() && !(await this.options.trust.hasCode(id, code)))
+        throw new VaultError('NEEDS_APPROVAL', 'This code needs approving before it runs on this computer.')
+  }
+
+  /** Who changed a file last: a name, '' for a change made outside Prem, or null if there's no history. */
+  private async lastAuthor(file: VaultPath): Promise<string | null> {
+    try {
+      const history = await this.options.vaults.history(file)
+      return history.length ? history[history.length - 1].author : null
+    } catch {
+      return null
+    }
+  }
+
   /** Runs one cell of a note. Refused for locked notes and when running Python is turned off in Settings. */
   async run(notePath: VaultPath, code: string): Promise<CellResult> {
     const settings = this.options.settings()
@@ -104,7 +179,7 @@ export class AnalysisManager {
     if ((await this.options.vaults.recordStatus(notePath)).locked)
       throw new VaultError('LOCKED', 'This note is signed, so its cells can no longer be run. Amend it first.')
 
-    this.vault()
+    await this.requireCode([code])
     const found = await this.python()
     if (!found.python) throw new VaultError('UNKNOWN', found.problem ?? 'Python was not found')
 
@@ -195,6 +270,7 @@ export class AnalysisManager {
   async reproduce(notePath: VaultPath, codes: string[], recorded: string | null): Promise<Reproduction> {
     if (!this.options.settings()['analysis.enabled'])
       throw new VaultError('FORBIDDEN', 'Running Python is turned off in Settings → Analysis.')
+    await this.requireCode(codes)
     const found = await this.python()
     if (!found.python) throw new VaultError('UNKNOWN', found.problem ?? 'Python was not found')
     const { python, environment } = await this.environmentFor(notePath, recorded, found)
@@ -211,17 +287,11 @@ export class AnalysisManager {
 
   /** The environment to reproduce in: the recorded one rebuilt from its saved list, else the best available. */
   private async environmentFor(notePath: VaultPath, recorded: string | null, found: PythonFound) {
-    const provider = this.options.vaults.current
-    const lockPath = recorded ? joinPath(attachmentFolder(notePath), lockFileName(recorded)) : null
-    const lockText =
-      lockPath && (await provider.exists(lockPath))
-        ? new TextDecoder().decode(await provider.readBinary(lockPath))
-        : null
-
-    if (recorded && lockText) {
-      const lock = parseLock(lockText)
-      const dir = path.join(this.options.envRoot(), 'locked', recorded)
-      const place = { dir, requirements: lock.requirements }
+    const saved = await this.savedLock(notePath, recorded)
+    if (recorded && saved) {
+      const { lock, place } = saved
+      const dir = place.dir
+      if (!(await currentStamp(place, windows))) await this.requireApproved(place, saved.file)
       let stamp: EnvironmentStamp
       try {
         // With uv, ask for the recorded Python version; uv uses one already on this computer.
@@ -264,10 +334,25 @@ export class AnalysisManager {
     return { python: found.python!, environment: { recorded, used: null, exact: !recorded, summary } }
   }
 
+  /** The package list saved with a note for the environment its outputs recorded, if there is one. */
+  private async savedLock(notePath: VaultPath, recorded: string | null) {
+    if (!recorded) return null
+    const provider = this.options.vaults.current
+    const file = joinPath(attachmentFolder(notePath), lockFileName(recorded))
+    if (!(await provider.exists(file))) return null
+    const lock = parseLock(new TextDecoder().decode(await provider.readBinary(file)))
+    const place: EnvironmentPlace = {
+      dir: path.join(this.options.envRoot(), 'locked', recorded),
+      requirements: lock.requirements
+    }
+    return { file, lock, place }
+  }
+
   /** The environment for environment.txt as it is now, building it first if needed. */
   private async prepareFor(place: EnvironmentPlace, found: PythonFound): Promise<EnvironmentStamp> {
     const ready = await currentStamp(place, windows)
     if (ready) return ready
+    await this.requireApproved(place, ENVIRONMENT_FILE)
     if (!this.preparing) {
       this.preparing = ensureEnvironment(place, found, this.options.onProgress).finally(() => {
         this.preparing = null

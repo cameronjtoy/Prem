@@ -22,7 +22,12 @@ function contentSecurityPolicy(): Plugin {
         "style-src 'self' 'unsafe-inline'",
         "img-src 'self' data: blob:",
         "font-src 'self' data:",
-        `connect-src ${connect}`
+        `connect-src ${connect}`,
+        // Nothing else: no plugins, frames, forms or <base> tricks.
+        "object-src 'none'",
+        "frame-src 'none'",
+        "form-action 'none'",
+        "base-uri 'none'"
       ].join('; ')
       return html.replace('<head>', `<head>\n    <meta http-equiv="Content-Security-Policy" content="${csp}" />`)
     }

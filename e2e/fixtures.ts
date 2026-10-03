@@ -1,5 +1,6 @@
 // Shared setup for the end-to-end tests: each test gets the built app, a fresh copy of the example vault
 // and its own settings folder, so tests can run in parallel and never touch a real vault.
+import { execFileSync } from 'node:child_process'
 import { cp, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
@@ -35,7 +36,7 @@ export async function tempDir(prefix: string): Promise<string> {
 /** Starts Prem. With a vault it opens straight into it; without one it shows the welcome screen. */
 export async function launch(
   options: { vault?: string; userData?: string } = {}
-): Promise<{ app: ElectronApplication; page: Page; userData: string }> {
+): Promise<{ app: ElectronApplication; page: Page; userData: string; blocked: string[] }> {
   const userData = options.userData ?? (await tempDir('settings'))
   if (options.vault) await writeFile(path.join(userData, 'state.json'), JSON.stringify({ lastVault: options.vault }))
   const app = await electron.launch({ args: [ROOT, '--no-sandbox', `--user-data-dir=${userData}`] })
@@ -48,11 +49,14 @@ export async function launch(
     shell.openExternal = async (u: string) => void g.external.push(u)
   })
   const page = await app.firstWindow()
+  // Anything the Content-Security-Policy blocks: the app should never try to load something it forbids.
+  const blocked: string[] = []
+  page.on('console', (m) => /Content Security Policy/i.test(m.text()) && blocked.push(m.text()))
   await page.setViewportSize({ width: 1280, height: 860 })
   // Without a vault given, the settings folder may still remember one.
   // The file list may be hidden, so wait for the main pane.
   await page.waitForSelector(options.vault ? '.main-pane' : '.main-pane, .welcome-card')
-  return { app, page, userData }
+  return { app, page, userData, blocked }
 }
 
 /** Makes the next "Save as" dialog choose `file`. */
@@ -102,6 +106,16 @@ export async function rename(page: Page, vaultPath: string, newName: string): Pr
 
 export const menuItem = (page: Page, label: string) => page.locator('.context-menu').getByText(label, { exact: true })
 
+/** The dialog that asks before code or package installs run on this computer. */
+export const approvalDialog = (page: Page) => page.getByRole('dialog', { name: /^(Run code|Install packages)$/ })
+
+/** Answers that dialog: runs or installs (the default), or cancels. */
+export async function approve(page: Page, answer: 'go' | 'cancel' = 'go'): Promise<void> {
+  const dialog = approvalDialog(page)
+  await dialog.getByRole('button', { name: answer === 'go' ? /^(Run|Install|Install and run)$/ : 'Cancel' }).click()
+  await expect(dialog).toBeHidden()
+}
+
 export const savedStatus = (page: Page) => expect(page.locator('.save-status')).toHaveText('Saved')
 
 /** Each test gets Prem open on its own copy of the example vault. */
@@ -109,11 +123,29 @@ export const test = base.extend<{ prem: Prem }>({
   prem: async ({}, use) => {
     const vault = await tempDir('vault')
     await cp(SAMPLE_VAULT, vault, { recursive: true })
-    const { app, page, userData } = await launch({ vault })
+    const { app, page, userData, blocked } = await launch({ vault })
     await use({ app, page, vault, userData, read: (p) => readFile(path.join(vault, p), 'utf8') })
     await app.close()
+    expect(blocked, 'blocked by the Content-Security-Policy').toEqual([])
     await rm(vault, { recursive: true, force: true })
   }
 })
+
+/** A tiny package as a wheel, so building environments needs no network. */
+export function makeWheel(dir: string, name = 'premtiny'): string {
+  const wheel = path.join(dir, `${name}-1.0-py3-none-any.whl`)
+  execFileSync('python3', [
+    '-c',
+    `import zipfile, sys
+with zipfile.ZipFile(sys.argv[1], "w") as z:
+    z.writestr(sys.argv[2] + "/__init__.py", "VALUE = 42\\n")
+    z.writestr(sys.argv[2] + "-1.0.dist-info/METADATA", "Metadata-Version: 2.1\\nName: " + sys.argv[2] + "\\nVersion: 1.0\\n")
+    z.writestr(sys.argv[2] + "-1.0.dist-info/WHEEL", "Wheel-Version: 1.0\\nGenerator: prem-test\\nRoot-Is-Purelib: true\\nTag: py3-none-any\\n")
+    z.writestr(sys.argv[2] + "-1.0.dist-info/RECORD", "")`,
+    wheel,
+    name
+  ])
+  return wheel
+}
 
 export { expect }

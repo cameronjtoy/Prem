@@ -9,7 +9,8 @@ import { generateToken, hashToken, parseConfig, UserDirectory } from './config'
 import { startServer, type PremServer } from './server'
 
 const tokens = { alice: generateToken(), bob: generateToken(), bot: generateToken() }
-const quiet = { info: () => {}, error: () => {} }
+const logged: string[] = []
+const quiet = { info: (m: string) => void logged.push(m), error: () => {} }
 
 let base: string
 let server: PremServer
@@ -93,6 +94,16 @@ describe('team server', () => {
     await expectCode(RemoteProvider.connect(server.url, 'prem_wrong'), 'UNAUTHORIZED')
     const res = await fetch(`${server.url}/api/entries`)
     expect(res.status).toBe(401)
+  })
+
+  it('logs repeated sign-ins with a wrong token, once', async () => {
+    for (let i = 0; i < 12; i++) {
+      const res = await fetch(`${server.url}/api/info`, { headers: { authorization: 'Bearer prem_guess' } })
+      expect(res.status).toBe(401)
+    }
+    expect(logged.filter((m) => m.includes('invalid token'))).toEqual([
+      expect.stringMatching(/^10 sign-ins with an invalid token from .+ in the last minute$/)
+    ])
   })
 
   it('answers health checks without a token', async () => {

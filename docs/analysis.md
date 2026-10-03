@@ -88,7 +88,7 @@ pandas==2.2.3
 matplotlib==3.9.2
 ```
 
-Prem builds an environment from it, with uv when it's installed and with Python's own `venv` and `pip` otherwise. It does this when you choose **Set up environment** in Settings, or before the first cell runs. It rebuilds the environment when `environment.txt` changes.
+Prem builds an environment from it, with uv when it's installed and with Python's own `venv` and `pip` otherwise. It does this when you choose **Set up environment** in Settings, or before the first cell runs. It rebuilds the environment when `environment.txt` changes. Installing packages can run code, so Prem shows you the list first, and again whenever packages are added or changed (see below).
 
 The environment is kept in Prem's own settings folder (`envs/` next to `settings.json`), never in the vault, so nothing large is synced or committed. Each one gets a short id from its Python version and the exact package versions installed (`pip freeze`), and that id is recorded with every result it produces.
 
@@ -100,9 +100,19 @@ Without an `environment.txt`, cells run in the Python Prem found, with whatever 
 - **What's shown:** printed output, errors (with the traceback trimmed to your code), the value of a cell's last line, pandas tables, and matplotlib figures (saved as PNG).
 - **Which files are recorded:** Prem notes every file a cell reads from the vault, with its SHA-256, so a result says exactly which data it came from.
 - **Where code runs:** in the note's folder, so `pd.read_csv("attachments/plate.csv")` works. On a team server, code runs on your computer against a copy of the note's attachments; it never touches the server directly.
-- **On a team vault**, the first time you run a note that someone else changed last, Prem asks before running their code on your computer.
+- **Prem asks before running code it hasn't seen.** See [What Prem asks before running](#what-prem-asks-before-running).
 - **Limits:**
   - code runs only when you choose Run;
   - a signed note's cells can't be run until it's amended;
   - a cell is stopped after **Settings → Analysis → Stop a cell after** (300 seconds by default);
   - turning off **Run Python in notes** stops all of it.
+
+## What Prem asks before running
+
+Running a cell runs its code on your computer, with your access to your files. So does installing packages: a package can run code while it installs. Code and package lists can come from other people, through a team server or any shared or synced folder (Dropbox, OneDrive, a network drive). So Prem runs only what you've approved on this computer.
+
+- **Packages:** before Prem installs `environment.txt`, or the saved list that **Reproduce** rebuilds, it shows you the packages. When the list changes, it shows just what was added and removed. Lines that install from somewhere other than the package index are pointed out: web addresses, files and folders, other package indexes.
+- **Code:** before a cell runs for the first time on this computer, Prem shows you its code and who changed the note last. **Run all** and **Reproduce** ask once, for all the cells together.
+- **Code you write needs no approval.** Prem remembers what you've approved. If the code changes, you're asked again, unless you made the change yourself in Prem.
+- **What you approve stays on this computer.** It's kept in `analysis-trust.json` in Prem's settings folder, as fingerprints (SHA-256) only. Nothing in a note or a vault can mark code as approved.
+

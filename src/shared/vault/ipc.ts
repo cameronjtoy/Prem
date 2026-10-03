@@ -2,6 +2,7 @@ import type { IpcResult } from './errors'
 import type { AnalysisStatus } from '../analysis/environment'
 import type { Reproduction } from '../analysis/reproduce'
 import type { CellResult } from '../analysis/results'
+import type { Approval, RunCheck } from '../analysis/trust'
 import type { KeybindingsSnapshot } from '../keybindings'
 import type { SettingKey, SettingsSnapshot } from '../settings/schema'
 import type { HistoryEntry } from '../records/history'
@@ -65,6 +66,8 @@ export const Channels = {
   analysisProgress: 'analysis:progress',
   analysisReproduce: 'analysis:reproduce',
   analysisInputHashes: 'analysis:inputHashes',
+  analysisCheck: 'analysis:check',
+  analysisApprove: 'analysis:approve',
   vaultChanged: 'vault:changed',
   indexUpdated: 'index:updated'
 } as const
@@ -155,6 +158,13 @@ export interface Api {
     reproduce(notePath: string, codes: string[], environment: string | null): R<Reproduction>
     /** The sha256 of each file (null if it's gone), to flag outputs whose inputs changed. */
     inputHashes(paths: string[]): R<Record<string, string | null>>
+    /**
+     * What needs approving before these cells run: code not approved on this computer, and the environment
+     * list if it would be installed. With `reproduce`, the environment Reproduce would rebuild for that note.
+     */
+    check(codes: string[], reproduce?: { notePath: string; recorded: string | null }): R<RunCheck>
+    /** Approves an environment list (by its hash) and cell code to run on this computer. */
+    approve(approval: Approval): R<void>
   }
   app: {
     openExternal(url: string): R<void>

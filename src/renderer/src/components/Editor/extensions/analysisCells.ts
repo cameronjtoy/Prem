@@ -1,4 +1,13 @@
-import { EditorState, Facet, Prec, StateEffect, StateField, type Extension, type Range } from '@codemirror/state'
+import {
+  EditorState,
+  Facet,
+  Prec,
+  StateEffect,
+  StateField,
+  type Extension,
+  type Range,
+  type Transaction
+} from '@codemirror/state'
 import { Decoration, EditorView, WidgetType, type DecorationSet } from '@codemirror/view'
 import { codeHash, describeMeta, findCells, parseOutputBody, type Cell, type OutputMeta } from '@shared/analysis/cells'
 import { changedInputs, describeChangedInputs } from '@shared/analysis/reproduce'
@@ -16,6 +25,12 @@ export interface AnalysisHost {
   reproduce(view: EditorView, cellFrom: number): void
   stop(): void
   formatTime(iso: string): string
+  /**
+   * You edited a cell: `before` is what its code's place in the note held before the edit, `after` its code
+   * now. Code you write yourself doesn't need approving; code that came from somewhere else still does after
+   * you edit it.
+   */
+  edited(before: string, after: string): void
 }
 
 export const analysisHostFacet = Facet.define<AnalysisHost, AnalysisHost | null>({
@@ -285,7 +300,27 @@ const cellDecorations = StateField.define<DecorationSet>({
   provide: (f) => EditorView.decorations.from(f)
 })
 
+/** Edits you make yourself (typing, deleting, pasting, dragging), as opposed to a file changed on disk. */
+const byYou = (tr: Transaction): boolean =>
+  tr.docChanged && (tr.isUserEvent('input') || tr.isUserEvent('delete') || tr.isUserEvent('move'))
+
+/** Tells the host which cells you edited, and what they held before, so code you write yourself can run. */
+const trackEdits = EditorView.updateListener.of((update) => {
+  const host = update.state.facet(analysisHostFacet)
+  if (!host) return
+  for (const tr of update.transactions) {
+    if (!byYou(tr)) continue
+    const back = tr.changes.invertedDesc
+    tr.changes.iterChangedRanges((_fromA, _toA, fromB, toB) => {
+      for (const cell of tr.state.field(cellsField)) {
+        if (cell.codeFrom > toB || cell.codeTo < fromB) continue
+        host.edited(tr.startState.sliceDoc(back.mapPos(cell.codeFrom, -1), back.mapPos(cell.codeTo, 1)), cell.code)
+      }
+    })
+  }
+})
+
 /** Run cells: a toolbar on each ```python {run} block, and its output shown below. */
 export function analysisCells(host: AnalysisHost): Extension {
-  return [analysisHostFacet.of(host), cellsField, cellStates, inputHashes, Prec.high(cellDecorations)]
+  return [analysisHostFacet.of(host), cellsField, cellStates, inputHashes, Prec.high(cellDecorations), trackEdits]
 }

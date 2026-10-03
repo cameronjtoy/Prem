@@ -103,6 +103,9 @@ function forbid(user: User, action: string, path: VaultPath): never {
   throw new VaultError('FORBIDDEN', `${user.name} doesn't have permission to ${action} "${path || '/'}"`)
 }
 
+const FAILURE_WINDOW_MS = 60_000
+const FAILURE_REPORT = 10
+
 /** Hosts one vault folder for a team over HTTP, with per-user tokens and per-folder permissions. */
 export async function startServer(config: ServerConfig, log: Logger = console): Promise<PremServer> {
   const root = await realpath(config.vault)
@@ -145,13 +148,31 @@ export async function startServer(config: ServerConfig, log: Logger = console): 
     req.on('close', () => clients.delete(client))
   }
 
+  // Tokens are 256 random bits, so they can't be guessed; repeated failures usually mean an old or mistyped
+  // token, or a stranger probing. They're logged once a minute per address, so whoever runs the server sees it.
+  const failures = new Map<string, { since: number; count: number }>()
+  const failedSignIn = (address: string): void => {
+    const now = Date.now()
+    const entry = failures.get(address)
+    if (!entry || now - entry.since > FAILURE_WINDOW_MS) {
+      if (failures.size > 10_000) failures.clear()
+      failures.set(address, { since: now, count: 1 })
+      return
+    }
+    if (++entry.count === FAILURE_REPORT)
+      log.info(`${FAILURE_REPORT} sign-ins with an invalid token from ${address} in the last minute`)
+  }
+
   const route = async (req: IncomingMessage, res: ServerResponse): Promise<void> => {
     const url = new URL(req.url ?? '/', 'http://localhost')
     if (req.method === 'GET' && url.pathname === Routes.health) return sendJson(res, 200, { ok: true })
 
     const token = bearerToken(req)
     const user = token ? users.authenticate(token) : null
-    if (!user) throw new VaultError('UNAUTHORIZED', 'Missing or invalid access token')
+    if (!user) {
+      if (token) failedSignIn(req.socket.remoteAddress ?? 'unknown')
+      throw new VaultError('UNAUTHORIZED', 'Missing or invalid access token')
+    }
     const { access } = user
     const clientId = typeof req.headers[CLIENT_HEADER] === 'string' ? req.headers[CLIENT_HEADER] : ''
 

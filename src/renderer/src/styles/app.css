@@ -688,6 +688,92 @@ kbd {
   margin: 10px 0 0;
 }
 
+/* Asking before installing packages or running code */
+
+.approve-modal {
+  width: min(640px, 92vw);
+  max-height: 82vh;
+  overflow: auto;
+  display: grid;
+  gap: 10px;
+}
+
+.approve-modal h2 {
+  margin: 0;
+}
+
+.approve-modal h3 {
+  margin: 0 0 6px;
+  font-size: 13px;
+}
+
+.approve-warning {
+  margin: 0;
+  padding: 8px 10px;
+  border: 1px solid var(--warning-border);
+  border-radius: 8px;
+  background: var(--warning-bg);
+}
+
+.approve-who {
+  margin: 0 0 6px;
+  color: var(--text-muted);
+}
+
+.approve-packages {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 2px;
+}
+
+.approve-package {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: baseline;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.approve-package code,
+.approve-cell {
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+
+.approve-package.added {
+  background: var(--added);
+}
+
+.approve-package.removed {
+  background: var(--removed);
+}
+
+.approve-risk {
+  color: var(--danger);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.approve-cell {
+  margin: 0 0 6px;
+  padding: 8px 10px;
+  max-height: 220px;
+  overflow: auto;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg-side);
+  white-space: pre;
+}
+
+.approve-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
 /* Reproduce report */
 
 .reproduce-modal {

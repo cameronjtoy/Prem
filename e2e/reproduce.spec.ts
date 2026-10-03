@@ -1,26 +1,9 @@
-import { execFileSync } from 'node:child_process'
 import { readFile, readdir, rm, writeFile } from 'node:fs/promises'
 import path from 'node:path'
-import { expect, openNote, savedStatus, tempDir, test } from './fixtures'
+import { approvalDialog, approve, expect, makeWheel, openNote, savedStatus, tempDir, test } from './fixtures'
 
 const NOTE = 'Notebook/2026/Plate analysis.md'
 const PLATE = 'Notebook/2026/attachments/plate.csv'
-
-/** A tiny package as a wheel, so building environments needs no network. */
-function makeWheel(dir: string): string {
-  const wheel = path.join(dir, 'premtiny-1.0-py3-none-any.whl')
-  execFileSync('python3', [
-    '-c',
-    `import zipfile, sys
-with zipfile.ZipFile(sys.argv[1], "w") as z:
-    z.writestr("premtiny/__init__.py", "VALUE = 42\\n")
-    z.writestr("premtiny-1.0.dist-info/METADATA", "Metadata-Version: 2.1\\nName: premtiny\\nVersion: 1.0\\n")
-    z.writestr("premtiny-1.0.dist-info/WHEEL", "Wheel-Version: 1.0\\nGenerator: prem-test\\nRoot-Is-Purelib: true\\nTag: py3-none-any\\n")
-    z.writestr("premtiny-1.0.dist-info/RECORD", "")`,
-    wheel
-  ])
-  return wheel
-}
 
 test('outputs save their environment, flag changed inputs, and Reproduce compares a rerun', async ({
   prem: { page, read, vault }
@@ -35,8 +18,13 @@ test('outputs save their environment, flag changed inputs, and Reproduce compare
   )
   await openNote(page, NOTE)
   await page.locator('.cm-cell-run').nth(0).dispatchEvent('mousedown')
+  // The first run asks about both the packages to install and the code.
+  await expect(approvalDialog(page).locator('.approve-package')).toContainText('premtiny-1.0-py3-none-any.whl')
+  await expect(approvalDialog(page).locator('.approve-risk')).toHaveText('installs a file from this computer')
+  await approve(page)
   await expect(page.locator('.cm-cell-output')).toHaveCount(1, { timeout: 180_000 })
   await page.locator('.cm-cell-run').nth(1).dispatchEvent('mousedown')
+  await approve(page)
   await expect(page.locator('.cm-cell-text')).toHaveText('42 2 wells', { timeout: 60_000 })
   await savedStatus(page)
 
@@ -52,6 +40,9 @@ test('outputs save their environment, flag changed inputs, and Reproduce compare
   await writeFile(path.join(vault, 'environment.txt'), '# nothing yet\n')
   const reproduce = page.locator('.cm-cell-reproduce').nth(1)
   await reproduce.dispatchEvent('mousedown')
+  // Rebuilding installs from the saved list, which this computer hasn't approved yet.
+  await expect(approvalDialog(page)).toContainText(`Packages from Notebook/2026/attachments/environment-${env}.txt`)
+  await approve(page)
   const report = page.getByRole('dialog', { name: 'Reproduce' })
   await expect(report).toBeVisible({ timeout: 180_000 })
   await expect(report.locator('.reproduce-headline')).toHaveText('All 2 outputs are the same as recorded.')

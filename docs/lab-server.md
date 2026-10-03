@@ -163,3 +163,4 @@ Upgrade the server first, then the apps. The vault is plain files, so an upgrade
 | Someone can't see a folder | Run `list`, and check their `access` rules. The deepest matching folder wins. |
 | Edits to the config don't apply | Look at the server log for "Kept the previous settings". The message says what's wrong with the file. |
 | The server log | `docker logs prem`, or `journalctl -u prem` with systemd. |
+| "10 sign-ins with an invalid token from …" in the log | Someone is using an old, mistyped or removed token, or a stranger is probing the server. Tokens can't be guessed, so nobody gets in this way. If it's someone in the lab, give them a new token with `prem-server token <name>`. |

@@ -26,6 +26,7 @@ import {
 } from './extensions/formatting'
 import { HistoryPanel } from './HistoryPanel'
 import { ReproduceReport } from './ReproduceReport'
+import { ApproveRun, type RunApprovalRequest } from './ApproveRun'
 import { NoteSession, type Conflict, type SaveStatus } from './NoteSession'
 import { RecordBar } from './RecordBar'
 import { readMeta, RunBar, type NoteMeta } from './RunBar'
@@ -47,6 +48,10 @@ export function NoteEditor({ path, cursor }: { path: string; cursor: number | nu
   const infoRef = useRef(info)
   infoRef.current = info
   const [reproduction, setReproduction] = useState<ReproduceReportData | null>(null)
+  const [approval, setApproval] = useState<{
+    request: RunApprovalRequest
+    resolve(ok: boolean): void
+  } | null>(null)
   const noticeRef = useRef(showNotice)
   noticeRef.current = showNotice
   // One per note, so the confirmation and the running state follow the note.
@@ -55,7 +60,8 @@ export function NoteEditor({ path, cursor }: { path: string; cursor: number | nu
       createCellRunner({
         path,
         author: () => infoRef.current?.author ?? '',
-        shared: () => !!infoRef.current?.user,
+        approve: (request) => new Promise((resolve) => setApproval({ request, resolve })),
+        notify: (message) => noticeRef.current(message),
         onReport: (report) =>
           'error' in report ? noticeRef.current(`Couldn't reproduce: ${report.error}`) : setReproduction(report)
       }),
@@ -146,6 +152,7 @@ export function NoteEditor({ path, cursor }: { path: string; cursor: number | nu
         if (amendingRef.current) session.amend(amendingRef.current)
         setMeta(readMeta(file.content))
         void cells.refreshInputs(session.view)
+        void cells.refreshTrust(session.view)
         registerEditor({ path, flush: () => session.save(), discard: () => session.discard() })
         setLoading(false)
         // Don't steal focus from the file tree's rename box when a new note is being named.
@@ -499,6 +506,15 @@ export function NoteEditor({ path, cursor }: { path: string; cursor: number | nu
       {error && <div className="banner error">{error}</div>}
       <div className="editor-host" ref={hostRef} />
       {reproduction && <ReproduceReport report={reproduction} onClose={() => setReproduction(null)} />}
+      {approval && (
+        <ApproveRun
+          request={approval.request}
+          onAnswer={(ok) => {
+            approval.resolve(ok)
+            setApproval(null)
+          }}
+        />
+      )}
       {showHistory && (
         <HistoryPanel
           path={path}

@@ -2,8 +2,10 @@ import type { EditorView } from '@codemirror/view'
 import { codeHash, outputChange, outputFiles, parseOutputBody, renderOutput } from '@shared/analysis/cells'
 import { compareOutput, type CellComparison, type EnvironmentReport } from '@shared/analysis/reproduce'
 import { resolveAttachment } from '@shared/attachments/attachments'
+import { approvalText } from '@shared/analysis/trust'
 import { errorMessage, vaultClient } from '../../services/vaultClient'
 import { currentSettings } from '../../state/SettingsContext'
+import type { RunApprovalRequest } from './ApproveRun'
 import {
   cellsField,
   cellStates,
@@ -17,8 +19,12 @@ let nextId = 1
 
 const posOf = (view: EditorView, id: number): number | undefined =>
   view.state.field(cellStates).find((s) => s.id === id)?.pos
-/** Notes whose code, last changed by someone else, you've agreed to run this session. */
-const trusted = new Set<string>()
+/**
+ * Cell code that's yours: approved on this computer, or written here by editing code that was. It still has
+ * to be approved in the main process before it runs; this is what lets that happen without asking.
+ */
+const known = new Set<string>()
+const isKnown = (code: string): boolean => !code.trim() || known.has(approvalText(code))
 
 /** What Reproduce found: how the environment compares, then each cell's rerun against its recorded output. */
 export interface ReproduceReport {
@@ -31,6 +37,8 @@ export interface CellRunner extends AnalysisHost {
   runAll(view: EditorView): Promise<void>
   /** Looks up the files the note's outputs read, to flag outputs whose inputs changed since. */
   refreshInputs(view: EditorView): Promise<void>
+  /** Learns which of the note's cells are already approved, so editing them keeps them approved. */
+  refreshTrust(view: EditorView): Promise<void>
   restart(): Promise<void>
   running(view: EditorView): boolean
 }
@@ -59,6 +67,16 @@ async function refreshInputs(view: EditorView): Promise<void> {
   }
 }
 
+/** Learns which of the note's cells are already approved, so editing them keeps them approved. */
+async function refreshTrust(view: EditorView): Promise<void> {
+  const codes = view.state.field(cellsField).map((c) => c.code)
+  if (!codes.length) return
+  const check = await vaultClient.checkRun(codes).catch(() => null)
+  if (!check) return
+  const untrusted = new Set(check.code)
+  codes.forEach((c, i) => !untrusted.has(i) && c.trim() && known.add(approvalText(c)))
+}
+
 const formatTime = (iso: string): string => {
   const date = new Date(iso)
   return Number.isNaN(date.getTime())
@@ -74,32 +92,48 @@ export function createCellRunner(options: {
   path: string
   /** Your name, recorded with each output. */
   author(): string
-  /** True on a team vault, where others may have written the code. */
-  shared(): boolean
+  /** Asks you to approve packages or code before they run. Resolves to whether you did. */
+  approve(request: RunApprovalRequest): Promise<boolean>
+  /** Shows a message, e.g. why cells couldn't run. */
+  notify(message: string): void
   /** Shows what Reproduce found, or why it couldn't run. */
   onReport(report: ReproduceReport | { error: string }): void
 }): CellRunner {
   const { path } = options
 
-  /** On a team vault, asks before running code someone else wrote last, once per note per session. */
-  const mayRun = async (): Promise<boolean> => {
-    if (!options.shared() || trusted.has(path)) return true
-    const history = await vaultClient.history(path).catch(() => [])
-    const last = history[history.length - 1]?.author
-    if (last && last !== options.author()) {
-      const ok = window.confirm(
-        `${last} changed this note last. Its code will run on your computer, with access to your files. Run it?`
-      )
-      if (!ok) return false
-    }
-    trusted.add(path)
+  /**
+   * Makes sure these cells may run on this computer: code you wrote here is approved quietly, and anything
+   * else (code from a teammate, a sync service or another program, or packages to install) is shown to you
+   * first. Resolves to false if you said no.
+   */
+  const mayRun = async (codes: string[], reproduce?: { recorded: string | null }): Promise<boolean> => {
+    const mine = codes.filter((c) => c.trim() && known.has(approvalText(c)))
+    if (mine.length) await vaultClient.approveRun({ code: mine })
+    const check = await vaultClient.checkRun(codes, reproduce && { notePath: path, recorded: reproduce.recorded })
+    const code = [...new Set(check.code.map((i) => codes[i]))]
+    if (!check.environment && !code.length) return true
+    const history = code.length ? await vaultClient.history(path).catch(() => []) : []
+    const ok = await options.approve({
+      environment: check.environment,
+      code,
+      changedBy: history.length ? history[history.length - 1].author : null,
+      you: options.author()
+    })
+    if (!ok) return false
+    await vaultClient.approveRun({ environment: check.environment?.hash, code })
+    for (const c of code) known.add(approvalText(c))
     return true
   }
 
-  const runOne = async (view: EditorView, from: number): Promise<boolean> => {
+  const runOne = async (view: EditorView, from: number, approved = false): Promise<boolean> => {
     const cell = view.state.field(cellsField).find((c) => c.from === from)
     if (!cell || !cell.code.trim()) return true
-    if (!(await mayRun())) return false
+    try {
+      if (!approved && !(await mayRun([cell.code]))) return false
+    } catch (err) {
+      options.notify(`Couldn't run the cell: ${errorMessage(err)}`)
+      return false
+    }
     const id = nextId++
     view.dispatch({ effects: setCellState.of({ id, state: { id, pos: from, state: 'running', message: 'Running…' } }) })
     const off = vaultClient.onAnalysisProgress((m) => update(view, id, 'running', `Setting up Python: ${m}`))
@@ -148,6 +182,18 @@ export function createCellRunner(options: {
     const cells = all.slice(0, upTo + 1).filter((c) => c.code.trim())
     const target = all[upTo]
     const environment = target.output?.meta?.env ?? cells.find((c) => c.output?.meta?.env)?.output?.meta?.env ?? null
+    try {
+      if (
+        !(await mayRun(
+          cells.map((c) => c.code),
+          { recorded: environment }
+        ))
+      )
+        return
+    } catch (err) {
+      options.onReport({ error: errorMessage(err) })
+      return
+    }
     const id = nextId++
     view.dispatch({
       effects: setCellState.of({ id, state: { id, pos: from, state: 'running', message: 'Reproducing…' } })
@@ -202,6 +248,10 @@ export function createCellRunner(options: {
     enabled: () => currentSettings()['analysis.enabled'],
     reproduce: (view, from) => void reproduce(view, from),
     refreshInputs,
+    refreshTrust,
+    edited: (before, after) => {
+      if (isKnown(before) && after.trim()) known.add(approvalText(after))
+    },
     blocked: () => null,
     formatTime,
     run: (view, from) => void runOne(view, from),
@@ -209,11 +259,18 @@ export function createCellRunner(options: {
     restart: () => vaultClient.restartAnalysis(path),
     running: (view) => view.state.field(cellStates).some((s) => s.state === 'running'),
     async runAll(view) {
+      // Everything that will run is approved together, before anything starts.
+      try {
+        if (!(await mayRun(view.state.field(cellsField).map((c) => c.code)))) return
+      } catch (err) {
+        options.notify(`Couldn't run the cells: ${errorMessage(err)}`)
+        return
+      }
       await vaultClient.restartAnalysis(path)
       for (let i = 0; ; i++) {
         const cell = view.state.field(cellsField)[i]
         if (!cell) return
-        if (!(await runOne(view, cell.from))) return
+        if (!(await runOne(view, cell.from, true))) return
       }
     }
   }

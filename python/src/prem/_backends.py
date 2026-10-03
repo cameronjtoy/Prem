@@ -12,6 +12,7 @@ import tempfile
 import urllib.error
 import urllib.parse
 import urllib.request
+import warnings
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
@@ -139,10 +140,38 @@ class LocalBackend(Backend):
         return is_locked([json.loads(line) for line in lines if line.strip()])
 
 
+LOOPBACK = {"localhost", "127.0.0.1", "::1"}
+
+
+class _NoRedirects(urllib.request.HTTPRedirectHandler):
+    """Redirects are refused: urllib would send the access token on to wherever they point."""
+
+    def redirect_request(self, req, fp, code, msg, headers, newurl):  # type: ignore[override]
+        raise PremError(f"The Prem server redirected to {newurl}. Connect to that address directly instead.")
+
+
+_opener = urllib.request.build_opener(_NoRedirects)
+
+
+def check_server_url(url: str, insecure: bool = False) -> None:
+    """Refuses addresses that would send the access token unencrypted to another computer."""
+    parts = urllib.parse.urlsplit(url)
+    if parts.scheme not in ("http", "https") or not parts.hostname:
+        raise ValueError(f"{url} isn't a server address. It should look like https://prem.example.org")
+    if parts.scheme == "http" and parts.hostname not in LOOPBACK:
+        if not insecure:
+            raise ValueError(
+                "Team servers must use https://, so your access token isn't sent unencrypted "
+                "(http:// only works for this computer). To connect anyway, pass insecure=True."
+            )
+        warnings.warn(f"Sending your Prem access token unencrypted to {parts.hostname}.", stacklevel=3)
+
+
 class RemoteBackend(Backend):
     """A Prem team server, through the same HTTP API the app uses. Permissions and history are the server's."""
 
-    def __init__(self, url: str, token: str, timeout: float = 60):
+    def __init__(self, url: str, token: str, timeout: float = 60, insecure: bool = False):
+        check_server_url(url, insecure)
         self.url = url.rstrip("/")
         self.token = token
         self.timeout = timeout
@@ -158,7 +187,7 @@ class RemoteBackend(Backend):
         if content_type:
             req.add_header("Content-Type", content_type)
         try:
-            with urllib.request.urlopen(req, timeout=self.timeout) as res:
+            with _opener.open(req, timeout=self.timeout) as res:
                 return res.read()
         except urllib.error.HTTPError as err:
             raise self._error(err) from None
