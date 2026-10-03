@@ -257,6 +257,63 @@
   cursor: pointer;
 }
 
+.job-redo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 6px 20px 0;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg-side);
+  font-size: 13px;
+}
+
+.job-redo label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-muted);
+}
+
+.job-redo select {
+  font: inherit;
+  padding: 3px 6px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--text);
+}
+
+.job-redo .text-input {
+  flex: 1 1 220px;
+  width: auto;
+  min-width: 0;
+  padding: 4px 8px;
+}
+
+.job-redo button {
+  padding: 4px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.job-redo button.run-primary {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--on-accent);
+}
+
+.job-redo button.run-primary:hover {
+  border-color: var(--accent-hover);
+  background: var(--accent-hover);
+}
+
 .run-job {
   flex: 0 1 auto;
   min-width: 0;

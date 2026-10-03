@@ -132,6 +132,7 @@ The command ids are listed on the Keyboard shortcuts tab. Like settings, the fil
 - A `type: workflow` note lists a process's **stages** in a table: each stage's protocol (or none, for a step done without one), who does it by default, and what it should produce. The **Workflow** template starts one.
 - **New job** starts one pass through the workflow, filed under `Jobs/<workflow>/` with a copy of its stages, so later edits to the workflow don't change jobs already under way.
 - The job's bar shows the stage it's at and who has it. **Start run** starts that stage's protocol run, linked both ways with the job; **Complete stage** logs when it finished and hands the job to the next stage's assignee. After the last stage, sign the job to lock its stage log.
+- **Redo and rerun**: **Send back…** returns a job to an earlier stage, or the current one, to do it again, with a reason that's noted in the job; the first attempt stays in the stage log. **Run again** starts a new job with the same stages and samples, linked to the original, even from a signed job.
 
 **Records you can trust**
 - **History**: every save of every note is kept, including edits made in other apps, with who and when. View what changed, restore any version (as a normal, undoable edit).

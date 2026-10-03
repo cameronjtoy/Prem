@@ -92,6 +92,52 @@ export function jobPath(workflowPath: VaultPath, now: Date): VaultPath {
   return joinPath(joinPath(JOBS_FOLDER, title), `${name}.md`)
 }
 
+/** The text of a job: at the first of `stages`, with its own copy of the Stages table. */
+function jobText(options: {
+  title: string
+  version: string
+  stagesTable: string
+  first: Stage
+  samples: string
+  now: Date
+  author: string
+  rerunOf?: string
+}): string {
+  const created = formatDate(options.now, 'YYYY-MM-DD HH:mm')
+  const { title } = options
+  const rerun = options.rerunOf ? `rerun-of: "[[${options.rerunOf}]]"\n` : ''
+  const intro = options.rerunOf
+    ? `Following [[${title}]] again, as a rerun of [[${options.rerunOf}]], with the same stages and samples.`
+    : `Following [[${title}]]. Start each stage's run from the bar above; completing a stage hands the job to the next stage's assignee.`
+  return `---
+type: job
+workflow: "[[${title}]]"
+workflow-version: ${options.version}
+stage: ${options.first.name}
+assignee: ${options.first.assignee}
+status: open
+created: ${created}
+created-by: ${options.author}
+${rerun}finished:
+tags: [job]
+---
+
+# ${title} — job ${created}
+
+${intro}
+
+## Samples
+${options.samples.trim() || '- [[ ]]'}
+
+## ${STAGES_HEADING}
+${options.stagesTable}
+
+## ${LOG_HEADING}
+${formatTable(LOG_HEADER, [])}
+## Notes
+`
+}
+
 /** The content of a new job: at the workflow's first stage, with a copy of its stages so later edits don't change it. */
 export function createJob(
   workflowPath: VaultPath,
@@ -102,36 +148,66 @@ export function createJob(
   if (!stages.length) throw new Error('This workflow has no stages yet. Add rows to its Stages table first.')
   const { fields } = parseFrontmatter(workflowText)
   const found = sectionTable(workflowText, STAGES_HEADING)!
-  const stagesTable = workflowText.slice(found.table.from, found.table.to).trimEnd()
-  const title = noteTitle(workflowPath)
-  const created = formatDate(options.now, 'YYYY-MM-DD HH:mm')
-  return `---
-type: job
-workflow: "[[${title}]]"
-workflow-version: ${fields.version ?? ''}
-stage: ${stages[0].name}
-assignee: ${stages[0].assignee}
-status: open
-created: ${created}
-created-by: ${options.author}
-finished:
-tags: [job]
----
+  return jobText({
+    title: noteTitle(workflowPath),
+    version: fields.version ?? '',
+    stagesTable: workflowText.slice(found.table.from, found.table.to).trimEnd(),
+    first: stages[0],
+    samples: '',
+    ...options
+  })
+}
 
-# ${title} — job ${created}
+/** The workflow a job follows, by title, from its `workflow:` link. */
+export function jobWorkflow(text: string): string | null {
+  return linkTarget(parseFrontmatter(text).fields.workflow)
+}
 
-Following [[${title}]]. Start each stage's run from the bar above; completing a stage hands the job to the next stage's assignee.
+/**
+ * A new job that runs a job again from its first stage: the same stages (from the job, not the workflow as
+ * it is now, so it repeats exactly what was done) and the same samples, linked back to the original.
+ */
+export function rerunJob(originalPath: VaultPath, text: string, options: { now: Date; author: string }): string {
+  const stages = parseStages(text)
+  if (!stages.length) throw new Error("This job's Stages table is empty, so there's nothing to run again.")
+  const { fields } = parseFrontmatter(text)
+  const found = sectionTable(text, STAGES_HEADING)!
+  const samples = findSection(text, 'Samples')
+  return jobText({
+    title: jobWorkflow(text) ?? noteTitle(originalPath),
+    version: fields['workflow-version'] ?? '',
+    stagesTable: text.slice(found.table.from, found.table.to).trimEnd(),
+    first: stages[0],
+    samples: samples ? text.slice(samples.from, samples.to) : '',
+    rerunOf: noteTitle(originalPath),
+    ...options
+  })
+}
 
-## Samples
-- [[ ]]
+/**
+ * Sends a job back to an earlier (or the current) stage to do it again: the stage and its default assignee
+ * become current, a finished job reopens, and a dated line in Notes says who sent it back and why. The stage
+ * log keeps every earlier row, so the first attempt stays on record; the redo gets rows of its own.
+ */
+export function redoStage(text: string, stage: string, entry: { by: string; now: Date; reason: string }): string {
+  const target = parseStages(text).find((s) => s.name === stage)
+  if (!target) throw new Error(`"${stage}" isn't one of this job's stages.`)
+  let next = setFrontmatterField(text, 'stage', target.name)
+  next = setFrontmatterField(next, 'assignee', target.assignee)
+  next = setFrontmatterField(next, 'status', 'in progress')
+  next = setFrontmatterField(next, 'finished', '')
+  const stamp = formatDate(entry.now, 'YYYY-MM-DD HH:mm')
+  const line = `- ${stamp} — ${entry.by || 'Someone'} sent the job back to ${target.name}${entry.reason.trim() ? `: ${entry.reason.trim()}` : '.'}`
+  const notes = findSection(next, 'Notes')
+  if (!notes) return `${next.endsWith('\n') ? next : next + '\n'}\n## Notes\n${line}\n`
+  const body = next.slice(notes.from, notes.to).replace(/\s+$/, '')
+  const rest = next.slice(notes.to)
+  return next.slice(0, notes.from) + (body ? `${body}\n` : '') + line + '\n' + (rest ? `\n${rest}` : '')
+}
 
-## ${STAGES_HEADING}
-${stagesTable}
-
-## ${LOG_HEADING}
-${formatTable(LOG_HEADER, [])}
-## Notes
-`
+/** The stages a job can be sent back to: those it has reached so far (all of them once it's done). */
+export function redoableStages(state: JobState): Stage[] {
+  return state.status === 'done' ? state.stages : state.stages.slice(0, Math.max(state.index + 1, 0))
 }
 
 function readLog(text: string): LogRow[] {

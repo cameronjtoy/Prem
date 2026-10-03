@@ -54,6 +54,8 @@ const LAYOUT: Record<string, Entry[]> = {
     'job.new',
     'job.startRun',
     'job.completeStage',
+    'job.redoStage',
+    'job.rerun',
     '-',
     // Not "Run Python cell": its Shift+Enter would be taken by the macOS menu even while typing elsewhere.
     'analysis.runAll',

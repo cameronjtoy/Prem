@@ -7,9 +7,13 @@ import {
   isWorkflow,
   jobPath,
   jobState,
+  jobWorkflow,
   linkTarget,
   logRunStarted,
   parseStages,
+  redoableStages,
+  redoStage,
+  rerunJob,
   tagRun
 } from './workflows'
 
@@ -148,5 +152,73 @@ it('tagRun links a run to its job and stage', () => {
     type: 'run',
     job: '[[Plasmid prep job 1]]',
     stage: 'Miniprep'
+  })
+})
+
+describe('running a job again', () => {
+  const done = (() => {
+    let text = createJob('Workflows/Plasmid prep.md', workflow, { now, author: 'cam' })
+    text = text.replace('## Samples\n- [[ ]]\n', '## Samples\n- [[S-0002]] (pUC19 in DH5α)\n')
+    text = logRunStarted(text, { stage: 'Grow culture', run: 'Culture run 1', by: 'bob', now })
+    text = completeStage(text, { by: 'bob', now: later })
+    text = completeStage(text, { by: 'alice', now: later })
+    return completeStage(text, { by: 'alice', now: later })
+  })()
+
+  it('sends a job back to a stage, keeping the log, and notes who and why', () => {
+    expect(jobState(done).status).toBe('done')
+    expect(redoableStages(jobState(done)).map((s) => s.name)).toEqual(['Grow culture', 'Miniprep', 'Sequence check'])
+
+    const text = redoStage(done, 'Miniprep', { by: 'pat', now: later, reason: 'Low yield, redo the prep' })
+    expect(fields(text)).toMatchObject({ stage: 'Miniprep', assignee: 'alice', status: 'in progress', finished: '' })
+    expect(text).toMatch(/^finished:$/m)
+    const state = jobState(text)
+    expect(state.index).toBe(1)
+    // The first attempt stays on record; the redo will get rows of its own.
+    expect(state.log).toHaveLength(3)
+    expect(state.openRow).toBeNull()
+    expect(text).toContain(
+      '## Notes\n- 2026-10-03 17:02 — pat sent the job back to Miniprep: Low yield, redo the prep\n'
+    )
+
+    const again = completeStage(
+      logRunStarted(text, { stage: 'Miniprep', run: 'Miniprep run 2', by: 'alice', now: later }),
+      {
+        by: 'alice',
+        now: later
+      }
+    )
+    expect(jobState(again).log.map((r) => [r.stage, r.run])).toEqual([
+      ['Grow culture', 'Culture run 1'],
+      ['Miniprep', null],
+      ['Sequence check', null],
+      ['Miniprep', 'Miniprep run 2']
+    ])
+    expect(fields(again).stage).toBe('Sequence check')
+  })
+
+  it('only offers stages the job has reached', () => {
+    const fresh = createJob('W.md', workflow, { now, author: 'cam' })
+    expect(redoableStages(jobState(fresh)).map((s) => s.name)).toEqual(['Grow culture'])
+    expect(() => redoStage(fresh, 'Nope', { by: 'x', now, reason: '' })).toThrow(/isn't one of this job's stages/)
+  })
+
+  it('reruns a job from its own stages and samples, linked to the original', () => {
+    // The workflow changed since; the rerun repeats what the job did, not the new workflow.
+    const text = rerunJob('Jobs/Plasmid prep/Plasmid prep job 2026-10-03 0930.md', done, { now: later, author: 'pat' })
+    expect(fields(text)).toMatchObject({
+      type: 'job',
+      workflow: '[[Plasmid prep]]',
+      'workflow-version': '2',
+      'rerun-of': '[[Plasmid prep job 2026-10-03 0930]]',
+      stage: 'Grow culture',
+      assignee: 'bob',
+      status: 'open'
+    })
+    expect(text).toContain('## Samples\n- [[S-0002]] (pUC19 in DH5α)\n')
+    expect(parseStages(text)).toEqual(parseStages(done))
+    expect(jobState(text).log).toEqual([])
+    expect(text).toContain('as a rerun of [[Plasmid prep job 2026-10-03 0930]]')
+    expect(jobWorkflow(text)).toBe('Plasmid prep')
   })
 })

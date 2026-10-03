@@ -98,7 +98,8 @@ test('takes a job through a workflow: runs, hand-offs, done and signed', async (
   await page.locator('.record-form input').fill('Plasmid verified')
   await page.getByRole('button', { name: 'Sign and lock' }).click()
   await expect(page.locator('.save-status')).toHaveText('Locked')
-  await expect(bar.getByRole('button')).toHaveCount(1) // only the link to the workflow
+  // Only the link to the workflow, and Run again, which starts a new job without changing this one.
+  await expect(bar.getByRole('button')).toHaveText([/Plasmid prep/, 'Run again'])
 })
 
 test('the sample job shows its progress and links to its runs', async ({ prem: { page } }) => {
@@ -113,4 +114,47 @@ test('the sample job shows its progress and links to its runs', async ({ prem: {
     'title',
     'Jobs/Plasmid prep/Plasmid prep job 2026-09-28 0900.md'
   )
+})
+
+test('a job can be sent back to a stage, and run again as a new job', async ({ prem: { page, read } }) => {
+  const JOB = 'Jobs/Plasmid prep/Plasmid prep job 2026-09-28 0900.md'
+  await openNote(page, JOB)
+  const bar = page.locator('.run-bar')
+  await expect(bar).toContainText('stage 3 of 3: Sequence check')
+
+  // Send it back to Miniprep, with a reason. The first attempt stays in the stage log.
+  await bar.getByRole('button', { name: /Send back/ }).click()
+  const form = page.locator('.job-redo')
+  await form.locator('select').selectOption('Miniprep')
+  await form.getByRole('textbox').fill('Sequencing showed a mixed population')
+  await form.getByRole('button', { name: 'Send back' }).click()
+  await expect(form).toHaveCount(0)
+  await expect(bar).toContainText('stage 2 of 3: Miniprep · alice')
+  await expect(bar.getByRole('button', { name: /Start run/ })).toBeVisible()
+  await savedStatus(page)
+  let text = await read(JOB)
+  expect(field(text, 'stage')).toBe('Miniprep')
+  expect(field(text, 'status')).toBe('in progress')
+  expect(text).toMatch(/— \S+ sent the job back to Miniprep: Sequencing showed a mixed population\n/)
+  expect(text).toContain('| Miniprep | [[Plasmid miniprep run 2026-09-29 1410]] |')
+
+  // Run again: a new job with the same stages and samples, linked to this one.
+  await bar.getByRole('button', { name: 'Run again' }).click()
+  await expect(bar).toContainText('New job')
+  await expect(bar).toContainText('stage 1 of 3: Grow culture · bob')
+  await expect(bar.getByTitle('A rerun of Plasmid prep job 2026-09-28 0900')).toBeVisible()
+  const rerunPath = (await page.locator('.breadcrumb').getAttribute('title'))!
+  expect(rerunPath).toMatch(/^Jobs\/Plasmid prep\/Plasmid prep job \d{4}-\d\d-\d\d \d{4}\.md$/)
+  text = await read(rerunPath)
+  expect(field(text, 'rerun-of')).toBe('"[[Plasmid prep job 2026-09-28 0900]]"')
+  expect(text).toContain('## Samples\n- [[S-0002]] (pUC19 in DH5α)\n- [[S-0001]] (the plasmid DNA)\n')
+  expect(text).toContain('| Stage | Run | By | Started | Completed |\n| --- | --- | --- | --- | --- |\n\n')
+
+  // A signed job can't be sent back, but it can still be run again.
+  await bar.getByTitle(/^A rerun of/).click()
+  await page.locator('.record-bar').getByRole('button', { name: 'Sign…' }).click()
+  await page.getByRole('button', { name: 'Sign and lock' }).click()
+  await expect(page.locator('.save-status')).toHaveText('Locked')
+  await expect(bar.getByRole('button', { name: /Send back/ })).toHaveCount(0)
+  await expect(bar.getByRole('button', { name: 'Run again' })).toBeVisible()
 })
