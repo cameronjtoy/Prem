@@ -30,8 +30,8 @@ describe.skipIf(!python())('ensureEnvironment', () => {
     expect(stamp.id).toMatch(/^[0-9a-f]{12}$/)
     expect(progress).toContain('Creating the environment')
 
-    expect(await currentStamp({ dir, requirements: null }, false)).toEqual(stamp)
-    expect(await currentStamp({ dir, requirements: 'numpy' }, false)).toBeNull()
+    expect(await currentStamp({ dir, requirements: null }, process.platform === 'win32')).toEqual(stamp)
+    expect(await currentStamp({ dir, requirements: 'numpy' }, process.platform === 'win32')).toBeNull()
     const again = await ensureEnvironment({ dir, requirements: null }, found, () => {})
     expect(again.created).toBe(stamp.created)
   }, 120_000)
@@ -42,6 +42,6 @@ describe.skipIf(!python())('ensureEnvironment', () => {
     await expect(
       ensureEnvironment({ dir, requirements: './definitely-not-a-package-dir' }, found, () => {})
     ).rejects.toThrow(/definitely-not-a-package-dir|does not exist|not found|Invalid requirement/i)
-    expect(await currentStamp({ dir, requirements: './definitely-not-a-package-dir' }, false)).toBeNull()
+    expect(await currentStamp({ dir, requirements: './definitely-not-a-package-dir' }, process.platform === 'win32')).toBeNull()
   }, 120_000)
 })
