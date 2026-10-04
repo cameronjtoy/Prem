@@ -551,6 +551,7 @@
 
 .nb-image {
   max-height: 420px;
+  /* fixed: plots are drawn for a white page, often with a transparent background */
   background: #fff;
   border-radius: 4px;
 }

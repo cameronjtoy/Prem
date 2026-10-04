@@ -57,6 +57,9 @@ describe('SettingsStore', () => {
     await s.load()
     s.watch()
     try {
+      // macOS starts watching a moment after watch() returns, so a write in the same instant can go unseen.
+      // In the app the watcher starts at launch, well before anyone edits the file; do the same here.
+      await new Promise((resolve) => setTimeout(resolve, 250))
       await writeFile(file, '{ "appearance.theme": "light" }')
       await vi.waitFor(() => expect(s.values['appearance.theme']).toBe('light'), { timeout: 3000 })
       expect(seen.at(-1)?.values['appearance.theme']).toBe('light')

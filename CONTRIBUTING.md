@@ -14,7 +14,7 @@ npm ci
 npm run dev
 ```
 
-Open `examples/sample-vault/` from the welcome screen to try things out. To work on the team server, see [Hosting a team vault](README.md#hosting-a-team-vault).
+Open `examples/sample-vault/` from the welcome screen to try things out. To work on the team server, see [the lab server guide](docs/lab-server.md).
 
 ## Before you open a pull request
 Run the same checks CI runs:
@@ -50,6 +50,8 @@ CI runs the whole suite on Linux, and the tests tagged `@smoke` (`test('…', { 
 
 ## Where things live
 See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md). In short: `src/shared` is plain TypeScript used everywhere, `src/main` is the Electron main process and the vault layer, `src/renderer` is the React app, and `src/server` is the team server.
+
+Before you build or change a screen, read [docs/DESIGN_SYSTEM.md](docs/DESIGN_SYSTEM.md): use its tokens rather than colours or sizes of your own, and its buttons, dialogs and banners rather than new ones. `npx vitest run src/docs` checks the tokens and every link in the docs.
 
 ## Notebook data is sensitive
 Lab notebooks hold research data. Changes that touch storage, the team server, permissions or signing need extra care:

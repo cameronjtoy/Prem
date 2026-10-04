@@ -21,6 +21,7 @@
     "src/main/**/*",
     "src/preload/**/*",
     "src/shared/**/*",
-    "src/server/**/*"
+    "src/server/**/*",
+    "src/docs/**/*"
   ]
 }
