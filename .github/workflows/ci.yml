@@ -41,6 +41,40 @@ jobs:
       - run: npm run notices -- --check
       - run: npm run site
 
+  # Most pilot labs use macOS or Windows, where paths, file watching and Python differ from Linux.
+  platforms:
+    name: Unit and smoke tests (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build
+      - run: npm run server:build
+      - name: Smoke tests in the real app
+        run: npm run e2e -- --grep @smoke
+      - uses: actions/upload-artifact@v7
+        if: failure()
+        with:
+          name: playwright-report-${{ matrix.os }}
+          path: |
+            playwright-report
+            test-results
+          retention-days: 7
+
   python:
     name: Python package (${{ matrix.python }})
     runs-on: ubuntu-latest

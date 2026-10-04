@@ -29,7 +29,7 @@ test('runs a protocol: timestamps steps and completes the run', async ({ prem: {
   await expect.poll(() => read(runPath)).toMatch(/status: complete/)
 })
 
-test('keeps every version and restores an old one', async ({ prem: { page, read } }) => {
+test('keeps every version and restores an old one', { tag: '@smoke' }, async ({ prem: { page, read } }) => {
   await openNote(page, 'Samples/S-0001.md')
   const original = await read('Samples/S-0001.md')
   await page.locator('.cm-content').focus()
@@ -47,30 +47,34 @@ test('keeps every version and restores an old one', async ({ prem: { page, read 
   await expect.poll(() => read('Samples/S-0001.md')).toBe(original)
 })
 
-test('signs a record, locks it, and only changes it through an amendment', async ({ prem: { page, read } }) => {
-  await openNote(page, EXPERIMENT)
-  await page.locator('.record-bar').getByRole('button', { name: 'Sign…' }).click()
-  await page.locator('.record-form input').fill('Gel reviewed')
-  await page.getByRole('button', { name: 'Sign and lock' }).click()
-  await expect(page.locator('.save-status')).toHaveText('Locked')
-  await expect(page.locator('.record-bar')).toContainText('Gel reviewed')
+test(
+  'signs a record, locks it, and only changes it through an amendment',
+  { tag: '@smoke' },
+  async ({ prem: { page, read } }) => {
+    await openNote(page, EXPERIMENT)
+    await page.locator('.record-bar').getByRole('button', { name: 'Sign…' }).click()
+    await page.locator('.record-form input').fill('Gel reviewed')
+    await page.getByRole('button', { name: 'Sign and lock' }).click()
+    await expect(page.locator('.save-status')).toHaveText('Locked')
+    await expect(page.locator('.record-bar')).toContainText('Gel reviewed')
 
-  const signed = await read(EXPERIMENT)
-  await page.locator('.cm-content').focus()
-  await page.keyboard.type('sneaky edit')
-  await page.waitForTimeout(1000)
-  expect(await read(EXPERIMENT)).toBe(signed)
+    const signed = await read(EXPERIMENT)
+    await page.locator('.cm-content').focus()
+    await page.keyboard.type('sneaky edit')
+    await page.waitForTimeout(1000)
+    expect(await read(EXPERIMENT)).toBe(signed)
 
-  await page.locator('.record-bar').getByRole('button', { name: 'Amend…' }).click()
-  await page.locator('.record-form input').fill('Lane 4 was primer dimer')
-  await page.getByRole('button', { name: 'Unlock to amend' }).click()
-  await page.locator('.cm-content').focus()
-  await page.keyboard.press('ControlOrMeta+End')
-  await page.keyboard.type(' Correction: lane 4 is primer dimer.')
-  await savedStatus(page)
-  await expect(page.locator('.record-bar')).toContainText('Amended')
-  await expect(page.locator('.record-bar')).toContainText('Lane 4 was primer dimer')
-})
+    await page.locator('.record-bar').getByRole('button', { name: 'Amend…' }).click()
+    await page.locator('.record-form input').fill('Lane 4 was primer dimer')
+    await page.getByRole('button', { name: 'Unlock to amend' }).click()
+    await page.locator('.cm-content').focus()
+    await page.keyboard.press('ControlOrMeta+End')
+    await page.keyboard.type(' Correction: lane 4 is primer dimer.')
+    await savedStatus(page)
+    await expect(page.locator('.record-bar')).toContainText('Amended')
+    await expect(page.locator('.record-bar')).toContainText('Lane 4 was primer dimer')
+  }
+)
 
 test('exports a signed entry and a whole folder as PDF', async ({ prem: { app, page } }) => {
   const out = await tempDir('pdf')

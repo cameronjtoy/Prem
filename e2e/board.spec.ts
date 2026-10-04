@@ -11,54 +11,56 @@ const cardSelector = (job: string) => `.board-card[data-job="${job}"]`
 const field = (text: string, key: string): string | undefined =>
   new RegExp(`^${key}: (.*)$`, 'm').exec(text)?.[1]?.trim()
 
-test('the board shows jobs by stage, and dragging a card completes or sends back a stage', async ({
-  prem: { page, read }
-}) => {
-  await page.getByRole('tab', { name: 'Board' }).click()
-  const board = page.locator('.board')
-  await expect(board.getByRole('combobox').first()).toHaveValue('Plasmid prep')
-  const column = (name: string) => board.locator(`.board-column[data-column="${name}"]`)
-  await expect(board.locator('.board-column h3')).toHaveText([/^Grow culture/, /^Miniprep/, /^Sequence check/])
-  const card = (job: string) => board.locator(cardSelector(job))
-  await expect(column('Grow culture').locator(cardSelector(JOB))).toBeVisible()
-  await expect(column('Sequence check').locator(cardSelector(FINISHING))).toBeVisible()
-  await expect(card(JOB)).toContainText('bob')
+test(
+  'the board shows jobs by stage, and dragging a card completes or sends back a stage',
+  { tag: '@smoke' },
+  async ({ prem: { page, read } }) => {
+    await page.getByRole('tab', { name: 'Board' }).click()
+    const board = page.locator('.board')
+    await expect(board.getByRole('combobox').first()).toHaveValue('Plasmid prep')
+    const column = (name: string) => board.locator(`.board-column[data-column="${name}"]`)
+    await expect(board.locator('.board-column h3')).toHaveText([/^Grow culture/, /^Miniprep/, /^Sequence check/])
+    const card = (job: string) => board.locator(cardSelector(job))
+    await expect(column('Grow culture').locator(cardSelector(JOB))).toBeVisible()
+    await expect(column('Sequence check').locator(cardSelector(FINISHING))).toBeVisible()
+    await expect(card(JOB)).toContainText('bob')
 
-  // Drag to the next stage: asks, then hands the job to Miniprep's assignee.
-  page.once('dialog', (dialog) => {
-    expect(dialog.message()).toBe('Complete Grow culture and hand the job to alice (Miniprep)?')
-    void dialog.accept()
-  })
-  await card(JOB).dragTo(column('Miniprep'))
-  await expect(column('Miniprep').locator(cardSelector(JOB))).toBeVisible()
-  const moved = await read(JOB)
-  expect(field(moved, 'stage')).toBe('Miniprep')
-  expect(field(moved, 'assignee')).toBe('alice')
-  expect(moved).toMatch(/\| Grow culture \| +\| \S+ \| \d{4}-\d\d-\d\d \d\d:\d\d \| \d{4}-\d\d-\d\d \d\d:\d\d \|/)
+    // Drag to the next stage: asks, then hands the job to Miniprep's assignee.
+    page.once('dialog', (dialog) => {
+      expect(dialog.message()).toBe('Complete Grow culture and hand the job to alice (Miniprep)?')
+      void dialog.accept()
+    })
+    await card(JOB).dragTo(column('Miniprep'))
+    await expect(column('Miniprep').locator(cardSelector(JOB))).toBeVisible()
+    const moved = await read(JOB)
+    expect(field(moved, 'stage')).toBe('Miniprep')
+    expect(field(moved, 'assignee')).toBe('alice')
+    expect(moved).toMatch(/\| Grow culture \| +\| \S+ \| \d{4}-\d\d-\d\d \d\d:\d\d \| \d{4}-\d\d-\d\d \d\d:\d\d \|/)
 
-  // A column that's neither next nor earlier can't take it.
-  await card(JOB).dragTo(column('Sequence check'))
-  await expect(column('Miniprep').locator(cardSelector(JOB))).toBeVisible()
+    // A column that's neither next nor earlier can't take it.
+    await card(JOB).dragTo(column('Sequence check'))
+    await expect(column('Miniprep').locator(cardSelector(JOB))).toBeVisible()
 
-  // Drag back: asks why, then sends it back with a note.
-  await card(JOB).dragTo(column('Grow culture'))
-  const form = page.getByRole('dialog', { name: 'Send back' })
-  await form.getByRole('textbox').fill('culture was contaminated')
-  await form.getByRole('button', { name: 'Send back' }).click()
-  await expect(column('Grow culture').locator(cardSelector(JOB))).toBeVisible()
-  const back = await read(JOB)
-  expect(field(back, 'stage')).toBe('Grow culture')
-  expect(back).toMatch(/sent the job back to Grow culture: culture was contaminated/)
+    // Drag back: asks why, then sends it back with a note.
+    await card(JOB).dragTo(column('Grow culture'))
+    const form = page.getByRole('dialog', { name: 'Send back' })
+    await form.getByRole('textbox').fill('culture was contaminated')
+    await form.getByRole('button', { name: 'Send back' }).click()
+    await expect(column('Grow culture').locator(cardSelector(JOB))).toBeVisible()
+    const back = await read(JOB)
+    expect(field(back, 'stage')).toBe('Grow culture')
+    expect(back).toMatch(/sent the job back to Grow culture: culture was contaminated/)
 
-  // Filter by assignee.
-  await board.getByLabel('Assigned to').selectOption('alice')
-  await expect(board.locator('.board-card')).toHaveCount(1)
-  await expect(card(FINISHING)).toBeVisible()
+    // Filter by assignee.
+    await board.getByLabel('Assigned to').selectOption('alice')
+    await expect(board.locator('.board-card')).toHaveCount(1)
+    await expect(card(FINISHING)).toBeVisible()
 
-  // Cards open their job.
-  await card(FINISHING).getByRole('button').first().click()
-  await expect(page.locator('.breadcrumb')).toHaveAttribute('title', FINISHING)
-})
+    // Cards open their job.
+    await card(FINISHING).getByRole('button').first().click()
+    await expect(page.locator('.breadcrumb')).toHaveAttribute('title', FINISHING)
+  }
+)
 
 test('My tasks counts the jobs waiting on you and opens them', async ({ prem: { page, vault } }) => {
   const me = userInfo().username

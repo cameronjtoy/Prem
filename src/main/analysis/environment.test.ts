@@ -5,20 +5,24 @@ import path from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { currentStamp, ensureEnvironment, sha256 } from './environment'
 
+/** A Python that can build environments: `python3` on macOS and Linux, often just `python` on Windows. */
 function python(): string | null {
-  try {
-    execFileSync('python3', ['-c', 'import venv, ensurepip'], { stdio: 'ignore' })
-    return 'python3'
-  } catch {
-    return null
+  for (const candidate of ['python3', 'python']) {
+    try {
+      execFileSync(candidate, ['-c', 'import venv, ensurepip'], { stdio: 'ignore' })
+      return candidate
+    } catch {
+      // try the next one
+    }
   }
+  return null
 }
 
 // Builds a real environment, without installing anything, so it needs Python but not the network.
 describe.skipIf(!python())('ensureEnvironment', () => {
   it('builds once, records what it built, and rebuilds when environment.txt changes', async () => {
     const dir = path.join(await mkdtemp(path.join(tmpdir(), 'prem-env-')), 'vault1')
-    const found = { python: 'python3', version: null, uv: null, source: 'path' as const, problem: null }
+    const found = { python: python()!, version: null, uv: null, source: 'path' as const, problem: null }
     const progress: string[] = []
     const stamp = await ensureEnvironment({ dir, requirements: null }, found, (m) => progress.push(m))
     expect(stamp).toMatchObject({ tool: 'venv', requirementsHash: sha256('') })
@@ -34,7 +38,7 @@ describe.skipIf(!python())('ensureEnvironment', () => {
 
   it('reports why it could not build, and leaves nothing half-made', async () => {
     const dir = path.join(await mkdtemp(path.join(tmpdir(), 'prem-env-')), 'vault2')
-    const found = { python: 'python3', version: null, uv: null, source: 'path' as const, problem: null }
+    const found = { python: python()!, version: null, uv: null, source: 'path' as const, problem: null }
     await expect(
       ensureEnvironment({ dir, requirements: './definitely-not-a-package-dir' }, found, () => {})
     ).rejects.toThrow(/definitely-not-a-package-dir|does not exist|not found|Invalid requirement/i)
