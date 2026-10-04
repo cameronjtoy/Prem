@@ -3,7 +3,7 @@ import { createServer } from 'node:net'
 import path from 'node:path'
 import { promisify } from 'node:util'
 import type { Page } from '@playwright/test'
-import { expect, launch, openNote, reveal, ROOT, savedStatus, tempDir, test } from './fixtures'
+import { approvalDialog, approve, expect, launch, openNote, reveal, ROOT, savedStatus, tempDir, test } from './fixtures'
 
 const SERVER = path.join(ROOT, 'out', 'server', 'index.js')
 const run = promisify(execFile)
@@ -139,16 +139,13 @@ test('on a team vault, cells run on your computer against the note’s attachmen
     }, note)
     expect(written.ok).toBe(true)
 
-    const questions: string[] = []
-    alice.page.on('dialog', (dialog) => {
-      questions.push(dialog.message())
-      void dialog.accept()
-    })
     await reveal(alice.page, note)
     await openNote(alice.page, note)
     await alice.page.locator('.cm-cell-run').dispatchEvent('mousedown')
+    await expect(approvalDialog(alice.page)).toContainText('pat changed this note last.')
+    await expect(approvalDialog(alice.page).locator('.approve-cell')).toContainText('len(rows) - 1')
+    await approve(alice.page)
     await expect(alice.page.locator('.cm-cell-output .cm-cell-text')).toHaveText('2')
-    expect(questions).toEqual([expect.stringContaining('pat changed this note last')])
     await savedStatus(alice.page)
 
     const saved = await pat.page.evaluate((p) => window.api.vault.read(p), note)

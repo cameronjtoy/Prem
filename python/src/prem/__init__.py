@@ -46,19 +46,20 @@ __all__ = [
 PathLike = Union[str, "os.PathLike[str]"]
 
 
-def connect(target: Optional[PathLike] = None, token: Optional[str] = None) -> "Vault":
+def connect(target: Optional[PathLike] = None, token: Optional[str] = None, insecure: bool = False) -> "Vault":
     """Opens a vault.
 
     ``target`` is a vault folder or a team server's address (``https://…``). Without one, Prem uses
     ``$PREM_VAULT``, or else the vault the current folder is in, which is where analysis cells run.
-    A team server needs your access token: pass ``token`` or set ``$PREM_TOKEN``.
+    A team server needs your access token: pass ``token`` or set ``$PREM_TOKEN``. Its address must use
+    ``https://``, except on this computer; ``insecure=True`` allows plain ``http://`` anyway, with a warning.
     """
     where = os.fspath(target) if target is not None else os.environ.get("PREM_VAULT", "")
     if where.startswith(("http://", "https://")):
         token = token or os.environ.get("PREM_TOKEN")
         if not token:
             raise ForbiddenError("A team server needs your access token: connect(url, token=…) or set PREM_TOKEN.")
-        return Vault(RemoteBackend(where, token))
+        return Vault(RemoteBackend(where, token, insecure=insecure))
     if where:
         root = Path(where).expanduser()
         if not root.is_dir():

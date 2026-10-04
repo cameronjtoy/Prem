@@ -1,3 +1,4 @@
+import type { Approval } from '@shared/analysis/trust'
 import { VaultError, type IpcResult } from '@shared/vault/errors'
 import type { SettingKey } from '@shared/settings/schema'
 import type { WriteOptions } from '@shared/vault/types'
@@ -57,7 +58,10 @@ export const vaultClient = {
   onAnalysisProgress: window.api.analysis.onProgress,
   reproduce: (notePath: string, codes: string[], environment: string | null) =>
     unwrap(window.api.analysis.reproduce(notePath, codes, environment)),
-  inputHashes: (paths: string[]) => unwrap(window.api.analysis.inputHashes(paths))
+  inputHashes: (paths: string[]) => unwrap(window.api.analysis.inputHashes(paths)),
+  checkRun: (codes: string[], reproduce?: { notePath: string; recorded: string | null }) =>
+    unwrap(window.api.analysis.check(codes, reproduce)),
+  approveRun: (approval: Approval) => unwrap(window.api.analysis.approve(approval))
 }
 
 export function errorMessage(err: unknown): string {

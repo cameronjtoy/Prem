@@ -44,5 +44,6 @@ export const STATUS_BY_CODE: Record<VaultErrorCode, number> = {
   NO_VAULT: 503,
   UNAVAILABLE: 503,
   LOCKED: 423,
+  NEEDS_APPROVAL: 403,
   UNKNOWN: 500
 }

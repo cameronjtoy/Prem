@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useState } from 'react'
 import { ENVIRONMENT_FILE, STARTER_ENVIRONMENT, type AnalysisStatus } from '@shared/analysis/environment'
+import type { EnvironmentApproval } from '@shared/analysis/trust'
 import { errorMessage, vaultClient } from '../../services/vaultClient'
+import { ApproveRun } from '../Editor/ApproveRun'
 import { useSettings } from '../../state/SettingsContext'
 import { useVault } from '../../state/VaultContext'
 
@@ -12,6 +14,7 @@ export function PythonStatus() {
   const [busy, setBusy] = useState(false)
   const [progress, setProgress] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [approval, setApproval] = useState<EnvironmentApproval | null>(null)
 
   const check = useCallback((refresh: boolean) => {
     setError(null)
@@ -24,7 +27,7 @@ export function PythonStatus() {
   useEffect(() => check(false), [check, pythonSetting])
   useEffect(() => vaultClient.onAnalysisProgress(setProgress), [])
 
-  const prepare = (): void => {
+  const build = (): void => {
     setBusy(true)
     setError(null)
     vaultClient
@@ -35,6 +38,25 @@ export function PythonStatus() {
         setBusy(false)
         setProgress(null)
       })
+  }
+
+  // Installing runs code from the package list, so a list this computer hasn't approved is shown first.
+  const prepare = (): void => {
+    setError(null)
+    vaultClient
+      .checkRun([])
+      .then((result) => (result.environment ? setApproval(result.environment) : build()))
+      .catch((e) => setError(errorMessage(e)))
+  }
+
+  const answer = (ok: boolean): void => {
+    const environment = approval
+    setApproval(null)
+    if (!ok || !environment) return
+    vaultClient
+      .approveRun({ environment: environment.hash })
+      .then(build)
+      .catch((e) => setError(errorMessage(e)))
   }
 
   const createFile = (): void => {
@@ -96,6 +118,12 @@ export function PythonStatus() {
           Look again
         </button>
       </div>
+      {approval && (
+        <ApproveRun
+          request={{ environment: approval, code: [], changedBy: null, you: info?.author ?? '' }}
+          onAnswer={answer}
+        />
+      )}
     </div>
   )
 }

@@ -5,6 +5,7 @@ import { resolveBindings, type KeybindingsSnapshot } from '@shared/keybindings'
 import { DEFAULTS, type SettingsSnapshot } from '@shared/settings/schema'
 import { Channels } from '@shared/vault/ipc'
 import { registerIpc } from './ipc/handlers'
+import { TrustStore } from './analysis/trust'
 import { AnalysisManager } from './analysis/AnalysisManager'
 import runnerSource from './analysis/prem_runner.py?raw'
 import { KeybindingsStore } from './keybindings'
@@ -55,7 +56,8 @@ const analysis = new AnalysisManager({
   settings: () => settings?.values ?? DEFAULTS,
   envRoot: () => path.join(app.getPath('userData'), 'envs'),
   script: runnerScript,
-  onProgress: (message) => send(Channels.analysisProgress, message)
+  onProgress: (message) => send(Channels.analysisProgress, message),
+  trust: new TrustStore(() => path.join(app.getPath('userData'), 'analysis-trust.json'))
 })
 
 function isSafeExternal(url: string): boolean {

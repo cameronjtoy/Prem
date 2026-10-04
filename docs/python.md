@@ -22,6 +22,8 @@ With no arguments, `connect()` uses the `PREM_VAULT` environment variable (a fol
 
 A team server needs your access token, the same one you gave the Prem app. Pass it as `token=` or set `PREM_TOKEN`, and keep it out of notebooks you share.
 
+The server's address must start with `https://`, so the token is never sent unencrypted. The one exception is a server on the same computer (`http://localhost`, `http://127.0.0.1`). `connect(url, token=…, insecure=True)` allows plain `http://` anyway, with a warning. Redirects aren't followed, so the token only ever goes to the address you gave.
+
 ## Finding an entry
 
 ```python

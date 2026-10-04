@@ -7,6 +7,13 @@ All notable changes to Prem are listed here. The format follows [Keep a Changelo
 Everything below will ship as **0.1.0**, the first pilot release.
 
 ### Added
+- **Asking before code runs**:
+  - **Packages:** Prem shows the package list before installing `environment.txt` or a list that Reproduce rebuilds, and shows what changed when it changes. Lines that install from web addresses, files or other package indexes are pointed out.
+  - **Code:** Prem shows a cell's code, and who changed the note last, before it runs for the first time on this computer. This applies on every vault, including local folders that are synced or shared. Code you write in Prem needs no approval, and code that changes elsewhere is asked about again.
+  - **Where approvals live:** they're kept on your computer as fingerprints, outside the vault.
+- **Safer connections from Python:** `prem.connect` refuses plain `http://` to other computers (`insecure=True` overrides it, with a warning), and doesn't follow redirects, so the token only goes where you sent it.
+- **Failed sign-ins are logged:** repeated sign-ins with an invalid token are logged on the team server.
+- **Tighter security policy:** the app's Content-Security-Policy now also blocks plugins, frames, form submissions and `<base>` changes.
 - **Workflows and jobs**: a `type: workflow` note lists a process's stages in a table, each with a protocol (or none), a default assignee and its outputs; a new **Workflow** template starts one. **New job** files a job under `Jobs/<workflow>/` with a copy of the stages. The job's bar shows its stage and assignee, starts the stage's run (linked both ways), and **Complete stage** logs the time and hands the job to the next stage's assignee, asking first if the run isn't complete. Finished jobs can be signed to lock their stage log. **Send back…** returns a job to an earlier stage, with a reason noted in the job; earlier runs stay in the stage log. **Run again** starts a new job with the same stages and samples, linked to the original (`rerun-of`). Signed jobs can't be sent back, but can be run again. The sample vault has a Plasmid prep workflow and a job in progress.
 - **Reproducible analyses**:
   - **Environment saved:** when a cell runs, the environment's full package list and Python version are saved next to the note (`attachments/environment-<env>.txt`).

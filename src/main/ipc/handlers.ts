@@ -26,6 +26,12 @@ function str(value: unknown, name: string): string {
   return value
 }
 
+function strings(value: unknown, name: string): string[] {
+  if (!Array.isArray(value) || !value.every((v) => typeof v === 'string'))
+    throw new VaultError('INVALID_ARGUMENT', `${name} must be a list of strings`)
+  return value as string[]
+}
+
 function writeOptions(value: unknown): WriteOptions {
   if (value == null) return {}
   if (typeof value !== 'object') throw new VaultError('INVALID_ARGUMENT', 'options must be an object')
@@ -191,6 +197,27 @@ export function registerIpc(
     if (!Array.isArray(paths) || !paths.every((p) => typeof p === 'string'))
       throw new VaultError('INVALID_ARGUMENT', 'paths must be a list of strings')
     return analysis.inputHashes((paths as string[]).map((p) => normalizeVaultPath(p)))
+  })
+
+  handle(Channels.analysisCheck, (codes, reproduce) => {
+    const notePath = (reproduce as { notePath?: unknown } | undefined)?.notePath
+    const recorded = (reproduce as { recorded?: unknown } | undefined)?.recorded
+    return analysis.check(
+      strings(codes, 'codes'),
+      reproduce === undefined || reproduce === null
+        ? undefined
+        : {
+            notePath: normalizeVaultPath(str(notePath, 'notePath')),
+            recorded: recorded === null ? null : str(recorded, 'recorded')
+          }
+    )
+  })
+  handle(Channels.analysisApprove, (approval) => {
+    const { environment, code } = (approval ?? {}) as { environment?: unknown; code?: unknown }
+    return analysis.approve({
+      environment: environment === undefined ? undefined : str(environment, 'environment'),
+      code: code === undefined ? undefined : strings(code, 'code')
+    })
   })
 
   handle(Channels.openExternal, async (url) => {
