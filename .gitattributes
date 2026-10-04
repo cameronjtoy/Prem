@@ -1,0 +1,7 @@
+# Notes, code and docs use LF line endings on every platform, so files and tests read the same everywhere.
+* text=auto eol=lf
+*.png binary
+*.woff2 binary
+*.ico binary
+*.icns binary
+*.whl binary

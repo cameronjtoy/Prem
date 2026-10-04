@@ -1,6 +1,6 @@
 import { execFileSync } from 'node:child_process'
 import { createHash } from 'node:crypto'
-import { mkdtemp, writeFile } from 'node:fs/promises'
+import { mkdtemp, symlink, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { afterEach, describe, expect, it } from 'vitest'
@@ -60,6 +60,18 @@ describe.skipIf(!python)('PythonRunner', () => {
     expect(result.outputs).toEqual([{ kind: 'result', text: '2' }])
     const sha = createHash('sha256').update('well,od\nA1,0.41\n').digest('hex')
     expect(result.inputs).toEqual([{ path: 'plate.csv', sha256: sha }])
+  })
+
+  // On macOS the temp folder (/var) is a symlink to /private/var, and synced folders can be too: Python sees
+  // the real path, Prem the linked one. Files read must still count as inside the vault.
+  it.skipIf(process.platform === 'win32')('records inputs when the vault is reached through a symlink', async () => {
+    const r = runner()
+    const real = await mkdtemp(path.join(tmpdir(), 'prem-real-'))
+    const linked = path.join(await mkdtemp(path.join(tmpdir(), 'prem-link-')), 'vault')
+    await symlink(real, linked)
+    await writeFile(path.join(real, 'plate.csv'), 'well,od\n')
+    const result = await r.run('open("plate.csv").read()', linked, linked, 10_000)
+    expect(result.inputs.map((i) => i.path)).toEqual(['plate.csv'])
   })
 
   it('stops a cell that runs too long and starts afresh', async () => {
