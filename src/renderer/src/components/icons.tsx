@@ -51,6 +51,20 @@ export const GraphIcon = (p: IconProps) => (
   </svg>
 )
 
+export const BoardIcon = (p: IconProps) => (
+  <svg {...base(p)}>
+    <rect x="3.5" y="4" width="5" height="15" rx="1.2" />
+    <rect x="10.5" y="4" width="5" height="10" rx="1.2" />
+    <rect x="17.5" y="4" width="3" height="6" rx="1" />
+  </svg>
+)
+
+export const TasksIcon = (p: IconProps) => (
+  <svg {...base(p)}>
+    <path d="M4 7l2 2 3.5-3.5M4 15l2 2 3.5-3.5M13 7.5h7M13 15.5h7" />
+  </svg>
+)
+
 export const EditIcon = (p: IconProps) => (
   <svg {...base(p)}>
     <path d="M4 20h4L19 9l-4-4L4 16z" />

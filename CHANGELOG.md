@@ -7,6 +7,11 @@ All notable changes to Prem are listed here. The format follows [Keep a Changelo
 Everything below will ship as **0.1.0**, the first pilot release.
 
 ### Added
+- **The board and My tasks**:
+  - **The board:** a Board view next to Note and Graph shows every job of a workflow in a column per stage, with who has it, whether its run is open, and its samples. Filter by assignee, and show finished jobs if you like.
+  - **Moving cards:** drag a card to the next column to complete its stage (Prem asks first), or back to send it back with a reason. Signed jobs stay put.
+  - **My tasks** in the toolbar counts the jobs waiting on you and opens them.
+  - **On a team server**, only a job's assignee or a PI can move it to another stage, and the server enforces this. New labs let members write to `Jobs`.
 - **Asking before code runs**:
   - **Packages:** Prem shows the package list before installing `environment.txt` or a list that Reproduce rebuilds, and shows what changed when it changes. Lines that install from web addresses, files or other package indexes are pointed out.
   - **Code:** Prem shows a cell's code, and who changed the note last, before it runs for the first time on this computer. This applies on every vault, including local folders that are synced or shared. Code you write in Prem needs no approval, and code that changes elsewhere is asked about again.

@@ -72,6 +72,11 @@ export class NoteHistory {
       .map((line) => JSON.parse(line) as HistoryEntry)
   }
 
+  /** The latest entry of a note's history, or null if it has none. */
+  latest(notePath: VaultPath): Promise<HistoryEntry | null> {
+    return this.serial(notePath.toLowerCase(), () => this.last(notePath))
+  }
+
   private async last(notePath: VaultPath): Promise<HistoryEntry | null> {
     const key = notePath.toLowerCase()
     if (!this.lastEntries.has(key)) {

@@ -54,6 +54,8 @@ export const COMMANDS = [
   { id: 'format.heading2', title: 'Heading 2', category: 'Format', key: 'Mod+Alt+2' },
   { id: 'format.heading3', title: 'Heading 3', category: 'Format', key: 'Mod+Alt+3' },
   { id: 'view.graph', title: 'Graph of links', category: 'View', key: 'Mod+G' },
+  { id: 'view.board', title: 'Board of jobs', category: 'View' },
+  { id: 'view.myTasks', title: 'My tasks', category: 'View' },
   { id: 'view.toggleFiles', title: 'Show or hide the file list', category: 'View', key: 'Mod+\\' },
   { id: 'view.toggleLinks', title: 'Show or hide links', category: 'View', key: 'Mod+Shift+\\' },
   { id: 'help.website', title: 'Prem website and guides', category: 'General' },

@@ -7,13 +7,17 @@ import {
   isWorkflow,
   jobPath,
   jobState,
+  jobMoveRefusal,
   jobWorkflow,
   linkTarget,
+  mayMoveJob,
   logRunStarted,
   parseStages,
   redoableStages,
   redoStage,
   rerunJob,
+  summarizeJob,
+  summarizeWorkflow,
   tagRun
 } from './workflows'
 
@@ -220,5 +224,74 @@ describe('running a job again', () => {
     expect(jobState(text).log).toEqual([])
     expect(text).toContain('as a rerun of [[Plasmid prep job 2026-10-03 0930]]')
     expect(jobWorkflow(text)).toBe('Plasmid prep')
+  })
+})
+
+describe('summaries for the board', () => {
+  const path = 'Jobs/Plasmid prep/Plasmid prep job 2026-10-03 0930.md'
+  const job = createJob('Workflows/Plasmid prep.md', workflow, { now, author: 'cam' })
+
+  it('summarises a workflow by its stages', () => {
+    expect(summarizeWorkflow('Workflows/Plasmid prep.md', workflow)).toEqual({
+      path: 'Workflows/Plasmid prep.md',
+      title: 'Plasmid prep',
+      stages: ['Grow culture', 'Miniprep', 'Sequence check']
+    })
+  })
+
+  it('summarises a new job, one in progress with a run open, and a finished one', () => {
+    expect(summarizeJob(path, job)).toEqual({
+      path,
+      title: 'Plasmid prep job 2026-10-03 0930',
+      workflow: 'Plasmid prep',
+      stage: 'Grow culture',
+      stages: [
+        { name: 'Grow culture', assignee: 'bob' },
+        { name: 'Miniprep', assignee: 'alice' },
+        { name: 'Sequence check', assignee: 'alice' }
+      ],
+      assignee: 'bob',
+      status: 'open',
+      runOpen: false,
+      samples: 0,
+      created: '2026-10-03 09:30',
+      finished: ''
+    })
+    const started = logRunStarted(job.replace('- [[ ]]', '- [[S-0001]]\n- [[S-0002]]'), {
+      stage: 'Grow culture',
+      run: 'Overnight culture run 2026-10-03 0931',
+      by: 'bob',
+      now
+    })
+    expect(summarizeJob(path, started)).toMatchObject({ status: 'in progress', runOpen: true, samples: 2 })
+    let done = started
+    for (let i = 0; i < 3; i++) done = completeStage(done, { by: 'alice', now: later })
+    expect(summarizeJob(path, done)).toMatchObject({ status: 'done', runOpen: false, finished: '2026-10-03 17:02' })
+  })
+
+  it('keeps a stage that is no longer in the stages table', () => {
+    const odd = job.replace('stage: Grow culture', 'stage: Old stage')
+    expect(summarizeJob(path, odd)).toMatchObject({ stage: 'Old stage', status: 'open' })
+  })
+})
+
+describe('who may move a job on', () => {
+  const job = createJob('Workflows/Plasmid prep.md', workflow, { now, author: 'cam' })
+
+  it('is the assignee or a PI', () => {
+    expect(mayMoveJob('bob', { name: 'bob' })).toBe(true)
+    expect(mayMoveJob('Bob', { name: 'bob' })).toBe(true)
+    expect(mayMoveJob('bob', { name: 'alice' })).toBe(false)
+    expect(mayMoveJob('bob', { name: 'pat', role: 'pi' })).toBe(true)
+    expect(mayMoveJob('', { name: 'alice' })).toBe(true)
+  })
+
+  it('refuses stage changes by others, but not other edits', () => {
+    const moved = completeStage(job, { by: 'alice', now: later })
+    expect(jobMoveRefusal(job, moved, { name: 'alice' })).toBe('Only bob (the assignee) or a PI can move this job on.')
+    expect(jobMoveRefusal(job, moved, { name: 'bob' })).toBeNull()
+    expect(jobMoveRefusal(job, moved, { name: 'pat', role: 'pi' })).toBeNull()
+    expect(jobMoveRefusal(job, `${job}\nA note from alice.\n`, { name: 'alice' })).toBeNull()
+    expect(jobMoveRefusal(workflow, workflow.replace('bob', 'carol'), { name: 'alice' })).toBeNull()
   })
 })

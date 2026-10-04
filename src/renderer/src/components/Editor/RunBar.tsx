@@ -1,6 +1,6 @@
 import { parseFrontmatter } from '@shared/notes/frontmatter'
 import { runProgress } from '@shared/records/runs'
-import { jobState, linkTarget, parseStages, redoableStages, type JobState } from '@shared/records/workflows'
+import { jobState, linkTarget, mayMoveJob, parseStages, redoableStages, type JobState } from '@shared/records/workflows'
 import { useEffect, useState, type FormEvent } from 'react'
 import { useNotebookFolder } from '../../state/SettingsContext'
 import { useVault } from '../../state/VaultContext'
@@ -88,6 +88,7 @@ export function RunBar({
         readOnly={readOnly}
         canStartRun={canWrite(notebook)}
         canRerun={canWrite('Jobs')}
+        canMove={!info?.user || mayMoveJob(meta.fields.assignee ?? '', { name: info.user, role: info.role })}
         redoRequest={redoRequest}
         onStartStageRun={onStartStageRun}
         onCompleteStage={onCompleteStage}
@@ -163,6 +164,7 @@ function JobBar({
   readOnly,
   canStartRun,
   canRerun,
+  canMove,
   redoRequest,
   onStartStageRun,
   onCompleteStage,
@@ -174,6 +176,8 @@ function JobBar({
   readOnly: boolean
   canStartRun: boolean
   canRerun: boolean
+  /** On a team vault, only the assignee or a PI moves the job to another stage. */
+  canMove: boolean
   redoRequest: number
   onStartStageRun(): void
   onCompleteStage(): void
@@ -189,7 +193,7 @@ function JobBar({
   const [redo, setRedo] = useState<{ stage: string; reason: string } | null>(null)
 
   useEffect(() => {
-    if (redoRequest && !readOnly && redoable.length)
+    if (redoRequest && !readOnly && canMove && redoable.length)
       setRedo({ stage: (current ?? redoable[redoable.length - 1]).name, reason: '' })
     // Only a new request opens the form.
     // oxlint-disable-next-line react-hooks/exhaustive-deps
@@ -240,7 +244,10 @@ function JobBar({
             Open run
           </button>
         )}
-        {!readOnly && redoable.length > 0 && !redo && (index > 0 || done || job.log.length > 0) && (
+        {!readOnly && !canMove && current && (
+          <span className="run-detail job-waiting">Waiting on {meta.fields.assignee}</span>
+        )}
+        {!readOnly && canMove && redoable.length > 0 && !redo && (index > 0 || done || job.log.length > 0) && (
           <button
             onClick={() => setRedo({ stage: (current ?? redoable[redoable.length - 1]).name, reason: '' })}
             title="Send the job back to a stage to do it again. Earlier runs stay in the stage log."
@@ -263,9 +270,11 @@ function JobBar({
                 ▶ Start run
               </button>
             )}
-            <button className="run-primary" onClick={onCompleteStage}>
-              {index === stages.length - 1 ? 'Complete job' : 'Complete stage'}
-            </button>
+            {canMove && (
+              <button className="run-primary" onClick={onCompleteStage}>
+                {index === stages.length - 1 ? 'Complete job' : 'Complete stage'}
+              </button>
+            )}
           </>
         )}
       </div>

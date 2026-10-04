@@ -1,12 +1,16 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { Group, Panel, Separator, useDefaultLayout, usePanelRef } from 'react-resizable-panels'
 import { BacklinksPanel } from './components/Backlinks/BacklinksPanel'
 import { NoteEditor } from './components/Editor/NoteEditor'
 import { FileTree } from './components/FileTree/FileTree'
 import { GraphView } from './components/Graph/GraphView'
+import { BoardView } from './components/Board/BoardView'
+import { MyTasks, useMyTasks } from './components/Board/MyTasks'
 import {
   EditIcon,
   GraphIcon,
+  BoardIcon,
+  TasksIcon,
   SearchIcon,
   SidebarLeftIcon,
   SidebarRightIcon,
@@ -65,6 +69,9 @@ function Shell() {
   const layout = useDefaultLayout({ id: 'prem-panels', storage: localStorage })
   const [filesHidden, setFilesHidden] = useState(false)
   const [linksHidden, setLinksHidden] = useState(false)
+  const [tasksOpen, setTasksOpen] = useState(false)
+  const closeTasks = useCallback(() => setTasksOpen(false), [])
+  const myTasks = useMyTasks()
   const vaultOpen = (): boolean => !!info
   const toggle = (which: NonNullable<typeof overlay>) => () => setOverlay((open) => (open === which ? null : which))
   const togglePanel = (ref: typeof filesPanel) => () => {
@@ -110,6 +117,8 @@ function Shell() {
   )
   useCommand('vault.open', () => void openVault())
   useCommand('view.graph', () => ws.setView(ws.view === 'graph' ? 'editor' : 'graph'), vaultOpen)
+  useCommand('view.board', () => ws.setView(ws.view === 'board' ? 'editor' : 'board'), vaultOpen)
+  useCommand('view.myTasks', () => setTasksOpen((open) => !open), vaultOpen)
   useCommand('view.toggleFiles', togglePanel(filesPanel), vaultOpen)
   useCommand('view.toggleLinks', togglePanel(linksPanel), vaultOpen)
   useCommand(
@@ -215,8 +224,30 @@ function Shell() {
                 >
                   <GraphIcon /> Graph
                 </button>
+                <button
+                  role="tab"
+                  aria-selected={ws.view === 'board'}
+                  className={ws.view === 'board' ? 'on' : undefined}
+                  onClick={() => ws.setView('board')}
+                  title="Board: every job of a workflow, by stage"
+                >
+                  <BoardIcon /> Board
+                </button>
               </div>
               <div className="toolbar-spacer" />
+              <div className="my-tasks-anchor">
+                <button
+                  className={`icon-button my-tasks-button${tasksOpen ? ' on' : ''}`}
+                  onClick={() => setTasksOpen((open) => !open)}
+                  aria-expanded={tasksOpen}
+                  aria-label={`My tasks${myTasks.length ? `, ${myTasks.length} waiting` : ''}`}
+                  title="My tasks: jobs waiting on you"
+                >
+                  <TasksIcon />
+                  {myTasks.length > 0 && <span className="badge">{myTasks.length}</span>}
+                </button>
+                {tasksOpen && <MyTasks onClose={closeTasks} />}
+              </div>
               <button
                 className="text-button"
                 onClick={() => setOverlay('search')}
@@ -271,6 +302,8 @@ function Shell() {
             <div className="main-content">
               {ws.view === 'graph' ? (
                 <GraphView />
+              ) : ws.view === 'board' ? (
+                <BoardView />
               ) : ws.active ? (
                 <NoteEditor key={ws.active.path} path={ws.active.path} cursor={ws.active.cursor} />
               ) : (

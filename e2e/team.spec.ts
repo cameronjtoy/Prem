@@ -155,3 +155,49 @@ test('on a team vault, cells run on your computer against the note’s attachmen
     await alice.close()
   }
 })
+
+const plateJob = (stage: string, assignee: string) =>
+  `---\ntype: job\nworkflow: "[[Plate prep]]"\nstage: ${stage}\nassignee: ${assignee}\nstatus: in progress\n---\n# Plate prep — job\n\n## Stages\n| Stage | Protocol | Assignee | Outputs |\n| --- | --- | --- | --- |\n| Pour | | alice | |\n| Check | | bob | |\n\n## Stage log\n| Stage | Run | By | Started | Completed |\n| --- | --- | --- | --- | --- |\n`
+
+test('on a team vault, only the job’s assignee or a PI moves it on', async () => {
+  const pat = await join('pat')
+  const bob = await join('bob')
+  const note = 'Jobs/Plate prep/Plate prep job 2026-10-04 0900.md'
+  try {
+    expect(
+      (
+        await pat.page.evaluate(
+          ([p, t]) => window.api.vault.write(p, t, { createOnly: true }),
+          [note, plateJob('Pour', 'alice')]
+        )
+      ).ok
+    ).toBe(true)
+
+    // Bob can write to Jobs, but the job is alice's: no Complete stage for him, and the server refuses a move.
+    await reveal(bob.page, note)
+    await openNote(bob.page, note)
+    await expect(bob.page.locator('.run-bar')).toContainText('Waiting on alice')
+    await expect(bob.page.getByRole('button', { name: /Complete stage/ })).toHaveCount(0)
+    const moved = await bob.page.evaluate(
+      async ([p, t]) => {
+        const current = await window.api.vault.read(p)
+        return window.api.vault.write(p, t, { expectedVersion: current.ok ? current.value.version : undefined })
+      },
+      [note, plateJob('Check', 'bob')]
+    )
+    expect(moved).toMatchObject({
+      ok: false,
+      error: { code: 'FORBIDDEN', message: /Only alice \(the assignee\) or a PI/ }
+    })
+
+    // The PI can move it on from the board.
+    await pat.page.getByRole('tab', { name: 'Board' }).click()
+    const card = pat.page.locator(`.board-card[data-job="${note}"]`)
+    pat.page.once('dialog', (d) => void d.accept())
+    await card.dragTo(pat.page.locator('.board-column[data-column="Check"]'))
+    await expect(pat.page.locator(`.board-column[data-column="Check"] .board-card[data-job="${note}"]`)).toBeVisible()
+  } finally {
+    await pat.close()
+    await bob.close()
+  }
+})

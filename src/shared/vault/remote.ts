@@ -27,6 +27,8 @@ export interface ServerInfo {
   name: string
   user: string
   access: Record<string, AccessLevel>
+  /** Your role on the server ("pi", "member" or "viewer"), if it has one. */
+  role?: string
 }
 
 export interface ErrorBody {

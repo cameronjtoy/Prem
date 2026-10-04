@@ -5,7 +5,7 @@ import { resolveAttachment } from '@shared/attachments/attachments'
 import { isInside, noteTitle } from '@shared/vault/paths'
 import { parseFrontmatter } from '@shared/notes/frontmatter'
 import { addDeviation, completeRun } from '@shared/records/runs'
-import { completeStage, logRunStarted, redoableStages, redoStage } from '@shared/records/workflows'
+import { completeStage, logRunStarted, mayMoveJob, redoableStages, redoStage } from '@shared/records/workflows'
 import { EMPTY_STATUS, SIGNABLE_TYPES, type RecordCheck } from '@shared/records/signatures'
 import { errorMessage, vaultClient } from '../../services/vaultClient'
 import { currentSettings, useSettings } from '../../state/SettingsContext'
@@ -278,6 +278,10 @@ export function NoteEditor({ path, cursor }: { path: string; cursor: number | nu
     }
   }
 
+  /** On a team vault, only the job's assignee or a PI moves it to another stage. */
+  const movable = (): boolean =>
+    !info?.user || mayMoveJob(meta.fields.assignee ?? '', { name: info.user, role: info.role })
+
   const [signRequest, setSignRequest] = useState(0)
   const view = (): EditorView | undefined => sessionRef.current?.view
   const editable = (): boolean => !loading && !readOnly && !!view()
@@ -389,12 +393,12 @@ export function NoteEditor({ path, cursor }: { path: string; cursor: number | nu
   useCommand(
     'job.completeStage',
     () => void onCompleteStage(),
-    () => editable() && meta.type === 'job' && !!meta.job?.current
+    () => editable() && meta.type === 'job' && !!meta.job?.current && movable()
   )
   useCommand(
     'job.redoStage',
     () => setRedoRequest((n) => n + 1),
-    () => editable() && meta.type === 'job' && !!meta.job && redoableStages(meta.job).length > 0
+    () => editable() && meta.type === 'job' && !!meta.job && redoableStages(meta.job).length > 0 && movable()
   )
   useCommand(
     'job.rerun',

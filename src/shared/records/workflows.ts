@@ -3,7 +3,7 @@ import { column, findSection, formatTable, parseTable } from '../notes/tables'
 import { formatDate } from '../notes/templates'
 import { splitLinkText } from '../notes/wikilinks'
 import { joinPath, noteTitle, sanitizeFileName } from '../vault/paths'
-import type { VaultPath } from '../vault/types'
+import type { JobSummary, VaultPath, WorkflowSummary } from '../vault/types'
 
 // A workflow is a lab process made of stages, each optionally run from a protocol. A job is one pass
 // through a workflow: it copies the workflow's stages, tracks which one it's at and who has it, and
@@ -291,4 +291,50 @@ export function completeStage(text: string, entry: { by: string; now: Date }): s
 /** Links a run back to the job and stage it was started for. */
 export function tagRun(runText: string, jobTitle: string, stage: string): string {
   return setFrontmatterField(setFrontmatterField(runText, 'job', `"[[${jobTitle}]]"`), 'stage', stage)
+}
+
+/** A workflow, as the board needs it: its stages in order. */
+export function summarizeWorkflow(path: VaultPath, text: string): WorkflowSummary {
+  return { path, title: noteTitle(path), stages: parseStages(text).map((s) => s.name) }
+}
+
+/** A job, as the board and My tasks need it, without reading the note again. */
+export function summarizeJob(path: VaultPath, text: string): JobSummary {
+  const { fields } = parseFrontmatter(text)
+  const state = jobState(text)
+  const samples = findSection(text, 'Samples')
+  const sampleLinks = samples
+    ? [...text.slice(samples.from, samples.to).matchAll(/\[\[([^\]]*)\]\]/g)].filter((m) => m[1].trim()).length
+    : 0
+  return {
+    path,
+    title: noteTitle(path),
+    workflow: jobWorkflow(text),
+    stage: fields.stage ?? '',
+    stages: state.stages.map((s) => ({ name: s.name, assignee: s.assignee })),
+    assignee: fields.assignee ?? '',
+    status: state.status,
+    runOpen: !!state.openRow?.run,
+    samples: sampleLinks,
+    created: fields.created ?? '',
+    finished: fields.finished ?? ''
+  }
+}
+
+/** Who may move a job to another stage on a team server: its current assignee, or a PI. */
+export function mayMoveJob(assignee: string, user: { name: string; role?: string }): boolean {
+  return user.role === 'pi' || !assignee.trim() || assignee.trim().toLowerCase() === user.name.toLowerCase()
+}
+
+/**
+ * Why a save may not go ahead on a team server, or null if it may: a job's stage, assignee or status can only
+ * be changed by its current assignee or a PI. Other edits to a job (notes, samples) need only write access.
+ */
+export function jobMoveRefusal(before: string, after: string, user: { name: string; role?: string }): string | null {
+  if (!isJob(before)) return null
+  const old = parseFrontmatter(before).fields
+  const next = parseFrontmatter(after).fields
+  const moved = (['stage', 'assignee', 'status'] as const).some((k) => (old[k] ?? '') !== (next[k] ?? ''))
+  if (!moved || mayMoveJob(old.assignee ?? '', user)) return null
+  return `Only ${old.assignee} (the assignee) or a PI can move this job on.`
 }

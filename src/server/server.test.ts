@@ -306,3 +306,56 @@ describe('signing on the team server', () => {
     expect(status.amendment).toMatchObject({ by: 'bob', reason: 'Re-read the plate' })
   })
 })
+
+const jobNote = (stage: string, assignee: string, extra = '') =>
+  `---\ntype: job\nworkflow: "[[W]]"\nstage: ${stage}\nassignee: ${assignee}\nstatus: in progress\n---\n# W job\n${extra}`
+
+describe('moving jobs on a team server', () => {
+  let dir: string
+  let lab: PremServer
+  const people = { alice: generateToken(), carol: generateToken(), pat: generateToken() }
+
+  beforeAll(async () => {
+    dir = await realpath(await mkdtemp(path.join(tmpdir(), 'prem-jobs-')))
+    await mkdir(path.join(dir, 'Jobs'))
+    await writeFile(path.join(dir, 'Jobs', 'W job.md'), jobNote('Prep', 'alice'))
+    lab = await startServer(
+      parseConfig(
+        {
+          vault: '.',
+          port: 0,
+          users: [
+            { name: 'alice', role: 'member', tokenHash: hashToken(people.alice), access: { '': 'write' } },
+            { name: 'carol', role: 'member', tokenHash: hashToken(people.carol), access: { '': 'write' } },
+            { name: 'pat', role: 'pi', tokenHash: hashToken(people.pat), access: { '': 'write' } }
+          ]
+        },
+        dir
+      ),
+      quiet
+    )
+  })
+
+  afterAll(async () => {
+    await lab.close()
+    await rm(dir, { recursive: true, force: true })
+  })
+
+  const write = async (who: keyof typeof people, content: string) => {
+    const provider = await RemoteProvider.connect(lab.url, people[who])
+    const current = await provider.read('Jobs/W job.md')
+    return provider.write('Jobs/W job.md', content, { expectedVersion: current.version })
+  }
+
+  it('tells the app your role', async () => {
+    expect((await RemoteProvider.connect(lab.url, people.pat)).role).toBe('pi')
+  })
+
+  it('lets only the assignee or a PI move a job on, and anyone with write access edit the rest', async () => {
+    await expectCode(write('carol', jobNote('Check', 'bob')), 'FORBIDDEN')
+    await write('carol', jobNote('Prep', 'alice', 'A note from carol.\n'))
+    await write('alice', jobNote('Check', 'bob'))
+    await write('pat', jobNote('Prep', 'alice'))
+    expect(await readFile(path.join(dir, 'Jobs', 'W job.md'), 'utf8')).toBe(jobNote('Prep', 'alice'))
+  })
+})

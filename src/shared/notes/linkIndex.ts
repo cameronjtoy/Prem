@@ -1,7 +1,10 @@
 import { isInside, isMarkdown, noteTitle, TEMPLATES_FOLDER } from '../vault/paths'
 import { createResolver, type Resolver } from './resolve'
+import { isJob, isWorkflow, summarizeJob, summarizeWorkflow } from '../records/workflows'
 import type {
   Backlink,
+  JobSummary,
+  WorkflowSummary,
   GraphLink,
   GraphNode,
   LinkIndexSnapshot,
@@ -12,6 +15,9 @@ import type {
 import { parseWikilinks } from './wikilinks'
 
 interface IndexedNote {
+  /** Set for job and workflow notes, which the board shows. */
+  job?: JobSummary
+  workflow?: WorkflowSummary
   links: ParsedLink[]
   /** Only the lines that contain links, keyed by line number, for backlink snippets. */
   lines: Map<number, string>
@@ -110,7 +116,21 @@ export class LinkIndex {
 
     for (const list of Object.values(backlinks)) list.sort((a, b) => a.source.localeCompare(b.source))
 
-    return { version: this.version, backlinks, outgoing, graph: { nodes: [...nodes.values()], links } }
+    const jobs: JobSummary[] = []
+    const workflows: WorkflowSummary[] = []
+    for (const [path, note] of this.notes) {
+      if (excluded(path)) continue
+      if (note.job) jobs.push(note.job)
+      if (note.workflow) workflows.push(note.workflow)
+    }
+    return {
+      version: this.version,
+      backlinks,
+      outgoing,
+      graph: { nodes: [...nodes.values()], links },
+      workflows,
+      jobs
+    }
   }
 
   private parseInto(path: VaultPath, content: string): void {
@@ -120,7 +140,10 @@ export class LinkIndex {
       const all = content.split('\n')
       for (const l of links) lines.set(l.line, all[l.line] ?? '')
     }
-    this.notes.set(path, { links, lines })
+    const note: IndexedNote = { links, lines }
+    if (isJob(content)) note.job = summarizeJob(path, content)
+    else if (isWorkflow(content)) note.workflow = summarizeWorkflow(path, content)
+    this.notes.set(path, note)
   }
 
   private touch(pathsChanged: boolean): void {
