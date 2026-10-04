@@ -58,6 +58,7 @@ Everything below will ship as **0.1.0**, the first pilot release.
 - **Project**: Apache-2.0 license, CI, Prettier and oxlint, end-to-end tests of the app and team server in CI, contributor guide, security policy, code of conduct, issue and pull request templates, Dependabot and CodeQL, `docs/ARCHITECTURE.md`, a release workflow, `THIRD_PARTY_NOTICES.md` in every installer, a website on GitHub Pages, and a lab sample vault in `examples/sample-vault/`.
 
 ### Changed
+- **Easier to read and to use from the keyboard**: hints, empty states and search paths are darker, so all text meets the WCAG AA contrast level in both themes; the green for signed and complete is a shade deeper. Everything you can reach with Tab now shows the same focus ring, disabled buttons look disabled, and animations stop when your system asks for reduced motion.
 - **New note and New folder ask for the name first**: nothing is created until you type a name and press Enter. Esc or clicking away drops it, so no more stray "Untitled" notes. A name that's already taken is refused.
 - **Typography**: San Francisco (SF Pro and SF Mono) on macOS as before, and now **Inter** and **JetBrains Mono**, bundled, on Windows and Linux instead of whatever the system had. The website uses Inter too.
 - A new or empty vault suggests where to start: today's entry, a new experiment, or a protocol, depending on what you can write.
