@@ -42,6 +42,8 @@ describe.skipIf(!python())('ensureEnvironment', () => {
     await expect(
       ensureEnvironment({ dir, requirements: './definitely-not-a-package-dir' }, found, () => {})
     ).rejects.toThrow(/definitely-not-a-package-dir|does not exist|not found|Invalid requirement/i)
-    expect(await currentStamp({ dir, requirements: './definitely-not-a-package-dir' }, process.platform === 'win32')).toBeNull()
+    expect(
+      await currentStamp({ dir, requirements: './definitely-not-a-package-dir' }, process.platform === 'win32')
+    ).toBeNull()
   }, 120_000)
 })
