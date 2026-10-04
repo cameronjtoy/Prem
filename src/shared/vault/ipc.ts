@@ -1,3 +1,4 @@
+import type { ReportInfo } from '../diagnostics'
 import type { IpcResult } from './errors'
 import type { AnalysisStatus } from '../analysis/environment'
 import type { Reproduction } from '../analysis/reproduce'
@@ -12,7 +13,9 @@ import type {
   AddedAttachment,
   CreatedNote,
   FileRecord,
+  IndexSummary,
   LinkIndexSnapshot,
+  NoteLinks,
   RenameResult,
   TemplateInfo,
   VaultChange,
@@ -39,6 +42,7 @@ export const Channels = {
   sign: 'record:sign',
   witness: 'record:witness',
   exportPdf: 'record:exportPdf',
+  backupVault: 'vault:backup',
   addAttachment: 'attachments:add',
   pickAttachments: 'attachments:pick',
   openFile: 'attachments:open',
@@ -46,10 +50,15 @@ export const Channels = {
   createFromTemplate: 'templates:create',
   openDaily: 'notebook:openDaily',
   getIndex: 'index:get',
+  indexLinks: 'index:links',
+  indexGraph: 'index:graph',
   search: 'search:query',
   openExternal: 'app:openExternal',
   updateReady: 'app:updateReady',
   installUpdate: 'app:installUpdate',
+  logError: 'app:logError',
+  diagnostics: 'app:diagnostics',
+  showLogs: 'app:showLogs',
   command: 'app:command',
   getSettings: 'settings:get',
   setSetting: 'settings:set',
@@ -112,6 +121,8 @@ export interface Api {
      * history check. Returns the saved file, or null if the person cancelled.
      */
     exportPdf(path: string): R<{ file: string; notes: number } | null>
+    /** Asks where to save, then zips the whole vault there, history included. Null if cancelled. */
+    backup(): R<{ file: string; files: number; bytes: number } | null>
   }
   templates: {
     list(): R<TemplateInfo[]>
@@ -123,8 +134,13 @@ export interface Api {
   }
   search(query: string): R<SearchHit[]>
   index: {
-    get(): R<LinkIndexSnapshot | null>
-    onUpdated(listener: (snapshot: LinkIndexSnapshot) => void): () => void
+    /** The small summary: version, workflows and jobs. */
+    get(): R<IndexSummary | null>
+    /** The links into and out of one note. */
+    links(path: string): R<NoteLinks | null>
+    /** Every note and link, for the graph view. */
+    graph(): R<LinkIndexSnapshot['graph'] | null>
+    onUpdated(listener: (summary: IndexSummary) => void): () => void
   }
   settings: {
     get(): R<SettingsSnapshot>
@@ -174,6 +190,12 @@ export interface Api {
     onUpdateReady(listener: (version: string) => void): () => void
     /** Restarts into the downloaded version. */
     installUpdate(): R<void>
+    /** Writes an error from the window to Prem's log. */
+    logError(message: string): R<void>
+    /** What a problem report contains: versions, the system, and the end of the log with private paths removed. */
+    diagnostics(): R<ReportInfo>
+    /** Opens the folder with Prem's log files. */
+    showLogs(): R<void>
     /** Commands chosen from the application menu, by id. */
     onCommand(listener: (id: string) => void): () => void
   }

@@ -34,7 +34,8 @@
     "package:dir": "npm run build && npm run notices && electron-builder --config electron-builder.config.cjs --dir",
     "site": "node scripts/build-site.mjs",
     "site:diagrams": "node scripts/site-diagrams.mjs",
-    "e2e": "playwright test -c e2e/playwright.config.ts"
+    "e2e": "playwright test -c e2e/playwright.config.ts",
+    "e2e:scale": "PREM_SCALE=1 playwright test -c e2e/playwright.config.ts"
   },
   "devDependencies": {
     "@codemirror/autocomplete": "^6.20.3",

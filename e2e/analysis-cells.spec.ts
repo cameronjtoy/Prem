@@ -13,32 +13,36 @@ async function writeNote(vault: string, ...cells: string[]): Promise<void> {
 const runButton = (page: Page, n = 0) => page.locator('.cm-cell-run').nth(n)
 const run = (page: Page, n = 0) => runButton(page, n).dispatchEvent('mousedown')
 
-test('Run writes the output under the cell, with what produced it', async ({ prem: { page, read, vault } }) => {
-  await writeFile(path.join(vault, 'Notebook/2026/attachments/plate.csv'), 'well,od\nA1,0.41\nA2,0.43\n')
-  await writeNote(
-    vault,
-    'import csv\nrows = list(csv.DictReader(open("attachments/plate.csv")))\nprint(len(rows), "wells")'
-  )
-  await openNote(page, NOTE)
-  await expect(page.locator('.cm-cell-status')).toHaveText('Not run yet')
-  await run(page)
-  // The code was written to the note outside Prem, so it's shown before it runs, once.
-  await approve(page)
+test(
+  'Run writes the output under the cell, with what produced it',
+  { tag: '@smoke' },
+  async ({ prem: { page, read, vault } }) => {
+    await writeFile(path.join(vault, 'Notebook/2026/attachments/plate.csv'), 'well,od\nA1,0.41\nA2,0.43\n')
+    await writeNote(
+      vault,
+      'import csv\nrows = list(csv.DictReader(open("attachments/plate.csv")))\nprint(len(rows), "wells")'
+    )
+    await openNote(page, NOTE)
+    await expect(page.locator('.cm-cell-status')).toHaveText('Not run yet')
+    await run(page)
+    // The code was written to the note outside Prem, so it's shown before it runs, once.
+    await approve(page)
 
-  const output = page.locator('.cm-cell-output')
-  await expect(output.locator('.cm-cell-text')).toHaveText('2 wells')
-  await expect(output.locator('.cm-cell-meta')).toContainText(/Ran .* · Python 3\.\d+.* · read plate\.csv/)
-  await savedStatus(page)
-  const text = await read(NOTE)
-  expect(text).toMatch(
-    /```\n<!-- prem:output code=[0-9a-f]{16} ran=\S+ by=\S+ took=[\d.]+ python=3\.\d+\.\d+ env=- inputs=Notebook\/2026\/attachments\/plate\.csv@[0-9a-f]{12} -->\n```text\n2 wells\n```\n<!-- \/prem:output -->\n/
-  )
+    const output = page.locator('.cm-cell-output')
+    await expect(output.locator('.cm-cell-text')).toHaveText('2 wells')
+    await expect(output.locator('.cm-cell-meta')).toContainText(/Ran .* · Python 3\.\d+.* · read plate\.csv/)
+    await savedStatus(page)
+    const text = await read(NOTE)
+    expect(text).toMatch(
+      /```\n<!-- prem:output code=[0-9a-f]{16} ran=\S+ by=\S+ took=[\d.]+ python=3\.\d+\.\d+ env=- inputs=Notebook\/2026\/attachments\/plate\.csv@[0-9a-f]{12} -->\n```text\n2 wells\n```\n<!-- \/prem:output -->\n/
+    )
 
-  // Running again replaces the output rather than adding another.
-  await run(page)
-  await savedStatus(page)
-  await expect.poll(async () => (await read(NOTE)).match(/prem:output code/g)?.length).toBe(1)
-})
+    // Running again replaces the output rather than adding another.
+    await run(page)
+    await savedStatus(page)
+    await expect.poll(async () => (await read(NOTE)).match(/prem:output code/g)?.length).toBe(1)
+  }
+)
 
 test('figures and tables are saved as attachments and shown', async ({ prem: { page, read, vault } }) => {
   await writeNote(

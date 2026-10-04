@@ -1,5 +1,6 @@
-import { readFile, stat } from 'node:fs/promises'
-import { basename as baseNameOf, join } from 'node:path'
+import { mkdir, readFile, stat } from 'node:fs/promises'
+import { homedir } from 'node:os'
+import { basename as baseNameOf, dirname as dirOf, join } from 'node:path'
 import {
   app,
   dialog,
@@ -10,6 +11,7 @@ import {
   type SaveDialogOptions
 } from 'electron'
 import { MAX_ATTACHMENT_BYTES } from '@shared/attachments/attachments'
+import { redact, type ReportInfo } from '@shared/diagnostics'
 import { settingDef, type SettingKey } from '@shared/settings/schema'
 import { VaultError, type IpcResult } from '@shared/vault/errors'
 import { Channels } from '@shared/vault/ipc'
@@ -17,6 +19,7 @@ import { basename, normalizeVaultPath, sanitizeFileName, stripMd } from '@shared
 import type { WriteOptions } from '@shared/vault/types'
 import type { AnalysisManager } from '../analysis/AnalysisManager'
 import type { KeybindingsStore } from '../keybindings'
+import type { LogFile } from '../log'
 import type { SettingsStore } from '../settings'
 import { installUpdate } from '../updates'
 import { loadState, recallToken } from '../state'
@@ -62,7 +65,8 @@ export function registerIpc(
   settings: SettingsStore,
   keybindings: KeybindingsStore,
   analysis: AnalysisManager,
-  getWindow: () => BrowserWindow | null
+  getWindow: () => BrowserWindow | null,
+  log: LogFile
 ): void {
   handle(Channels.pickAndOpen, async () => {
     const win = getWindow()
@@ -123,6 +127,21 @@ export function registerIpc(
     return { file, notes }
   })
 
+  handle(Channels.backupVault, async () => {
+    const day = new Date().toISOString().slice(0, 10)
+    const name = sanitizeFileName(`${vaults.current.name} backup ${day}`) || 'Prem backup'
+    const options: SaveDialogOptions = {
+      title: 'Back up vault',
+      defaultPath: join(app.getPath('documents'), `${name}.zip`),
+      filters: [{ name: 'Zip archive', extensions: ['zip'] }]
+    }
+    const win = getWindow()
+    const result = win ? await dialog.showSaveDialog(win, options) : await dialog.showSaveDialog(options)
+    if (result.canceled || !result.filePath) return null
+    const file = /\.zip$/i.test(result.filePath) ? result.filePath : `${result.filePath}.zip`
+    return { file, ...(await vaults.backup(file)) }
+  })
+
   handle(Channels.readBinary, (path) => vaults.readBinary(str(path, 'path')))
   handle(Channels.addAttachment, (notePath, fileName, data) => {
     if (!(data instanceof Uint8Array)) throw new VaultError('INVALID_ARGUMENT', 'data must be bytes')
@@ -156,7 +175,9 @@ export function registerIpc(
 
   handle(Channels.openDaily, (day) => vaults.openDaily(str(day, 'day')))
 
-  handle(Channels.getIndex, () => vaults.snapshot())
+  handle(Channels.getIndex, () => vaults.summary())
+  handle(Channels.indexLinks, (path) => vaults.linksFor(normalizeVaultPath(str(path, 'path'))))
+  handle(Channels.indexGraph, () => vaults.graph())
   handle(Channels.search, (query) => vaults.find(str(query, 'query')))
 
   handle(Channels.getSettings, () => settings.current)
@@ -222,6 +243,23 @@ export function registerIpc(
   })
 
   handle(Channels.installUpdate, () => installUpdate())
+  handle(Channels.logError, (message) => log.write('error', `[window] ${str(message, 'message').slice(0, 8000)}`))
+  handle(Channels.diagnostics, (): ReportInfo => {
+    const where = vaults.location()
+    const os = `${{ darwin: 'macOS', win32: 'Windows', linux: 'Linux' }[process.platform as string] ?? process.platform} ${process.getSystemVersion()} (${process.arch})`
+    return {
+      version: app.getVersion(),
+      os,
+      electron: process.versions.electron,
+      vault: where?.kind ?? 'none',
+      log: log.tail(200).map((line) => redact(line, { vault: where?.root, home: homedir() }))
+    }
+  })
+  handle(Channels.showLogs, async () => {
+    await mkdir(dirOf(log.file), { recursive: true })
+    const problem = await shell.openPath(dirOf(log.file))
+    if (problem) throw new VaultError('UNKNOWN', problem)
+  })
 
   handle(Channels.openExternal, async (url) => {
     const target = new URL(str(url, 'url'))

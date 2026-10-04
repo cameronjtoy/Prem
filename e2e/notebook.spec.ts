@@ -9,13 +9,13 @@ test('shows the welcome screen when no vault is open', async () => {
   await app.close()
 })
 
-test('opens the example vault with every link resolving', async ({ prem: { page } }) => {
+test('opens the example vault with every link resolving', { tag: '@smoke' }, async ({ prem: { page } }) => {
   await openNote(page, 'Welcome.md')
   await expect(page.locator('.cm-wikilink').first()).toBeVisible()
   await expect(page.locator('.cm-wikilink-unresolved')).toHaveCount(0)
 })
 
-test('creates an entry from a template and saves it to disk', async ({ prem: { page, read } }) => {
+test('creates an entry from a template and saves it to disk', { tag: '@smoke' }, async ({ prem: { page, read } }) => {
   await page.locator('.main-toolbar').getByText('New from template').click()
   await page.locator('.modal input').fill('PCR check')
   await page.locator('.template-list li', { hasText: 'Experiment' }).click()
@@ -46,7 +46,7 @@ test("opens today's entry with ⌘T, filed by year", async ({ prem: { page, vaul
     .toBe(true)
 })
 
-test('finds text across the vault and opens the match', async ({ prem: { page } }) => {
+test('finds text across the vault and opens the match', { tag: '@smoke' }, async ({ prem: { page } }) => {
   await page.keyboard.press('ControlOrMeta+k')
   await page.locator('.search-input').fill('ligase')
   await expect(page.locator('.search-results li').first()).toContainText('Ligation of insert into pUC19')
@@ -54,36 +54,40 @@ test('finds text across the vault and opens the match', async ({ prem: { page } 
   await expect(page.locator('.breadcrumb')).toHaveAttribute('title', 'Notebook/2026/Ligation of insert into pUC19.md')
 })
 
-test('attaches a dropped file next to the note and shows it', async ({ prem: { page, vault, read } }) => {
-  await openNote(page, 'Notebook/2026/2026-09-30.md')
-  const png = await readFile(path.join(vault, 'Notebook/2026/attachments/gel 2026-09-30.png'))
-  await page.locator('.cm-content').focus()
-  await page.keyboard.press('ControlOrMeta+End')
-  // Drop a file the way the operating system would.
-  await page.locator('.cm-content').evaluate(
-    (target, bytes) => {
-      const transfer = new DataTransfer()
-      transfer.items.add(new File([new Uint8Array(bytes)], 'western blot.png', { type: 'image/png' }))
-      const box = target.getBoundingClientRect()
-      target.dispatchEvent(
-        new DragEvent('drop', {
-          dataTransfer: transfer,
-          bubbles: true,
-          cancelable: true,
-          clientX: box.left + 10,
-          clientY: box.bottom - 5
-        })
-      )
-    },
-    [...png]
-  )
-  await savedStatus(page)
-  await expect
-    .poll(() => read('Notebook/2026/2026-09-30.md'))
-    .toContain('![western blot.png](attachments/western%20blot.png)')
-  const saved = await readFile(path.join(vault, 'Notebook/2026/attachments/western blot.png'))
-  expect(saved.equals(png)).toBe(true)
-})
+test(
+  'attaches a dropped file next to the note and shows it',
+  { tag: '@smoke' },
+  async ({ prem: { page, vault, read } }) => {
+    await openNote(page, 'Notebook/2026/2026-09-30.md')
+    const png = await readFile(path.join(vault, 'Notebook/2026/attachments/gel 2026-09-30.png'))
+    await page.locator('.cm-content').focus()
+    await page.keyboard.press('ControlOrMeta+End')
+    // Drop a file the way the operating system would.
+    await page.locator('.cm-content').evaluate(
+      (target, bytes) => {
+        const transfer = new DataTransfer()
+        transfer.items.add(new File([new Uint8Array(bytes)], 'western blot.png', { type: 'image/png' }))
+        const box = target.getBoundingClientRect()
+        target.dispatchEvent(
+          new DragEvent('drop', {
+            dataTransfer: transfer,
+            bubbles: true,
+            cancelable: true,
+            clientX: box.left + 10,
+            clientY: box.bottom - 5
+          })
+        )
+      },
+      [...png]
+    )
+    await savedStatus(page)
+    await expect
+      .poll(() => read('Notebook/2026/2026-09-30.md'))
+      .toContain('![western blot.png](attachments/western%20blot.png)')
+    const saved = await readFile(path.join(vault, 'Notebook/2026/attachments/western blot.png'))
+    expect(saved.equals(png)).toBe(true)
+  }
+)
 
 test('previews an attached Jupyter notebook without running it', async ({ prem: { app, page } }) => {
   await openNote(page, 'Notebook/2026/2026-09-30.md')

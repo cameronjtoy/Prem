@@ -26,6 +26,7 @@ export const COMMANDS = [
   { id: 'note.new', title: 'New note', category: 'Note', key: 'Mod+N' },
   { id: 'note.newFromTemplate', title: 'New note from template', category: 'Note', key: 'Mod+Shift+N' },
   { id: 'vault.open', title: 'Open another vault', category: 'General', key: 'Mod+O' },
+  { id: 'vault.backup', title: 'Back up vault…', category: 'General' },
   { id: 'note.exportPdf', title: 'Export as PDF', category: 'Note', key: 'Mod+P' },
   { id: 'note.save', title: 'Save now', category: 'Note', key: 'Mod+S' },
   { id: 'note.history', title: 'History of this note', category: 'Note', key: 'Mod+Shift+H' },
@@ -59,7 +60,8 @@ export const COMMANDS = [
   { id: 'view.toggleFiles', title: 'Show or hide the file list', category: 'View', key: 'Mod+\\' },
   { id: 'view.toggleLinks', title: 'Show or hide links', category: 'View', key: 'Mod+Shift+\\' },
   { id: 'help.website', title: 'Prem website and guides', category: 'General' },
-  { id: 'help.reportIssue', title: 'Report a problem', category: 'General' }
+  { id: 'help.reportIssue', title: 'Report a problem…', category: 'General' },
+  { id: 'help.showLogs', title: 'Show logs', category: 'General' }
 ] as const satisfies readonly Command[]
 
 export type CommandId = (typeof COMMANDS)[number]['id']

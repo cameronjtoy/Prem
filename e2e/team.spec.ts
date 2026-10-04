@@ -67,7 +67,7 @@ async function join(name: string): Promise<{ page: Page; close(): Promise<void> 
   return { page, close: () => app.close() }
 }
 
-test('a member writes in their own notebook and cannot see private ones', async () => {
+test('a member writes in their own notebook and cannot see private ones', { tag: '@smoke' }, async () => {
   const alice = await join('alice')
   await reveal(alice.page, 'Notebooks/alice')
   await expect(alice.page.locator('.file-tree [title="Notebooks/bob"]')).toHaveCount(0)
