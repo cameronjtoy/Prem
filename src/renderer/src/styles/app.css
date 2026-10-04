@@ -10,16 +10,16 @@
   --text: #2e2c27;
   --text-strong: #1a1915;
   --text-muted: #6e6a5f;
-  --text-faint: #a29e92;
+  --text-faint: #8f8a7e;
   --accent: #4c6f77;
   --accent-hover: #3f5e65;
   --accent-soft: rgba(76, 111, 119, 0.14);
   --on-accent: #ffffff;
   --danger: #b5412f;
-  --success: #3f7d4e;
-  --success-soft: rgba(63, 125, 78, 0.08);
-  --success-border: rgba(63, 125, 78, 0.4);
-  --added: rgba(63, 125, 78, 0.16);
+  --success: #3a7649;
+  --success-soft: rgba(58, 118, 73, 0.08);
+  --success-border: rgba(58, 118, 73, 0.4);
+  --added: rgba(58, 118, 73, 0.16);
   --removed: rgba(181, 65, 47, 0.14);
   --warning-bg: #fbf1d9;
   --warning-border: #e8d29a;
@@ -64,7 +64,7 @@
     --text: #e9e6dd;
     --text-strong: #f7f5ef;
     --text-muted: #a7a398;
-    --text-faint: #6f6c64;
+    --text-faint: #7c7970;
     --accent: #9dbcc2;
     --accent-hover: #b4cfd4;
     --accent-soft: rgba(157, 188, 194, 0.16);
@@ -124,6 +124,26 @@ body {
 button {
   font: inherit;
   color: inherit;
+}
+
+button:disabled {
+  cursor: default;
+  opacity: 0.5;
+}
+
+/* One focus ring for everything you can tab to; text fields show focus with their border instead. */
+:where(button, a, summary, [role='button'], [role='tab'], [role='option'], [tabindex]:not(.cm-content)):focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 
 .app,
@@ -240,12 +260,12 @@ button {
 }
 
 .hint {
-  color: var(--text-faint);
+  color: var(--text-muted);
   font-size: 12px;
 }
 
 .empty {
-  color: var(--text-faint);
+  color: var(--text-muted);
   font-size: 13px;
   padding: 8px 12px;
   margin: 0;
@@ -925,7 +945,7 @@ kbd {
 .search-path {
   font-size: 12px;
   font-weight: 400;
-  color: var(--text-faint);
+  color: var(--text-muted);
 }
 
 .search-line {
@@ -1667,7 +1687,7 @@ kbd {
   border: 1px solid var(--border);
   border-radius: 10px;
   background: var(--bg-elevated);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.16);
+  box-shadow: var(--shadow);
 }
 
 .my-tasks h3 {
