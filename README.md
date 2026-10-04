@@ -10,7 +10,7 @@ Prem is in active development towards a first release. It is being piloted with 
 
 **Website:** [cameronjtoy.github.io/Prem](https://cameronjtoy.github.io/Prem/)
 
-![An experiment entry in Prem with a reagent table, results and a gel image](site/assets/screenshots/experiment.png)
+![How Prem fits together: the app reads and writes plain markdown files in a vault folder you own, with every save kept in a hash-chained history; Python and other apps write to the same files; an optional lab server shares one vault with roles and per-folder permissions](site/assets/diagrams/overview.svg)
 
 ## Why Prem
 
@@ -95,6 +95,8 @@ Everything on that screen is also in `settings.json`, which lists only what you'
 
 ### Python analysis in notes
 
+![A Python cell's output saved with its code, packages and input files, and Reproduce checking a rerun](site/assets/diagrams/analysis.svg)
+
 Put code in a `python {run}` block and choose **Run** (or ⇧↵). The output (text, tables, figures) is saved in the note under the cell, along with what produced it: the code, who ran it, the Python environment, and a checksum of every file it read. Add an `environment.txt` to the vault so every computer in the lab uses the same packages. Prem saves the exact package list with each output, flags outputs whose input files changed, and **↻ Reproduce** reruns a note in the recorded environment and reports what still matches. See [`docs/analysis.md`](docs/analysis.md).
 
 From your own scripts and Jupyter notebooks, the [`prem-notebook`](python) package writes to an entry directly: `entry.attach(fig)`, `entry.record("Colonies", 84)`, `entry.tables()`. It works with a vault folder or a team server, and never changes signed notes. See [`docs/python.md`](docs/python.md).
@@ -116,6 +118,8 @@ The command ids are listed on the Keyboard shortcuts tab. Like settings, the fil
 
 ## Features
 
+![How a record moves through Prem: workflows start jobs, each stage starts a run of a protocol, runs and jobs are signed, witnessed and exported, and analyses land in the same entries](site/assets/diagrams/lifecycle.svg)
+
 **Notebook**
 - **Daily entries** (⌘T) filed by year: `Notebook/2026/2026-09-30.md`, or `Notebooks/<name>/…` on a shared vault so each person's notebook can have its own permissions.
 - **Templates** for Experiment, Protocol, Sample, Lab meeting, Reference and Daily entry, with `{{title}}`, `{{date}}`, `{{time}}`, `{{author}}` and `{{cursor}}` placeholders. Add your own to the vault's `templates/` folder.
@@ -129,6 +133,9 @@ The command ids are listed on the Keyboard shortcuts tab. Like settings, the fil
 - Protocols list their runs under Backlinks, so you can see every time a method was used.
 
 **Workflows and jobs**
+
+![The board: every job of a workflow in a column per stage, with a card dragged to the next stage and My tasks](site/assets/diagrams/board.svg)
+
 - A `type: workflow` note lists a process's **stages** in a table: each stage's protocol (or none, for a step done without one), who does it by default, and what it should produce. The **Workflow** template starts one.
 - **New job** starts one pass through the workflow, filed under `Jobs/<workflow>/` with a copy of its stages, so later edits to the workflow don't change jobs already under way.
 - The job's bar shows the stage it's at and who has it. **Start run** starts that stage's protocol run, linked both ways with the job; **Complete stage** logs when it finished and hands the job to the next stage's assignee. After the last stage, sign the job to lock its stage log.
@@ -137,6 +144,9 @@ The command ids are listed on the Keyboard shortcuts tab. Like settings, the fil
 - **My tasks** in the toolbar counts the jobs waiting on you, and opens them. On a team server, only a job's assignee or a PI can move it to another stage.
 
 **Records you can trust**
+
+![One note's history: saves, then signed, witnessed and amended, each entry carrying the hash of the one before](site/assets/diagrams/history.svg)
+
 - **History**: every save of every note is kept, including edits made in other apps, with who and when. View what changed, restore any version (as a normal, undoable edit).
 - **Signing**: sign an experiment, run or entry to lock it; a colleague can **witness** it; change it only through an **amendment** with a reason. The history is a hash chain, so altering a past version or signature is detected. Prem flags signed notes changed outside the app, even while it was closed.
 - **PDF export** (⌘P, or right-click a note or folder): the entry with its metadata, embedded images, every signature, witness and amendment, whether the history checks out, and a hash of the printed content. A folder exports as one PDF, one entry per page, for archiving a notebook.

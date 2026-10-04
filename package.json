@@ -33,6 +33,7 @@
     "package": "npm run build && npm run notices && electron-builder",
     "package:dir": "npm run build && npm run notices && electron-builder --dir",
     "site": "node scripts/build-site.mjs",
+    "site:diagrams": "node scripts/site-diagrams.mjs",
     "e2e": "playwright test -c e2e/playwright.config.ts"
   },
   "devDependencies": {

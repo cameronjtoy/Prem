@@ -1,6 +1,6 @@
 <!--
 title: Prem: an open-source lab notebook
-description: An open-source electronic lab notebook that runs on your own machines. Protocols, runs, samples, attachments and signed records, stored as plain files you own.
+description: An open-source electronic lab notebook that runs on your own machines. Protocols, runs, workflows, samples, analysis and signed records, stored as plain files you own.
 -->
 <section class="hero">
   <div class="wrap hero-grid">
@@ -8,8 +8,8 @@ description: An open-source electronic lab notebook that runs on your own machin
       <p class="eyebrow">Open-source electronic lab notebook</p>
       <h1>A lab notebook that stays on your own machines.</h1>
       <p class="lede">
-        Experiments, protocols, runs and samples, kept as plain files your lab owns. Every save is kept, records can be
-        signed and witnessed, and the whole lab can share one notebook from a server you run.
+        Experiments, protocols, runs, workflows and analyses, kept as plain files your lab owns. Every save is kept,
+        records can be signed and witnessed, and the whole lab can share one notebook from a server you run.
       </p>
       <div class="actions">
         <a class="button primary" href="download.html" data-download>Download Prem</a>
@@ -17,12 +17,12 @@ description: An open-source electronic lab notebook that runs on your own machin
       </div>
       <p class="small muted" data-download-note>Free for macOS, Windows and Linux.</p>
     </div>
-    <figure class="shot hero-shot">
+    <figure class="diagram hero-diagram">
       <img
-        src="assets/screenshots/experiment.png"
-        alt="An experiment entry with a reagent table, results and a gel image"
-        width="1280"
-        height="800"
+        src="assets/diagrams/overview.svg"
+        alt="Prem reads and writes plain markdown files in a vault folder you own, with every save kept in a hash-chained history. Python and other apps write to the same files. An optional lab server shares one vault with roles and per-folder permissions."
+        width="680"
+        height="430"
       />
     </figure>
   </div>
@@ -39,8 +39,8 @@ description: An open-source electronic lab notebook that runs on your own machin
   <div class="feature">
     <h3>Built for the bench</h3>
     <p>
-      Protocols with checkable steps. Runs that record when each step was done and what deviated. Samples with IDs.
-      Gels, plate reads and traces attached to the entry they belong to.
+      Protocols with checkable steps, runs that record when each step was done, workflows that hand jobs from person to
+      person, and samples with IDs.
     </p>
   </div>
   <div class="feature">
@@ -51,70 +51,98 @@ description: An open-source electronic lab notebook that runs on your own machin
     </p>
   </div>
   <div class="feature">
-    <h3>One person or a whole lab</h3>
+    <h3>Analysis in the record</h3>
     <p>
-      Start with a folder on your laptop. Add the lab server when you want shared protocols and per-person notebooks:
-      students write their own, the PI reads everything.
+      Run Python in an entry, or write to it from your scripts and Jupyter. Every result says which code, data and
+      packages made it, and can be rerun to check.
     </p>
   </div>
 </section>
 
 <section class="wrap showcase">
-  <div class="showcase-row">
-    <div>
-      <h2>Protocols become runs</h2>
-      <p>
-        Start a run from any protocol. Prem copies its materials and steps into your notebook, records the time as you
-        tick each step, and keeps a log of deviations. The protocol lists every time it was used.
-      </p>
-    </div>
-    <figure class="shot">
+  <div class="showcase-wide" id="how-it-works">
+    <h2>How a record moves through Prem</h2>
+    <p>
+      A workflow starts jobs, and each stage of a job starts a run of a protocol. Finishing the run finishes the stage
+      and hands the job to the next person. Runs and jobs are signed, witnessed and exported to PDF. Analyses land in
+      the same entries, and every change is kept.
+    </p>
+    <figure class="diagram">
       <img
-        src="assets/screenshots/run.png"
-        alt="A completed protocol run with timestamped steps and a deviation"
+        src="assets/diagrams/lifecycle.svg"
+        alt="Three lanes. Process: workflow, new job, job stage, complete stage, job done, my tasks. Record: protocol, start run, run, complete run, sign and witness, amend, PDF export. Analysis: scripts and Jupyter through the prem package, and Python cells with their outputs and Reproduce, all kept in the history."
         loading="lazy"
-        width="1280"
-        height="800"
+        width="1220"
+        height="500"
       />
     </figure>
   </div>
-  <div class="showcase-row reverse">
+
+  <div class="showcase-wide">
+    <div>
+      <h2>Workflows, jobs and the board</h2>
+      <p>
+        Write a lab process once as a workflow: its stages, the protocol for each, and who does it. Every job of it
+        shows on the board. Drag a card to the next column to complete a stage and hand the job on, or back to redo a
+        stage with a reason. <strong>My tasks</strong> shows what's waiting on you.
+      </p>
+      <p class="small muted">On a team server, only a job's assignee or the PI moves it on.</p>
+    </div>
+    <figure class="diagram fit">
+      <img
+        src="assets/diagrams/board.svg"
+        alt="The board for the Plasmid prep workflow: columns Grow culture, Miniprep, Sequence check and Done, with job cards, a card being dragged to the next stage, and a My tasks button showing 2."
+        loading="lazy"
+        width="760"
+        height="330"
+      />
+    </figure>
+  </div>
+
+  <div class="showcase-wide">
     <div>
       <h2>Sign, witness, amend</h2>
       <p>
-        A signed entry is locked, on your machine and on the lab server. The history is a hash chain, so altering a past
-        version or signature is detected, and Prem flags signed entries edited outside the app.
+        Every save of an entry is kept, and each one includes the hash of the one before. Sign an entry to lock it, have
+        a colleague witness it, and change it later only through an amendment with a reason. Alter anything in the past
+        and Prem shows that the history no longer checks out.
       </p>
       <p class="small muted">
         Signatures are recorded attestations, not cryptographic signatures yet. Prem is not certified for 21 CFR Part
         11.
       </p>
     </div>
-    <figure class="shot">
+    <figure class="diagram fit">
       <img
-        src="assets/screenshots/signed.png"
-        alt="A signed and locked experiment entry"
+        src="assets/diagrams/history.svg"
+        alt="One note's history: two saves, then signed by alice, witnessed by bob, and amended with a reason. Each entry shows its hash and the hash of the entry before."
         loading="lazy"
-        width="1280"
-        height="800"
+        width="900"
+        height="300"
       />
     </figure>
   </div>
-  <div class="showcase-row">
+
+  <div class="showcase-wide">
     <div>
-      <h2>Find anything</h2>
+      <h2>Analysis you can rerun</h2>
       <p>
-        Search every entry, protocol and sample at once, and jump straight to the line that matched. Link entries with
-        <code>[[double brackets]]</code> and see what links back.
+        Put a <code>python {run}</code> cell in an entry. Its output is saved under it with the code version, the files
+        it read and the exact packages it ran with. If the data changes, the output is flagged.
+        <strong>Reproduce</strong> rebuilds the environment, reruns the cells and says what still matches.
+      </p>
+      <p class="small muted">
+        From scripts and Jupyter, the <a href="docs/python.html"><code>prem</code> Python package</a> attaches figures
+        and records results into the same entries.
       </p>
     </div>
-    <figure class="shot">
+    <figure class="diagram fit">
       <img
-        src="assets/screenshots/search.png"
-        alt="The search palette finding a reagent across entries"
+        src="assets/diagrams/analysis.svg"
+        alt="A Python cell in a note, its saved output with code, Python, environment and input-file fingerprints, the saved environment list, and Reproduce comparing a rerun: same or different."
         loading="lazy"
-        width="1280"
-        height="800"
+        width="900"
+        height="350"
       />
     </figure>
   </div>
@@ -126,20 +154,20 @@ description: An open-source electronic lab notebook that runs on your own machin
     <div>
       <h3>Now: pilot</h3>
       <p>
-        Installers for every platform, PDF export with signatures, a guided lab-server setup and notebook (.ipynb)
-        previews.
+        Protocols and runs, workflows with a board, signing and history, Python cells you can reproduce, the
+        <code>prem</code> package, PDF export and a lab server you run.
       </p>
     </div>
     <div>
-      <h3>Next: lab workflows</h3>
+      <h3>Next: samples and instruments</h3>
       <p>
-        Samples and projects moving through stages, with tasks, assignees and a board. Jupyter analyses that write
-        figures and results back into the entry.
+        A sample registry with freezer maps, plate layouts, reagent lots and equipment, Open in Jupyter, and instrument
+        folders that file new data where it belongs.
       </p>
     </div>
     <div>
-      <h3>Later: analysis in the notebook</h3>
-      <p>Python cells inside entries, run by a kernel Prem manages, with outputs saved as part of the signed record.</p>
+      <h3>Later: stronger records</h3>
+      <p>Per-person signing keys, scheduled pipelines on the lab server, and signed installers with auto-update.</p>
     </div>
   </div>
   <p>

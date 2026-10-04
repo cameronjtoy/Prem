@@ -271,17 +271,51 @@ h3 {
   color: var(--muted);
 }
 
-.shot {
+/* Diagrams: SVG files with their own light and dark colours. On narrow screens they scroll sideways
+   rather than shrink until the text can't be read. */
+.diagram {
   margin: 0;
   border-radius: 10px;
-  overflow: hidden;
   border: 1px solid var(--border);
-  box-shadow: var(--shadow);
   background: var(--bg);
+  overflow-x: auto;
 }
 
-.shot img {
+.hero .diagram {
+  box-shadow: var(--shadow);
+}
+
+.diagram img {
   display: block;
+  width: 100%;
+  height: auto;
+}
+
+.showcase-wide {
+  padding: 48px 0 16px;
+}
+
+.showcase-wide h2 {
+  margin-top: 0;
+}
+
+.showcase-wide > div {
+  max-width: 760px;
+}
+
+.showcase-wide > p,
+.showcase-wide > div > p {
+  max-width: 760px;
+  color: var(--muted);
+}
+
+.showcase-wide .diagram {
+  margin-top: 20px;
+}
+
+/* Smaller diagrams stay at their drawn size rather than stretch across the page. */
+.showcase-wide .diagram.fit {
+  max-width: 960px;
 }
 
 .features {
@@ -473,6 +507,14 @@ table.files td:nth-child(2) {
 @media (max-width: 560px) {
   .features {
     grid-template-columns: 1fr;
+  }
+
+  .diagram img {
+    min-width: 560px;
+  }
+
+  .showcase-wide .diagram img {
+    min-width: 820px;
   }
 
   .nav-links {
