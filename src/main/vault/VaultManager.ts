@@ -37,6 +37,8 @@ import { printableHtml, type PrintableNote } from '../export/printable'
 import { DEFAULTS, type Settings } from '@shared/settings/schema'
 import { rememberServer, saveState } from '../state'
 import { DAILY_TEMPLATE, DEFAULT_TEMPLATES } from './defaultTemplates'
+import { backupVault } from './backup'
+import { checkVaultFormat } from './format'
 import { LocalFsProvider } from './LocalFsProvider'
 import { RemoteProvider } from './RemoteProvider'
 import type { VaultProvider } from './VaultProvider'
@@ -72,6 +74,21 @@ export class VaultManager {
     return !!this.provider
   }
 
+  /**
+   * Zips the whole local vault, history included, into `file`. A team vault's backups are made on the server,
+   * where the files are.
+   */
+  async backup(file: string): Promise<{ files: number; bytes: number }> {
+    const provider = this.current
+    if (!(provider instanceof LocalFsProvider)) {
+      throw new VaultError(
+        'INVALID_ARGUMENT',
+        "A team vault is backed up on the lab server, where its files are. See 'Backups' in the lab server guide."
+      )
+    }
+    return backupVault(provider.root, file)
+  }
+
   get current(): VaultProvider {
     if (!this.provider) throw new VaultError('NO_VAULT', 'No vault is open')
     return this.provider
@@ -80,6 +97,7 @@ export class VaultManager {
   async open(folder: string): Promise<VaultInfo> {
     const root = await realpath(folder)
     if (!(await stat(root)).isDirectory()) throw new VaultError('INVALID_PATH', 'Not a folder')
+    await checkVaultFormat(root)
     const provider = new LocalFsProvider(root, { trash: (abs) => shell.trashItem(abs) })
     await this.seedTemplates(provider)
     await this.attach(provider)

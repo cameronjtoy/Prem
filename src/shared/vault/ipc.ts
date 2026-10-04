@@ -39,6 +39,7 @@ export const Channels = {
   sign: 'record:sign',
   witness: 'record:witness',
   exportPdf: 'record:exportPdf',
+  backupVault: 'vault:backup',
   addAttachment: 'attachments:add',
   pickAttachments: 'attachments:pick',
   openFile: 'attachments:open',
@@ -110,6 +111,8 @@ export interface Api {
      * history check. Returns the saved file, or null if the person cancelled.
      */
     exportPdf(path: string): R<{ file: string; notes: number } | null>
+    /** Asks where to save, then zips the whole vault there, history included. Null if cancelled. */
+    backup(): R<{ file: string; files: number; bytes: number } | null>
   }
   templates: {
     list(): R<TemplateInfo[]>

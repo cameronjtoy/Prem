@@ -6,7 +6,17 @@ type Entry = CommandId | '-' | MenuItemConstructorOptions
 
 /** Which commands each menu shows, in order. Titles and shortcuts come from the shared command list. */
 const LAYOUT: Record<string, Entry[]> = {
-  File: ['note.new', 'note.newFromTemplate', 'note.today', '-', 'vault.open', '-', 'note.save', 'note.exportPdf'],
+  File: [
+    'note.new',
+    'note.newFromTemplate',
+    'note.today',
+    '-',
+    'vault.open',
+    'vault.backup',
+    '-',
+    'note.save',
+    'note.exportPdf'
+  ],
   Edit: [
     { role: 'undo' },
     { role: 'redo' },

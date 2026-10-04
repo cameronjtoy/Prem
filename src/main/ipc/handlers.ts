@@ -122,6 +122,21 @@ export function registerIpc(
     return { file, notes }
   })
 
+  handle(Channels.backupVault, async () => {
+    const day = new Date().toISOString().slice(0, 10)
+    const name = sanitizeFileName(`${vaults.current.name} backup ${day}`) || 'Prem backup'
+    const options: SaveDialogOptions = {
+      title: 'Back up vault',
+      defaultPath: join(app.getPath('documents'), `${name}.zip`),
+      filters: [{ name: 'Zip archive', extensions: ['zip'] }]
+    }
+    const win = getWindow()
+    const result = win ? await dialog.showSaveDialog(win, options) : await dialog.showSaveDialog(options)
+    if (result.canceled || !result.filePath) return null
+    const file = /\.zip$/i.test(result.filePath) ? result.filePath : `${result.filePath}.zip`
+    return { file, ...(await vaults.backup(file)) }
+  })
+
   handle(Channels.readBinary, (path) => vaults.readBinary(str(path, 'path')))
   handle(Channels.addAttachment, (notePath, fileName, data) => {
     if (!(data instanceof Uint8Array)) throw new VaultError('INVALID_ARGUMENT', 'data must be bytes')

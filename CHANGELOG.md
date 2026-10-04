@@ -7,6 +7,7 @@ All notable changes to Prem are listed here. The format follows [Keep a Changelo
 Everything below will ship as **0.1.0**, the first pilot release.
 
 ### Added
+- **Back up vault**: **File → Back up vault…** saves the whole vault as one `.zip`, history and signatures included, and it opens anywhere. A note whose history log is damaged now shows as broken and stays read-only, rather than appearing fine. A vault records its format (`.prem/format.json`), so a vault written by a newer Prem isn't opened by an older one.
 - **The board and My tasks**:
   - **The board:** a Board view next to Note and Graph shows every job of a workflow in a column per stage, with who has it, whether its run is open, and its samples. Filter by assignee, and show finished jobs if you like.
   - **Moving cards:** drag a card to the next column to complete its stage (Prem asks first), or back to send it back with a reason. Signed jobs stay put.

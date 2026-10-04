@@ -70,6 +70,14 @@ Choose **Open a folder as a vault** and pick an empty folder; Prem adds a `templ
 
 Prem doesn't update itself yet. Download the new version from the releases page and install it over the old one. Your notebooks are ordinary folders and are not touched by installing or uninstalling.
 
+## Backing up your notebook
+
+A vault is a folder, so any backup tool that copies folders keeps it safe. That includes Time Machine, File History, a sync service or a copy to an external drive. Copy the whole folder, including the hidden `.prem` folder, which holds every saved version and the signatures.
+
+To make a single file to keep or send, choose **File → Back up vault…**. Prem saves a `.zip` of everything in the vault, history included. To restore it, unzip it and open the folder in Prem: the history and signatures still check out. A team vault is backed up on the lab server instead; see [Backups](lab-server.md#backups).
+
+If a note's history is ever damaged, for example by a sync conflict or a disk error, Prem says so above the note and keeps it read-only. Restore its log from a backup (`.prem/history/<the note's path>.jsonl`), and the note can be edited again.
+
 ## The lab server
 
 To share one notebook across a lab, someone runs the Prem server on a machine everyone can reach. Each release includes it as a Docker image, `ghcr.io/cameronjtoy/prem-server`, and as a single file for Node.js 20 or later, `prem-server-<version>.js`. Setting up a lab takes one command:
