@@ -65,6 +65,8 @@ jobs:
       - run: npm run build
       - run: npm run server:build
       - name: Smoke tests in the real app
+        # bash on every runner: PowerShell would read @smoke as one of its own variables.
+        shell: bash
         run: npm run e2e -- --grep @smoke
       - uses: actions/upload-artifact@v7
         if: failure()
