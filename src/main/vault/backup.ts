@@ -142,7 +142,12 @@ export async function backupVault(
     await new Promise<void>((resolve, reject) => out.end((err?: Error | null) => (err ? reject(err) : resolve())))
     return { files: entries.length, bytes: offset }
   } catch (err) {
-    out.destroy()
+    // Wait for the stream to close before removing the file: if it hadn't finished opening yet, it would
+    // otherwise create the file again, empty, after it was removed.
+    await new Promise<void>((resolve) => {
+      if (out.closed) resolve()
+      else out.once('close', () => resolve()).destroy()
+    })
     // Don't leave half a backup that looks like a whole one.
     await unlink(file).catch(() => {})
     throw err

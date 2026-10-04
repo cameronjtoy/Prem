@@ -60,4 +60,14 @@ describe.skipIf(!python())('backupVault', () => {
     await expect(backupVault(path.join(dir, 'missing'), file)).rejects.toThrow()
     await expect(readFile(file)).rejects.toThrow()
   })
+
+  it('leaves no empty file when it fails before the file is open', async () => {
+    // A missing vault fails at once, often before the zip file has finished opening. Repeat to catch the race.
+    for (let i = 0; i < 25; i++) {
+      const file = path.join(dir, `early-${i}.zip`)
+      await expect(backupVault(path.join(dir, 'missing'), file)).rejects.toThrow()
+      await new Promise((resolve) => setTimeout(resolve, 2))
+      await expect(readFile(file)).rejects.toThrow()
+    }
+  })
 })
