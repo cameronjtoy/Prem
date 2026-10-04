@@ -7,7 +7,7 @@ import { useSettings } from '../../state/SettingsContext'
 import { PythonStatus } from './PythonStatus'
 import { ShortcutsTab } from './ShortcutsTab'
 
-const SECTIONS: SettingSection[] = ['Appearance', 'Editor', 'Notebook', 'Analysis', 'Export']
+const SECTIONS: SettingSection[] = ['Appearance', 'Editor', 'Notebook', 'Analysis', 'Export', 'Updates']
 const ALL = SETTINGS as readonly SettingDef[]
 
 function matchesQuery(def: SettingDef, query: string): boolean {

@@ -15,8 +15,8 @@ import type {
   WriteOptions,
   WriteResult
 } from '@shared/vault/types'
-import type { RecordCheck } from '@shared/records/signatures'
-import { contentHash, NoteHistory } from './NoteHistory'
+import { EMPTY_STATUS, type RecordCheck } from '@shared/records/signatures'
+import { contentHash, HistoryUnreadable, NoteHistory } from './NoteHistory'
 import { assertRealPathInside, resolveInsideVault, toVaultPath } from './safePath'
 import type { VaultProvider } from './VaultProvider'
 
@@ -185,9 +185,15 @@ export class LocalFsProvider implements VaultProvider {
   /** A note's signing status, after checking the file still matches its history and the history is intact. */
   async recordStatus(relPath: VaultPath): Promise<RecordCheck> {
     const notePath = normalizeVaultPath(relPath)
-    await this.catchUp(notePath, await this.abs(relPath))
-    const [status, chain] = await Promise.all([this.notes.status(notePath), this.notes.verify(notePath)])
-    return { ...status, chainOk: chain.ok }
+    try {
+      await this.catchUp(notePath, await this.abs(relPath))
+      const [status, chain] = await Promise.all([this.notes.status(notePath), this.notes.verify(notePath)])
+      return { ...status, chainOk: chain.ok }
+    } catch (err) {
+      // A damaged log is shown as a broken history, and the note is kept read-only until it's restored.
+      if (err instanceof HistoryUnreadable) return { ...EMPTY_STATUS, locked: true, chainOk: false }
+      throw err
+    }
   }
 
   history(relPath: VaultPath): Promise<HistoryEntry[]> {

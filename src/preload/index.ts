@@ -34,7 +34,8 @@ const api: Api = {
     status: (path) => ipcRenderer.invoke(Channels.recordStatus, path),
     sign: (path, statement) => ipcRenderer.invoke(Channels.sign, path, statement),
     witness: (path) => ipcRenderer.invoke(Channels.witness, path),
-    exportPdf: (path) => ipcRenderer.invoke(Channels.exportPdf, path)
+    exportPdf: (path) => ipcRenderer.invoke(Channels.exportPdf, path),
+    backup: () => ipcRenderer.invoke(Channels.backupVault)
   },
   templates: {
     list: () => ipcRenderer.invoke(Channels.listTemplates),
@@ -79,6 +80,11 @@ const api: Api = {
   },
   app: {
     openExternal: (url) => ipcRenderer.invoke(Channels.openExternal, url),
+    onUpdateReady: (listener) => subscribe(Channels.updateReady, listener),
+    installUpdate: () => ipcRenderer.invoke(Channels.installUpdate),
+    logError: (message) => ipcRenderer.invoke(Channels.logError, message),
+    diagnostics: () => ipcRenderer.invoke(Channels.diagnostics),
+    showLogs: () => ipcRenderer.invoke(Channels.showLogs),
     onCommand: (listener) => subscribe(Channels.command, listener)
   }
 }

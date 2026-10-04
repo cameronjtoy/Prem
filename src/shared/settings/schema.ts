@@ -1,7 +1,7 @@
 // Everything a person can set, in one place: the Settings screen is built from this list, and settings.json
 // is checked against it. The file holds only what someone changed, keyed like "appearance.theme".
 
-export type SettingSection = 'Appearance' | 'Editor' | 'Notebook' | 'Analysis' | 'Export'
+export type SettingSection = 'Appearance' | 'Editor' | 'Notebook' | 'Analysis' | 'Export' | 'Updates'
 
 interface Base {
   key: string
@@ -163,6 +163,15 @@ export const SETTINGS = [
       { value: 'Letter', label: 'US Letter' }
     ],
     default: 'A4'
+  },
+  {
+    key: 'updates.check',
+    section: 'Updates',
+    title: 'Check for updates',
+    description:
+      'Once a day, look for a new version of Prem on GitHub and download it, then offer to restart. Your notes are never sent anywhere.',
+    type: 'boolean',
+    default: true
   }
 ] as const satisfies readonly SettingDef[]
 

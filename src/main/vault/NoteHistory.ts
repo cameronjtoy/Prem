@@ -66,10 +66,16 @@ export class NoteHistory {
       if ((err as NodeJS.ErrnoException).code === 'ENOENT') return []
       throw err
     }
-    return text
-      .split('\n')
-      .filter((line) => line.trim())
-      .map((line) => JSON.parse(line) as HistoryEntry)
+    const entries: HistoryEntry[] = []
+    for (const [i, line] of text.split('\n').entries()) {
+      if (!line.trim()) continue
+      try {
+        entries.push(JSON.parse(line) as HistoryEntry)
+      } catch {
+        throw new HistoryUnreadable(notePath, i + 1)
+      }
+    }
+    return entries
   }
 
   /** The latest entry of a note's history, or null if it has none. */
@@ -269,5 +275,19 @@ export class NoteHistory {
       prev = id
     }
     return { ok: true }
+  }
+}
+
+/**
+ * A note whose history log can't be read, e.g. a line damaged by a bad sync or a disk error. Nothing more is
+ * written to it, so the damage can't spread or be hidden: the note stays read-only until the log is restored
+ * from a backup.
+ */
+export class HistoryUnreadable extends VaultError {
+  constructor(notePath: VaultPath, line: number) {
+    super(
+      'LOCKED',
+      `The history of ${notePath} is damaged (line ${line} of its log can't be read), so it can't be changed until the log is restored from a backup.`
+    )
   }
 }

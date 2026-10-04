@@ -9,6 +9,7 @@ import { jobMoveRefusal } from '@shared/records/workflows'
 import { CLIENT_HEADER, Routes, STATUS_BY_CODE, type ServerInfo } from '@shared/vault/remote'
 import type { VaultChange, VaultPath, WriteOptions } from '@shared/vault/types'
 import { DEFAULT_TEMPLATES } from '../main/vault/defaultTemplates'
+import { checkVaultFormat } from '../main/vault/format'
 import { LocalFsProvider } from '../main/vault/LocalFsProvider'
 import { UserDirectory, type ServerConfig, type User, type UserConfig } from './config'
 
@@ -112,6 +113,7 @@ export async function startServer(config: ServerConfig, log: Logger = console): 
   const root = await realpath(config.vault)
   if (!(await stat(root)).isDirectory()) throw new Error(`Not a folder: ${config.vault}`)
 
+  await checkVaultFormat(root)
   const provider = new LocalFsProvider(root)
   if (!(await provider.exists(TEMPLATES_FOLDER))) {
     await provider.mkdir(TEMPLATES_FOLDER)

@@ -113,3 +113,22 @@ describe('signing records', () => {
     expect(recordStatus(await vault.history('Run.md'))).toMatchObject({ state: 'amended', locked: false })
   })
 })
+
+describe('a damaged history', () => {
+  it('shows as broken and read-only, and nothing more is written to it', async () => {
+    await vault.write('E.md', '# E\n', { author: 'alice' })
+    await vault.write('E.md', '# E\n\nMore.\n', { author: 'alice' })
+    const log = path.join(root, '.prem', 'history', 'E.md.jsonl')
+    const text = await readFile(log, 'utf8')
+    await writeFile(log, text.replace(/\}\n$/, '\n'))
+
+    const fresh = new LocalFsProvider(root)
+    try {
+      expect(await fresh.recordStatus('E.md')).toMatchObject({ locked: true, chainOk: false })
+      expect(await code(fresh.write('E.md', '# E\n\nChanged.\n', { author: 'alice' }))).toBe('LOCKED')
+      expect(await readFile(path.join(root, 'E.md'), 'utf8')).toBe('# E\n\nMore.\n')
+    } finally {
+      await fresh.dispose()
+    }
+  })
+})

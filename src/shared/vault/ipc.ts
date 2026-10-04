@@ -1,3 +1,4 @@
+import type { ReportInfo } from '../diagnostics'
 import type { IpcResult } from './errors'
 import type { AnalysisStatus } from '../analysis/environment'
 import type { Reproduction } from '../analysis/reproduce'
@@ -41,6 +42,7 @@ export const Channels = {
   sign: 'record:sign',
   witness: 'record:witness',
   exportPdf: 'record:exportPdf',
+  backupVault: 'vault:backup',
   addAttachment: 'attachments:add',
   pickAttachments: 'attachments:pick',
   openFile: 'attachments:open',
@@ -52,6 +54,11 @@ export const Channels = {
   indexGraph: 'index:graph',
   search: 'search:query',
   openExternal: 'app:openExternal',
+  updateReady: 'app:updateReady',
+  installUpdate: 'app:installUpdate',
+  logError: 'app:logError',
+  diagnostics: 'app:diagnostics',
+  showLogs: 'app:showLogs',
   command: 'app:command',
   getSettings: 'settings:get',
   setSetting: 'settings:set',
@@ -114,6 +121,8 @@ export interface Api {
      * history check. Returns the saved file, or null if the person cancelled.
      */
     exportPdf(path: string): R<{ file: string; notes: number } | null>
+    /** Asks where to save, then zips the whole vault there, history included. Null if cancelled. */
+    backup(): R<{ file: string; files: number; bytes: number } | null>
   }
   templates: {
     list(): R<TemplateInfo[]>
@@ -177,6 +186,16 @@ export interface Api {
   }
   app: {
     openExternal(url: string): R<void>
+    /** A new version has been downloaded and is ready to install. */
+    onUpdateReady(listener: (version: string) => void): () => void
+    /** Restarts into the downloaded version. */
+    installUpdate(): R<void>
+    /** Writes an error from the window to Prem's log. */
+    logError(message: string): R<void>
+    /** What a problem report contains: versions, the system, and the end of the log with private paths removed. */
+    diagnostics(): R<ReportInfo>
+    /** Opens the folder with Prem's log files. */
+    showLogs(): R<void>
     /** Commands chosen from the application menu, by id. */
     onCommand(listener: (id: string) => void): () => void
   }
