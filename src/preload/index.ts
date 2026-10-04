@@ -77,6 +77,9 @@ const api: Api = {
   },
   app: {
     openExternal: (url) => ipcRenderer.invoke(Channels.openExternal, url),
+    logError: (message) => ipcRenderer.invoke(Channels.logError, message),
+    diagnostics: () => ipcRenderer.invoke(Channels.diagnostics),
+    showLogs: () => ipcRenderer.invoke(Channels.showLogs),
     onCommand: (listener) => subscribe(Channels.command, listener)
   }
 }

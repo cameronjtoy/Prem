@@ -59,7 +59,8 @@ export const COMMANDS = [
   { id: 'view.toggleFiles', title: 'Show or hide the file list', category: 'View', key: 'Mod+\\' },
   { id: 'view.toggleLinks', title: 'Show or hide links', category: 'View', key: 'Mod+Shift+\\' },
   { id: 'help.website', title: 'Prem website and guides', category: 'General' },
-  { id: 'help.reportIssue', title: 'Report a problem', category: 'General' }
+  { id: 'help.reportIssue', title: 'Report a problem…', category: 'General' },
+  { id: 'help.showLogs', title: 'Show logs', category: 'General' }
 ] as const satisfies readonly Command[]
 
 export type CommandId = (typeof COMMANDS)[number]['id']

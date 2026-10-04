@@ -72,6 +72,12 @@ export class VaultManager {
     return !!this.provider
   }
 
+  /** Where the open vault is, and what kind it is, for problem reports (which leave the location out). */
+  location(): { kind: 'local' | 'team server'; root: string } | null {
+    if (!this.provider) return null
+    return { kind: this.provider instanceof LocalFsProvider ? 'local' : 'team server', root: this.provider.root }
+  }
+
   get current(): VaultProvider {
     if (!this.provider) throw new VaultError('NO_VAULT', 'No vault is open')
     return this.provider
