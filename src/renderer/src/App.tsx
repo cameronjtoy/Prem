@@ -4,6 +4,7 @@ import { BacklinksPanel } from './components/Backlinks/BacklinksPanel'
 import { NoteEditor } from './components/Editor/NoteEditor'
 import { FileTree } from './components/FileTree/FileTree'
 import { GraphView } from './components/Graph/GraphView'
+import { ReportProblem } from './components/ReportProblem'
 import { BoardView } from './components/Board/BoardView'
 import { MyTasks, useMyTasks } from './components/Board/MyTasks'
 import {
@@ -32,7 +33,6 @@ import { useVault, VaultProvider } from './state/VaultContext'
 import { useWorkspace, WorkspaceProvider } from './state/WorkspaceContext'
 
 const WEBSITE = 'https://cameronjtoy.github.io/Prem/'
-const ISSUES = 'https://github.com/cameronjtoy/Prem/issues/new/choose'
 
 export function App() {
   return (
@@ -67,6 +67,7 @@ function Shell() {
   const linksPanel = usePanelRef()
   // Panel widths, and whether each side panel is hidden, are kept between launches.
   const layout = useDefaultLayout({ id: 'prem-panels', storage: localStorage })
+  const [reporting, setReporting] = useState(false)
   const [filesHidden, setFilesHidden] = useState(false)
   const [linksHidden, setLinksHidden] = useState(false)
   const [tasksOpen, setTasksOpen] = useState(false)
@@ -139,7 +140,8 @@ function Shell() {
     () => !!ws.active
   )
   useCommand('help.website', () => void vaultClient.openExternal(WEBSITE))
-  useCommand('help.reportIssue', () => void vaultClient.openExternal(ISSUES))
+  useCommand('help.reportIssue', () => setReporting(true))
+  useCommand('help.showLogs', () => void vaultClient.showLogs().catch(() => {}))
 
   useEffect(() => {
     // Capture phase, so these win over the editor's own keys (e.g. ⌘[ "indent less") when they can run.
@@ -158,6 +160,7 @@ function Shell() {
       onClose={() => setOverlay(null)}
     />
   )
+  const report = reporting && <ReportProblem onClose={() => setReporting(false)} />
   const sheet = overlay === 'shortcuts' && (
     <ShortcutsSheet onClose={() => setOverlay(null)} onCustomize={() => setOverlay('keybindings')} />
   )
@@ -168,6 +171,7 @@ function Shell() {
         <WelcomeScreen />
         {settings}
         {sheet}
+        {report}
       </>
     )
   }
@@ -332,6 +336,7 @@ function Shell() {
       {overlay === 'commands' && <CommandPalette onClose={() => setOverlay(null)} />}
       {overlay === 'notes' && <QuickSwitcher onClose={() => setOverlay(null)} />}
       {sheet}
+      {report}
       {settings}
     </div>
   )

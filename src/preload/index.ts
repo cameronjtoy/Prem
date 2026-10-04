@@ -48,6 +48,8 @@ const api: Api = {
   search: (query) => ipcRenderer.invoke(Channels.search, query),
   index: {
     get: () => ipcRenderer.invoke(Channels.getIndex),
+    links: (path) => ipcRenderer.invoke(Channels.indexLinks, path),
+    graph: () => ipcRenderer.invoke(Channels.indexGraph),
     onUpdated: (listener) => subscribe(Channels.indexUpdated, listener)
   },
   settings: {
@@ -78,6 +80,9 @@ const api: Api = {
   },
   app: {
     openExternal: (url) => ipcRenderer.invoke(Channels.openExternal, url),
+    logError: (message) => ipcRenderer.invoke(Channels.logError, message),
+    diagnostics: () => ipcRenderer.invoke(Channels.diagnostics),
+    showLogs: () => ipcRenderer.invoke(Channels.showLogs),
     onCommand: (listener) => subscribe(Channels.command, listener)
   }
 }

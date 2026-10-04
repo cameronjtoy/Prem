@@ -75,7 +75,7 @@ const LAYOUT: Record<string, Entry[]> = {
     'analysis.restart',
     'analysis.reproduce'
   ],
-  Help: ['app.shortcuts', '-', 'help.website', 'help.reportIssue']
+  Help: ['app.shortcuts', '-', 'help.website', 'help.reportIssue', 'help.showLogs']
 }
 
 export function buildMenu(

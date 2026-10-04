@@ -9,6 +9,7 @@ import { TrustStore } from './analysis/trust'
 import { AnalysisManager } from './analysis/AnalysisManager'
 import runnerSource from './analysis/prem_runner.py?raw'
 import { KeybindingsStore } from './keybindings'
+import { captureConsole, LogFile } from './log'
 import { installMenu } from './menu'
 import { SettingsStore } from './settings'
 import { migrateState } from './state'
@@ -106,6 +107,12 @@ function createWindow(): void {
 }
 
 app.whenReady().then(async () => {
+  const log = new LogFile(path.join(app.getPath('userData'), 'logs'))
+  captureConsole(log)
+  log.write(
+    'info',
+    `Prem ${app.getVersion()} started on ${process.platform} ${process.getSystemVersion()} (${process.arch})`
+  )
   await migrateState()
   settings = new SettingsStore(path.join(app.getPath('userData'), 'settings.json'), (snapshot) => {
     applySettings(snapshot)
@@ -119,7 +126,7 @@ app.whenReady().then(async () => {
   })
   applyKeybindings(await keybindings.load())
   keybindings.watch()
-  registerIpc(vaults, settings, keybindings, analysis, () => mainWindow)
+  registerIpc(vaults, settings, keybindings, analysis, () => mainWindow, log)
   createWindow()
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow()

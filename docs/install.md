@@ -78,6 +78,20 @@ To make a single file to keep or send, choose **File → Back up vault…**. Pre
 
 If a note's history is ever damaged, for example by a sync conflict or a disk error, Prem says so above the note and keeps it read-only. Restore its log from a backup (`.prem/history/<the note's path>.jsonl`), and the note can be edited again.
 
+## Reporting a problem
+
+Choose **Help → Report a problem…**. Prem shows everything the report contains: its version, your system, whether the vault is local or on a team server, and the last lines of its log. Where your vault is, your home folder and any access tokens are left out. Nothing is sent by Prem. **Open GitHub issue** opens the report in your browser, where you can change it before posting, and **Copy** lets you send it another way.
+
+Prem's log stays on your computer. **Help → Show logs** opens its folder:
+
+| System | Folder |
+|---|---|
+| macOS | `~/Library/Application Support/Prem/logs` |
+| Windows | `%APPDATA%\Prem\logs` |
+| Linux | `~/.config/Prem/logs` |
+
+It holds errors and warnings, and is limited to about 4 MB.
+
 ## The lab server
 
 To share one notebook across a lab, someone runs the Prem server on a machine everyone can reach. Each release includes it as a Docker image, `ghcr.io/cameronjtoy/prem-server`, and as a single file for Node.js 20 or later, `prem-server-<version>.js`. Setting up a lab takes one command:

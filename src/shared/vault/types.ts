@@ -92,6 +92,22 @@ export interface LinkIndexSnapshot {
   jobs: JobSummary[]
 }
 
+/**
+ * What the window is sent whenever the index changes. It's kept small, because a big vault's full index
+ * runs to megabytes: backlinks and the graph are asked for separately, when they're shown.
+ */
+export interface IndexSummary {
+  version: number
+  workflows: WorkflowSummary[]
+  jobs: JobSummary[]
+}
+
+/** The links into and out of one note. */
+export interface NoteLinks {
+  backlinks: Backlink[]
+  outgoing: OutgoingLink[]
+}
+
 export interface WorkflowSummary {
   path: VaultPath
   title: string

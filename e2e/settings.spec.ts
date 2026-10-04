@@ -43,7 +43,7 @@ test('changing a setting on the Settings screen saves it to settings.json and ap
   await expect(size).not.toContainText('Modified')
 })
 
-test('editing settings.json applies straight away', async ({ prem: { app, page, userData } }) => {
+test('editing settings.json applies straight away', { tag: '@smoke' }, async ({ prem: { app, page, userData } }) => {
   const file = path.join(userData, 'settings.json')
   const dark = () => page.evaluate(() => matchMedia('(prefers-color-scheme: dark)').matches)
   // Playwright pins pages to light mode by default; let the app's theme through.

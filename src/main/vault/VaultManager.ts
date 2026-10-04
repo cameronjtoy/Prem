@@ -23,7 +23,9 @@ import { renderTemplate } from '@shared/notes/templates'
 import type {
   AddedAttachment,
   CreatedNote,
+  IndexSummary,
   LinkIndexSnapshot,
+  NoteLinks,
   RenameResult,
   TemplateInfo,
   VaultChange,
@@ -47,7 +49,7 @@ import serifFont from '@fontsource-variable/source-serif-4/files/source-serif-4-
 const WATCH_READY_MS = 5000
 export interface VaultEvents {
   onChanged(changes: VaultChange[]): void
-  onIndexUpdated(snapshot: LinkIndexSnapshot): void
+  onIndexUpdated(summary: IndexSummary): void
 }
 
 const INDEX_BROADCAST_MS = 150
@@ -87,6 +89,12 @@ export class VaultManager {
       )
     }
     return backupVault(provider.root, file)
+  }
+
+  /** Where the open vault is, and what kind it is, for problem reports (which leave the location out). */
+  location(): { kind: 'local' | 'team server'; root: string } | null {
+    if (!this.provider) return null
+    return { kind: this.provider instanceof LocalFsProvider ? 'local' : 'team server', root: this.provider.root }
   }
 
   get current(): VaultProvider {
@@ -153,8 +161,19 @@ export class VaultManager {
     return this.provider ? this.search.search(query) : []
   }
 
-  snapshot(): LinkIndexSnapshot | null {
-    return this.provider ? this.index.snapshot() : null
+  /** The small summary the window is sent on every change. */
+  summary(): IndexSummary | null {
+    return this.provider ? this.index.summary() : null
+  }
+
+  /** The links into and out of one note, for the Links panel. */
+  linksFor(path: VaultPath): NoteLinks | null {
+    return this.provider ? this.index.linksFor(path) : null
+  }
+
+  /** Every note and link, for the graph view. */
+  graph(): LinkIndexSnapshot['graph'] | null {
+    return this.provider ? this.index.snapshot().graph : null
   }
 
   async write(path: VaultPath, content: string, options?: WriteOptions): Promise<WriteResult> {
@@ -396,8 +415,8 @@ export class VaultManager {
     if (this.broadcastTimer) return
     this.broadcastTimer = setTimeout(() => {
       this.broadcastTimer = null
-      const snapshot = this.snapshot()
-      if (snapshot) this.events.onIndexUpdated(snapshot)
+      const summary = this.summary()
+      if (summary) this.events.onIndexUpdated(summary)
     }, INDEX_BROADCAST_MS)
   }
 }
