@@ -1,0 +1,82 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 430" width="680" height="430" role="img" aria-labelledby="title desc">
+<title id="title">How Prem fits together</title>
+<desc id="desc">Prem reads and writes plain markdown files in a vault folder you own, with every save kept in a hash-chained history. Python cells and scripts write results into the same notes. An optional lab server shares one vault with a team, with roles and per-folder permissions.</desc>
+<!-- Drawn by scripts/site-diagrams.mjs; edit that, not this file. -->
+<style>
+  .bg { fill: #faf9f5 } .panel { fill: #f2f0e9; stroke: #e5e2d9 }
+  .box { fill: #ffffff; stroke: #d9d5ca; stroke-width: 1.2 }
+  .key { fill: #e3ebec; stroke: #4c6f77; stroke-width: 1.4 }
+  .done { fill: #e6f0e8; stroke: #3f7d4e; stroke-width: 1.4 }
+  .warn { fill: #f8ecd9; stroke: #a8661a; stroke-width: 1.4 }
+  .ghost { fill: none; stroke: #8d887b; stroke-width: 1.2; stroke-dasharray: 5 4 }
+  .rule { stroke: #e5e2d9 }
+  .t { font: 600 14px -apple-system, 'Segoe UI', Inter, system-ui, Roboto, sans-serif; fill: #1a1915 }
+  .h { font: 600 15px -apple-system, 'Segoe UI', Inter, system-ui, Roboto, sans-serif; fill: #1a1915 }
+  .s { font: 12px -apple-system, 'Segoe UI', Inter, system-ui, Roboto, sans-serif; fill: #6e6a5f }
+  .m { font: 11.5px ui-monospace, 'SF Mono', Menlo, Consolas, monospace; fill: #4a4740 }
+  .lane { font: 600 11px ui-monospace, 'SF Mono', Menlo, Consolas, monospace; letter-spacing: 0.08em; fill: #6e6a5f }
+  .label { font: 11.5px -apple-system, 'Segoe UI', Inter, system-ui, Roboto, sans-serif; fill: #6e6a5f }
+  .accent { fill: #4c6f77 } .accent-text { font: 600 11px -apple-system, 'Segoe UI', Inter, system-ui, Roboto, sans-serif; fill: #4c6f77 }
+  .ok { font: 600 11px -apple-system, 'Segoe UI', Inter, system-ui, Roboto, sans-serif; fill: #3f7d4e } .bad { font: 600 11px -apple-system, 'Segoe UI', Inter, system-ui, Roboto, sans-serif; fill: #a8661a }
+  .chip { fill: #e3ebec } .chip-text { font: 600 11px -apple-system, 'Segoe UI', Inter, system-ui, Roboto, sans-serif; fill: #2e2c27 }
+  .badge { fill: #4c6f77 } .badge-text { font: 700 10px -apple-system, 'Segoe UI', Inter, system-ui, Roboto, sans-serif; fill: #ffffff }
+  .edge { stroke: #8d887b; stroke-width: 1.5; fill: none } .edge.dash { stroke-dasharray: 5 4 }
+  .edge.key-edge { stroke: #4c6f77; stroke-width: 2 }
+  .head { fill: #8d887b } .head.key-head { fill: #4c6f77 }
+  @media (prefers-color-scheme: dark) {
+    .bg { fill: #262624 } .panel { fill: #1f1e1c; stroke: #3d3c38 }
+    .box { fill: #302f2c; stroke: #4a4844 }
+    .key { fill: #33403f; stroke: #9dbcc2 }
+    .done { fill: #26342a; stroke: #8dc49a }
+    .warn { fill: #3a2f1f; stroke: #e3ad62 }
+    .ghost { stroke: #8a867c } .rule { stroke: #3d3c38 }
+    .t, .h { fill: #f7f5ef } .s, .lane, .label { fill: #a7a398 } .m { fill: #d4d0c6 }
+    .accent { fill: #9dbcc2 } .accent-text { fill: #9dbcc2 }
+    .ok { fill: #8dc49a } .bad { fill: #e3ad62 }
+    .chip { fill: #33403f } .chip-text { fill: #e9e6dd }
+    .badge { fill: #9dbcc2 } .badge-text { fill: #1a1d1d }
+    .edge { stroke: #8a867c } .edge.key-edge { stroke: #9dbcc2 }
+    .head { fill: #8a867c } .head.key-head { fill: #9dbcc2 }
+  }
+</style>
+<defs>
+  <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="head"/></marker>
+  <marker id="k" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="head key-head"/></marker>
+</defs>
+<rect width="680" height="430" class="bg"/>
+<rect x="16" y="16" width="404" height="398" rx="12" class="panel"/>
+<text x="32" y="40" class="lane">ON YOUR COMPUTER</text>
+<rect x="36" y="56" width="364" height="70" rx="9" class="key"/>
+<text x="50" y="81" class="t">Prem</text>
+<text x="50" y="101" class="s">Notes, protocols, runs, jobs and the board</text>
+<text x="50" y="119" class="s">Signing, history, search and PDF export</text>
+<rect x="36" y="186" width="364" height="122" rx="9" class="box"/>
+<text x="50" y="211" class="t">Your vault: a folder you own</text>
+<text x="50" y="231" class="m">Notebook/2026/Ligation of insert.md</text>
+<text x="50" y="249" class="m">Protocols/  Workflows/  Jobs/  Samples/</text>
+<text x="50" y="267" class="m">attachments/gel.png  plate.csv</text>
+<text x="50" y="285" class="m">.prem/history/  every save, hash-chained</text>
+<path d="M218,126 L218,186" class="edge" marker-end="url(#a)" marker-start="url(#a)"/>
+<text x="228" y="160" class="label">plain markdown files</text>
+<rect x="36" y="336" width="172" height="62" rx="9" class="box"/>
+<text x="50" y="361" class="t">Python</text>
+<text x="50" y="381" class="s">Cells, scripts, Jupyter</text>
+<rect x="228" y="336" width="172" height="62" rx="9" class="ghost"/>
+<text x="242" y="361" class="t">Other apps</text>
+<text x="242" y="381" class="s">Any editor, sync or git</text>
+<path d="M122,336 L122,308" class="edge" marker-end="url(#a)"/>
+<text x="130" y="326" class="label">figures, results</text>
+<path d="M314,336 L314,308" class="edge dash" marker-end="url(#a)"/>
+<text x="322" y="326" class="label">recorded too</text>
+<text x="458" y="112" class="lane">OPTIONAL</text>
+<rect x="450" y="124" width="214" height="170" rx="9" class="box"/>
+<text x="464" y="149" class="t">Lab server</text>
+<text x="464" y="169" class="s">One shared vault for the lab</text>
+<text x="464" y="187" class="s">Roles: PI, member, viewer</text>
+<text x="464" y="205" class="s">Permissions per folder</text>
+<text x="464" y="223" class="s">Who changed what comes</text>
+<text x="464" y="241" class="s">from each person's token</text>
+<path d="M400,92 L424,92 L424,160 L450,160" class="edge key-edge" marker-end="url(#k)" marker-start="url(#k)"/>
+<text x="458" y="318" class="label">Connected over HTTPS,</text>
+<text x="458" y="334" class="label">with one token per person</text>
+</svg>

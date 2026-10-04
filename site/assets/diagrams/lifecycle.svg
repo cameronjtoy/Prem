@@ -1,0 +1,136 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1220 500" width="1220" height="500" role="img" aria-labelledby="title desc">
+<title id="title">How a record moves through Prem</title>
+<desc id="desc">A workflow starts jobs; each job stage starts a run of a protocol; completing a run completes the stage and hands the job on. Runs and jobs are signed, witnessed and locked, and exported to PDF. Python cells and the prem package write analysis into the same entries, and every change is kept in the history.</desc>
+<!-- Drawn by scripts/site-diagrams.mjs; edit that, not this file. -->
+<style>
+  .bg { fill: #faf9f5 } .panel { fill: #f2f0e9; stroke: #e5e2d9 }
+  .box { fill: #ffffff; stroke: #d9d5ca; stroke-width: 1.2 }
+  .key { fill: #e3ebec; stroke: #4c6f77; stroke-width: 1.4 }
+  .done { fill: #e6f0e8; stroke: #3f7d4e; stroke-width: 1.4 }
+  .warn { fill: #f8ecd9; stroke: #a8661a; stroke-width: 1.4 }
+  .ghost { fill: none; stroke: #8d887b; stroke-width: 1.2; stroke-dasharray: 5 4 }
+  .rule { stroke: #e5e2d9 }
+  .t { font: 600 14px -apple-system, 'Segoe UI', Inter, system-ui, Roboto, sans-serif; fill: #1a1915 }
+  .h { font: 600 15px -apple-system, 'Segoe UI', Inter, system-ui, Roboto, sans-serif; fill: #1a1915 }
+  .s { font: 12px -apple-system, 'Segoe UI', Inter, system-ui, Roboto, sans-serif; fill: #6e6a5f }
+  .m { font: 11.5px ui-monospace, 'SF Mono', Menlo, Consolas, monospace; fill: #4a4740 }
+  .lane { font: 600 11px ui-monospace, 'SF Mono', Menlo, Consolas, monospace; letter-spacing: 0.08em; fill: #6e6a5f }
+  .label { font: 11.5px -apple-system, 'Segoe UI', Inter, system-ui, Roboto, sans-serif; fill: #6e6a5f }
+  .accent { fill: #4c6f77 } .accent-text { font: 600 11px -apple-system, 'Segoe UI', Inter, system-ui, Roboto, sans-serif; fill: #4c6f77 }
+  .ok { font: 600 11px -apple-system, 'Segoe UI', Inter, system-ui, Roboto, sans-serif; fill: #3f7d4e } .bad { font: 600 11px -apple-system, 'Segoe UI', Inter, system-ui, Roboto, sans-serif; fill: #a8661a }
+  .chip { fill: #e3ebec } .chip-text { font: 600 11px -apple-system, 'Segoe UI', Inter, system-ui, Roboto, sans-serif; fill: #2e2c27 }
+  .badge { fill: #4c6f77 } .badge-text { font: 700 10px -apple-system, 'Segoe UI', Inter, system-ui, Roboto, sans-serif; fill: #ffffff }
+  .edge { stroke: #8d887b; stroke-width: 1.5; fill: none } .edge.dash { stroke-dasharray: 5 4 }
+  .edge.key-edge { stroke: #4c6f77; stroke-width: 2 }
+  .head { fill: #8d887b } .head.key-head { fill: #4c6f77 }
+  @media (prefers-color-scheme: dark) {
+    .bg { fill: #262624 } .panel { fill: #1f1e1c; stroke: #3d3c38 }
+    .box { fill: #302f2c; stroke: #4a4844 }
+    .key { fill: #33403f; stroke: #9dbcc2 }
+    .done { fill: #26342a; stroke: #8dc49a }
+    .warn { fill: #3a2f1f; stroke: #e3ad62 }
+    .ghost { stroke: #8a867c } .rule { stroke: #3d3c38 }
+    .t, .h { fill: #f7f5ef } .s, .lane, .label { fill: #a7a398 } .m { fill: #d4d0c6 }
+    .accent { fill: #9dbcc2 } .accent-text { fill: #9dbcc2 }
+    .ok { fill: #8dc49a } .bad { fill: #e3ad62 }
+    .chip { fill: #33403f } .chip-text { fill: #e9e6dd }
+    .badge { fill: #9dbcc2 } .badge-text { fill: #1a1d1d }
+    .edge { stroke: #8a867c } .edge.key-edge { stroke: #9dbcc2 }
+    .head { fill: #8a867c } .head.key-head { fill: #9dbcc2 }
+  }
+</style>
+<defs>
+  <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="head"/></marker>
+  <marker id="k" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="head key-head"/></marker>
+</defs>
+<rect width="1220" height="500" class="bg"/>
+<text x="16" y="68" class="lane">PROCESS</text>
+<line x1="14" y1="152" x2="1206" y2="152" class="rule"/>
+<text x="16" y="218" class="lane">RECORD</text>
+<line x1="14" y1="322" x2="1206" y2="322" class="rule"/>
+<text x="16" y="388" class="lane">ANALYSIS</text>
+<rect x="112" y="35" width="146" height="58" rx="9" class="key"/>
+<text x="124" y="60" class="t">Workflow</text>
+<text x="124" y="78" class="s">stages and who</text>
+<rect x="270" y="35" width="146" height="58" rx="9" class="box"/>
+<text x="282" y="60" class="t">New job</text>
+<text x="282" y="78" class="s">copies the stages</text>
+<rect x="428" y="35" width="146" height="58" rx="9" class="box"/>
+<text x="440" y="60" class="t">Job stage</text>
+<text x="440" y="78" class="s">on the board</text>
+<rect x="586" y="35" width="146" height="58" rx="9" class="box"/>
+<text x="598" y="60" class="t">Complete stage</text>
+<text x="598" y="78" class="s">hands it on</text>
+<rect x="744" y="35" width="146" height="58" rx="9" class="box"/>
+<text x="756" y="60" class="t">Job done</text>
+<text x="756" y="78" class="s">stage log complete</text>
+<rect x="902" y="35" width="146" height="58" rx="9" class="box"/>
+<text x="914" y="60" class="t">My tasks</text>
+<text x="914" y="78" class="s">what waits on you</text>
+<rect x="112" y="185" width="146" height="58" rx="9" class="key"/>
+<text x="124" y="210" class="t">Protocol</text>
+<text x="124" y="228" class="s">materials, steps</text>
+<rect x="270" y="185" width="146" height="58" rx="9" class="box"/>
+<text x="282" y="210" class="t">Start run</text>
+<text x="282" y="228" class="s">copies the steps</text>
+<rect x="428" y="185" width="146" height="58" rx="9" class="box"/>
+<text x="440" y="210" class="t">Run</text>
+<text x="440" y="228" class="s">timed steps, notes</text>
+<rect x="586" y="185" width="146" height="58" rx="9" class="box"/>
+<text x="598" y="210" class="t">Complete run</text>
+<text x="598" y="228" class="s">finish time</text>
+<rect x="744" y="185" width="146" height="58" rx="9" class="box"/>
+<text x="756" y="210" class="t">Sign, witness</text>
+<text x="756" y="228" class="s">locks the record</text>
+<rect x="902" y="185" width="146" height="58" rx="9" class="box"/>
+<text x="914" y="210" class="t">Amend</text>
+<text x="914" y="228" class="s">with a reason</text>
+<rect x="1060" y="185" width="146" height="58" rx="9" class="box"/>
+<text x="1072" y="210" class="t">PDF export</text>
+<text x="1072" y="228" class="s">with signatures</text>
+<rect x="112" y="355" width="146" height="58" rx="9" class="ghost"/>
+<text x="124" y="380" class="t">Script, Jupyter</text>
+<text x="124" y="398" class="s">your own code</text>
+<rect x="270" y="355" width="146" height="58" rx="9" class="box"/>
+<text x="282" y="380" class="t">prem package</text>
+<text x="282" y="398" class="s">attach, record</text>
+<rect x="428" y="355" width="146" height="58" rx="9" class="key"/>
+<text x="440" y="380" class="t">Python cell</text>
+<text x="440" y="398" class="s">runs in the note</text>
+<rect x="586" y="355" width="146" height="58" rx="9" class="box"/>
+<text x="598" y="380" class="t">Output</text>
+<text x="598" y="398" class="s">code, inputs, env</text>
+<rect x="744" y="355" width="146" height="58" rx="9" class="box"/>
+<text x="756" y="380" class="t">Reproduce</text>
+<text x="756" y="398" class="s">same or different?</text>
+<rect x="902" y="355" width="146" height="58" rx="9" class="box"/>
+<text x="914" y="380" class="t">History</text>
+<text x="914" y="398" class="s">every save, chained</text>
+<path d="M258,64 L270,64" class="edge" marker-end="url(#a)"/>
+<path d="M416,64 L428,64" class="edge" marker-end="url(#a)"/>
+<path d="M574,64 L586,64" class="edge" marker-end="url(#a)"/>
+<path d="M732,64 L744,64" class="edge" marker-end="url(#a)"/>
+<path d="M890,64 L902,64" class="edge dash" marker-end="url(#a)"/>
+<path d="M258,214 L270,214" class="edge" marker-end="url(#a)"/>
+<path d="M416,214 L428,214" class="edge" marker-end="url(#a)"/>
+<path d="M574,214 L586,214" class="edge" marker-end="url(#a)"/>
+<path d="M732,214 L744,214" class="edge" marker-end="url(#a)"/>
+<path d="M890,214 L902,214" class="edge" marker-end="url(#a)"/>
+<path d="M1048,214 L1060,214" class="edge" marker-end="url(#a)"/>
+<path d="M481,93 L481,185" class="edge" marker-end="url(#a)"/>
+<text x="471" y="142" class="label" text-anchor="end">each stage starts a run</text>
+<path d="M659,185 L659,93" class="edge" marker-end="url(#a)"/>
+<text x="669" y="142" class="label">run done, stage done</text>
+<path d="M817,93 L817,185" class="edge" marker-end="url(#a)"/>
+<text x="827" y="142" class="label">sign the job</text>
+<path d="M258,384 L270,384" class="edge" marker-end="url(#a)"/>
+<path d="M343,355 L471,243" class="edge" marker-end="url(#a)"/>
+<text x="353" y="300" class="label">into the entry</text>
+<path d="M574,384 L586,384" class="edge" marker-end="url(#a)"/>
+<path d="M732,384 L744,384" class="edge" marker-end="url(#a)"/>
+<path d="M679,355 L531,243" class="edge" marker-end="url(#a)"/>
+<text x="687" y="300" class="label">saved in the note</text>
+<path d="M975,243 L975,355" class="edge" marker-end="url(#a)"/>
+<text x="985" y="300" class="label">every change</text>
+<text x="1206" y="478" class="label" text-anchor="end">Every box is a markdown note or a step in one; nothing lives in a database.</text>
+</svg>

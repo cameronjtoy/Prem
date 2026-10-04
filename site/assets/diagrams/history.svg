@@ -1,0 +1,85 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 300" width="900" height="300" role="img" aria-labelledby="title desc">
+<title id="title">A note's history</title>
+<desc id="desc">Each save of a note is an entry in its history, and each entry includes the hash of the one before, so changing any past version or signature breaks the chain. Signing locks the note; a colleague witnesses it; later changes are amendments with a reason. Edits made outside Prem are recorded too, and flagged on a signed note.</desc>
+<!-- Drawn by scripts/site-diagrams.mjs; edit that, not this file. -->
+<style>
+  .bg { fill: #faf9f5 } .panel { fill: #f2f0e9; stroke: #e5e2d9 }
+  .box { fill: #ffffff; stroke: #d9d5ca; stroke-width: 1.2 }
+  .key { fill: #e3ebec; stroke: #4c6f77; stroke-width: 1.4 }
+  .done { fill: #e6f0e8; stroke: #3f7d4e; stroke-width: 1.4 }
+  .warn { fill: #f8ecd9; stroke: #a8661a; stroke-width: 1.4 }
+  .ghost { fill: none; stroke: #8d887b; stroke-width: 1.2; stroke-dasharray: 5 4 }
+  .rule { stroke: #e5e2d9 }
+  .t { font: 600 14px -apple-system, 'Segoe UI', Inter, system-ui, Roboto, sans-serif; fill: #1a1915 }
+  .h { font: 600 15px -apple-system, 'Segoe UI', Inter, system-ui, Roboto, sans-serif; fill: #1a1915 }
+  .s { font: 12px -apple-system, 'Segoe UI', Inter, system-ui, Roboto, sans-serif; fill: #6e6a5f }
+  .m { font: 11.5px ui-monospace, 'SF Mono', Menlo, Consolas, monospace; fill: #4a4740 }
+  .lane { font: 600 11px ui-monospace, 'SF Mono', Menlo, Consolas, monospace; letter-spacing: 0.08em; fill: #6e6a5f }
+  .label { font: 11.5px -apple-system, 'Segoe UI', Inter, system-ui, Roboto, sans-serif; fill: #6e6a5f }
+  .accent { fill: #4c6f77 } .accent-text { font: 600 11px -apple-system, 'Segoe UI', Inter, system-ui, Roboto, sans-serif; fill: #4c6f77 }
+  .ok { font: 600 11px -apple-system, 'Segoe UI', Inter, system-ui, Roboto, sans-serif; fill: #3f7d4e } .bad { font: 600 11px -apple-system, 'Segoe UI', Inter, system-ui, Roboto, sans-serif; fill: #a8661a }
+  .chip { fill: #e3ebec } .chip-text { font: 600 11px -apple-system, 'Segoe UI', Inter, system-ui, Roboto, sans-serif; fill: #2e2c27 }
+  .badge { fill: #4c6f77 } .badge-text { font: 700 10px -apple-system, 'Segoe UI', Inter, system-ui, Roboto, sans-serif; fill: #ffffff }
+  .edge { stroke: #8d887b; stroke-width: 1.5; fill: none } .edge.dash { stroke-dasharray: 5 4 }
+  .edge.key-edge { stroke: #4c6f77; stroke-width: 2 }
+  .head { fill: #8d887b } .head.key-head { fill: #4c6f77 }
+  @media (prefers-color-scheme: dark) {
+    .bg { fill: #262624 } .panel { fill: #1f1e1c; stroke: #3d3c38 }
+    .box { fill: #302f2c; stroke: #4a4844 }
+    .key { fill: #33403f; stroke: #9dbcc2 }
+    .done { fill: #26342a; stroke: #8dc49a }
+    .warn { fill: #3a2f1f; stroke: #e3ad62 }
+    .ghost { stroke: #8a867c } .rule { stroke: #3d3c38 }
+    .t, .h { fill: #f7f5ef } .s, .lane, .label { fill: #a7a398 } .m { fill: #d4d0c6 }
+    .accent { fill: #9dbcc2 } .accent-text { fill: #9dbcc2 }
+    .ok { fill: #8dc49a } .bad { fill: #e3ad62 }
+    .chip { fill: #33403f } .chip-text { fill: #e9e6dd }
+    .badge { fill: #9dbcc2 } .badge-text { fill: #1a1d1d }
+    .edge { stroke: #8a867c } .edge.key-edge { stroke: #9dbcc2 }
+    .head { fill: #8a867c } .head.key-head { fill: #9dbcc2 }
+  }
+</style>
+<defs>
+  <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="head"/></marker>
+  <marker id="k" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="head key-head"/></marker>
+</defs>
+<rect width="900" height="300" class="bg"/>
+<text x="20" y="34" class="m">Ligation of insert into pUC19.md</text>
+<rect x="20" y="56" width="148" height="104" rx="9" class="box"/>
+<text x="34" y="82" class="t">Saved</text>
+<text x="34" y="101" class="s">alice · 09:12</text>
+<text x="34" y="124" class="m">hash a41c0e12…</text>
+<text x="34" y="142" class="m">prev none</text>
+<rect x="196" y="56" width="148" height="104" rx="9" class="box"/>
+<text x="210" y="82" class="t">Saved</text>
+<text x="210" y="101" class="s">alice · 11:40</text>
+<text x="210" y="124" class="m">hash 7d2b9f03…</text>
+<text x="210" y="142" class="m">prev a41c0e12…</text>
+<path d="M168,108 L196,108" class="edge" marker-end="url(#a)"/>
+<rect x="372" y="56" width="148" height="104" rx="9" class="key"/>
+<text x="386" y="82" class="t">Signed</text>
+<text x="386" y="101" class="s">alice · 16:05</text>
+<text x="386" y="124" class="m">hash c90e4a77…</text>
+<text x="386" y="142" class="m">prev 7d2b9f03…</text>
+<path d="M344,108 L372,108" class="edge" marker-end="url(#a)"/>
+<rect x="548" y="56" width="148" height="104" rx="9" class="key"/>
+<text x="562" y="82" class="t">Witnessed</text>
+<text x="562" y="101" class="s">bob · 16:31</text>
+<text x="562" y="124" class="m">hash 1f5d3b20…</text>
+<text x="562" y="142" class="m">prev c90e4a77…</text>
+<path d="M520,108 L548,108" class="edge" marker-end="url(#a)"/>
+<rect x="724" y="56" width="148" height="104" rx="9" class="warn"/>
+<text x="738" y="82" class="t">Amended</text>
+<text x="738" y="101" class="s">alice · next day</text>
+<text x="738" y="124" class="m">hash 88ab0c51…</text>
+<text x="738" y="142" class="m">prev 1f5d3b20…</text>
+<path d="M696,108 L724,108" class="edge" marker-end="url(#a)"/>
+<text x="738" y="178" class="label">reason: "fixed a unit typo"</text>
+<line x1="20" y1="200" x2="880" y2="200" class="rule"/>
+<text x="20" y="226" class="lane">LOCKED</text>
+<text x="110" y="226" class="s">From Signed on, the note is read-only. Changing it takes an amendment with a reason.</text>
+<text x="20" y="252" class="lane">CHECKED</text>
+<text x="110" y="252" class="s">Change any past version or signature and the chain no longer checks out. Prem says so.</text>
+<text x="20" y="278" class="lane">OUTSIDE</text>
+<text x="110" y="278" class="s">Edits made in other apps are recorded as "Changed outside Prem", and flagged on a signed note.</text>
+</svg>

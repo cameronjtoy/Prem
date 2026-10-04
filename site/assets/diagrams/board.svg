@@ -1,0 +1,96 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 330" width="760" height="330" role="img" aria-labelledby="title desc">
+<title id="title">The board of jobs</title>
+<desc id="desc">Every job of the Plasmid prep workflow, in a column per stage. Dragging a job to the next column completes its stage and hands it to the next person; dragging it back sends it back with a reason. My tasks counts the jobs waiting on you.</desc>
+<!-- Drawn by scripts/site-diagrams.mjs; edit that, not this file. -->
+<style>
+  .bg { fill: #faf9f5 } .panel { fill: #f2f0e9; stroke: #e5e2d9 }
+  .box { fill: #ffffff; stroke: #d9d5ca; stroke-width: 1.2 }
+  .key { fill: #e3ebec; stroke: #4c6f77; stroke-width: 1.4 }
+  .done { fill: #e6f0e8; stroke: #3f7d4e; stroke-width: 1.4 }
+  .warn { fill: #f8ecd9; stroke: #a8661a; stroke-width: 1.4 }
+  .ghost { fill: none; stroke: #8d887b; stroke-width: 1.2; stroke-dasharray: 5 4 }
+  .rule { stroke: #e5e2d9 }
+  .t { font: 600 14px -apple-system, 'Segoe UI', Inter, system-ui, Roboto, sans-serif; fill: #1a1915 }
+  .h { font: 600 15px -apple-system, 'Segoe UI', Inter, system-ui, Roboto, sans-serif; fill: #1a1915 }
+  .s { font: 12px -apple-system, 'Segoe UI', Inter, system-ui, Roboto, sans-serif; fill: #6e6a5f }
+  .m { font: 11.5px ui-monospace, 'SF Mono', Menlo, Consolas, monospace; fill: #4a4740 }
+  .lane { font: 600 11px ui-monospace, 'SF Mono', Menlo, Consolas, monospace; letter-spacing: 0.08em; fill: #6e6a5f }
+  .label { font: 11.5px -apple-system, 'Segoe UI', Inter, system-ui, Roboto, sans-serif; fill: #6e6a5f }
+  .accent { fill: #4c6f77 } .accent-text { font: 600 11px -apple-system, 'Segoe UI', Inter, system-ui, Roboto, sans-serif; fill: #4c6f77 }
+  .ok { font: 600 11px -apple-system, 'Segoe UI', Inter, system-ui, Roboto, sans-serif; fill: #3f7d4e } .bad { font: 600 11px -apple-system, 'Segoe UI', Inter, system-ui, Roboto, sans-serif; fill: #a8661a }
+  .chip { fill: #e3ebec } .chip-text { font: 600 11px -apple-system, 'Segoe UI', Inter, system-ui, Roboto, sans-serif; fill: #2e2c27 }
+  .badge { fill: #4c6f77 } .badge-text { font: 700 10px -apple-system, 'Segoe UI', Inter, system-ui, Roboto, sans-serif; fill: #ffffff }
+  .edge { stroke: #8d887b; stroke-width: 1.5; fill: none } .edge.dash { stroke-dasharray: 5 4 }
+  .edge.key-edge { stroke: #4c6f77; stroke-width: 2 }
+  .head { fill: #8d887b } .head.key-head { fill: #4c6f77 }
+  @media (prefers-color-scheme: dark) {
+    .bg { fill: #262624 } .panel { fill: #1f1e1c; stroke: #3d3c38 }
+    .box { fill: #302f2c; stroke: #4a4844 }
+    .key { fill: #33403f; stroke: #9dbcc2 }
+    .done { fill: #26342a; stroke: #8dc49a }
+    .warn { fill: #3a2f1f; stroke: #e3ad62 }
+    .ghost { stroke: #8a867c } .rule { stroke: #3d3c38 }
+    .t, .h { fill: #f7f5ef } .s, .lane, .label { fill: #a7a398 } .m { fill: #d4d0c6 }
+    .accent { fill: #9dbcc2 } .accent-text { fill: #9dbcc2 }
+    .ok { fill: #8dc49a } .bad { fill: #e3ad62 }
+    .chip { fill: #33403f } .chip-text { fill: #e9e6dd }
+    .badge { fill: #9dbcc2 } .badge-text { fill: #1a1d1d }
+    .edge { stroke: #8a867c } .edge.key-edge { stroke: #9dbcc2 }
+    .head { fill: #8a867c } .head.key-head { fill: #9dbcc2 }
+  }
+</style>
+<defs>
+  <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="head"/></marker>
+  <marker id="k" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="head key-head"/></marker>
+</defs>
+<rect width="760" height="330" class="bg"/>
+<text x="20" y="34" class="h">Plasmid prep</text>
+<text x="140" y="34" class="s">3 stages · 5 jobs</text>
+<rect x="612" y="16" width="128" height="28" rx="8" class="box"/>
+<text x="626" y="35" class="t">My tasks</text>
+<rect x="708" y="22" width="22" height="16" rx="8" class="badge"/>
+<text x="719" y="34" class="badge-text" text-anchor="middle">2</text>
+<rect x="20" y="60" width="172" height="254" rx="10" class="panel"/>
+<text x="32" y="84" class="t">Grow culture</text>
+<rect x="204" y="60" width="172" height="254" rx="10" class="key"/>
+<text x="216" y="84" class="t">Miniprep</text>
+<rect x="388" y="60" width="172" height="254" rx="10" class="panel"/>
+<text x="400" y="84" class="t">Sequence check</text>
+<rect x="572" y="60" width="172" height="254" rx="10" class="panel"/>
+<text x="584" y="84" class="t">Done</text>
+<rect x="30" y="100" width="152" height="72" rx="8" class="box"/>
+<text x="42" y="124" class="t">job 10-02 09:30</text>
+<rect x="42" y="136" width="35.8" height="20" rx="10" class="chip"/>
+<text x="59.9" y="150" class="chip-text" text-anchor="middle">bob</text>
+<text x="85.8" y="150" class="s">open</text>
+<rect x="214" y="100" width="152" height="72" rx="8" class="box"/>
+<text x="226" y="124" class="t">job 10-01 14:00</text>
+<rect x="226" y="136" width="49" height="20" rx="10" class="chip"/>
+<text x="250.5" y="150" class="chip-text" text-anchor="middle">alice</text>
+<text x="283" y="150" class="s">in progress</text>
+<text x="226" y="166" class="accent-text">run open</text>
+<rect x="398" y="100" width="152" height="72" rx="8" class="box"/>
+<text x="410" y="124" class="t">job 09-28 09:00</text>
+<rect x="410" y="136" width="49" height="20" rx="10" class="chip"/>
+<text x="434.5" y="150" class="chip-text" text-anchor="middle">alice</text>
+<text x="467" y="150" class="s">in progress</text>
+<text x="410" y="166" class="accent-text">2 samples</text>
+<rect x="582" y="100" width="152" height="72" rx="8" class="box"/>
+<text x="594" y="124" class="t">job 09-15 10:00</text>
+<rect x="594" y="136" width="35.8" height="20" rx="10" class="chip"/>
+<text x="611.9" y="150" class="chip-text" text-anchor="middle">bob</text>
+<text x="637.8" y="150" class="s">done</text>
+<rect x="30" y="200" width="152" height="72" rx="8" class="ghost"/>
+<text x="42" y="224" class="t">job 10-03 08:15</text>
+<rect x="42" y="236" width="35.8" height="20" rx="10" class="chip"/>
+<text x="59.9" y="250" class="chip-text" text-anchor="middle">bob</text>
+<path d="M182,236 L228,236" class="edge key-edge" marker-end="url(#k)"/>
+<rect x="214" y="200" width="152" height="72" rx="8" class="ghost"/>
+<text x="290" y="230" class="accent-text" text-anchor="middle">Drop to complete</text>
+<text x="290" y="246" class="label" text-anchor="middle">Grow culture and</text>
+<text x="290" y="260" class="label" text-anchor="middle">hand the job to alice</text>
+<text x="400" y="230" class="label">Drag back to send a</text>
+<text x="400" y="246" class="label">job back, with a reason.</text>
+<text x="400" y="270" class="label">On a team server, only the</text>
+<text x="400" y="286" class="label">assignee or a PI moves it.</text>
+</svg>

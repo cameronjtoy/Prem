@@ -1,0 +1,90 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 350" width="900" height="350" role="img" aria-labelledby="title desc">
+<title id="title">Reproducible analysis in a note</title>
+<desc id="desc">A Python cell runs in the note. Its output is saved under it with the code version, the Python and environment it ran in, and the files it read with their hashes. The environment’s full package list is saved next to the note. Reproduce rebuilds that environment, reruns the cells and says which outputs are the same.</desc>
+<!-- Drawn by scripts/site-diagrams.mjs; edit that, not this file. -->
+<style>
+  .bg { fill: #faf9f5 } .panel { fill: #f2f0e9; stroke: #e5e2d9 }
+  .box { fill: #ffffff; stroke: #d9d5ca; stroke-width: 1.2 }
+  .key { fill: #e3ebec; stroke: #4c6f77; stroke-width: 1.4 }
+  .done { fill: #e6f0e8; stroke: #3f7d4e; stroke-width: 1.4 }
+  .warn { fill: #f8ecd9; stroke: #a8661a; stroke-width: 1.4 }
+  .ghost { fill: none; stroke: #8d887b; stroke-width: 1.2; stroke-dasharray: 5 4 }
+  .rule { stroke: #e5e2d9 }
+  .t { font: 600 14px -apple-system, 'Segoe UI', Inter, system-ui, Roboto, sans-serif; fill: #1a1915 }
+  .h { font: 600 15px -apple-system, 'Segoe UI', Inter, system-ui, Roboto, sans-serif; fill: #1a1915 }
+  .s { font: 12px -apple-system, 'Segoe UI', Inter, system-ui, Roboto, sans-serif; fill: #6e6a5f }
+  .m { font: 11.5px ui-monospace, 'SF Mono', Menlo, Consolas, monospace; fill: #4a4740 }
+  .lane { font: 600 11px ui-monospace, 'SF Mono', Menlo, Consolas, monospace; letter-spacing: 0.08em; fill: #6e6a5f }
+  .label { font: 11.5px -apple-system, 'Segoe UI', Inter, system-ui, Roboto, sans-serif; fill: #6e6a5f }
+  .accent { fill: #4c6f77 } .accent-text { font: 600 11px -apple-system, 'Segoe UI', Inter, system-ui, Roboto, sans-serif; fill: #4c6f77 }
+  .ok { font: 600 11px -apple-system, 'Segoe UI', Inter, system-ui, Roboto, sans-serif; fill: #3f7d4e } .bad { font: 600 11px -apple-system, 'Segoe UI', Inter, system-ui, Roboto, sans-serif; fill: #a8661a }
+  .chip { fill: #e3ebec } .chip-text { font: 600 11px -apple-system, 'Segoe UI', Inter, system-ui, Roboto, sans-serif; fill: #2e2c27 }
+  .badge { fill: #4c6f77 } .badge-text { font: 700 10px -apple-system, 'Segoe UI', Inter, system-ui, Roboto, sans-serif; fill: #ffffff }
+  .edge { stroke: #8d887b; stroke-width: 1.5; fill: none } .edge.dash { stroke-dasharray: 5 4 }
+  .edge.key-edge { stroke: #4c6f77; stroke-width: 2 }
+  .head { fill: #8d887b } .head.key-head { fill: #4c6f77 }
+  @media (prefers-color-scheme: dark) {
+    .bg { fill: #262624 } .panel { fill: #1f1e1c; stroke: #3d3c38 }
+    .box { fill: #302f2c; stroke: #4a4844 }
+    .key { fill: #33403f; stroke: #9dbcc2 }
+    .done { fill: #26342a; stroke: #8dc49a }
+    .warn { fill: #3a2f1f; stroke: #e3ad62 }
+    .ghost { stroke: #8a867c } .rule { stroke: #3d3c38 }
+    .t, .h { fill: #f7f5ef } .s, .lane, .label { fill: #a7a398 } .m { fill: #d4d0c6 }
+    .accent { fill: #9dbcc2 } .accent-text { fill: #9dbcc2 }
+    .ok { fill: #8dc49a } .bad { fill: #e3ad62 }
+    .chip { fill: #33403f } .chip-text { fill: #e9e6dd }
+    .badge { fill: #9dbcc2 } .badge-text { fill: #1a1d1d }
+    .edge { stroke: #8a867c } .edge.key-edge { stroke: #9dbcc2 }
+    .head { fill: #8a867c } .head.key-head { fill: #9dbcc2 }
+  }
+</style>
+<defs>
+  <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="head"/></marker>
+  <marker id="k" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="head key-head"/></marker>
+</defs>
+<rect width="900" height="350" class="bg"/>
+<text x="20" y="34" class="lane">IN THE NOTE</text>
+<rect x="20" y="46" width="400" height="92" rx="9" class="box"/>
+<text x="34" y="70" class="m">```python {run}</text>
+<text x="34" y="90" class="m">df = pd.read_csv("attachments/plate.csv")</text>
+<text x="34" y="110" class="m">df.groupby("sample").od.mean()</text>
+<text x="34" y="130" class="m">```</text>
+<path d="M220,138 L220,166" class="edge" marker-end="url(#a)"/>
+<text x="230" y="158" class="label">Run</text>
+<rect x="20" y="166" width="400" height="112" rx="9" class="key"/>
+<text x="34" y="190" class="t">Output, saved in the note</text>
+<text x="34" y="212" class="m">sample A 0.41 · sample B 0.88</text>
+<rect x="34" y="226" width="101.8" height="20" rx="10" class="chip"/>
+<text x="84.9" y="240" class="chip-text" text-anchor="middle">code 3f2a91c0</text>
+<rect x="143.8" y="226" width="101.8" height="20" rx="10" class="chip"/>
+<text x="194.70000000000002" y="240" class="chip-text" text-anchor="middle">Python 3.12.4</text>
+<rect x="253.60000000000002" y="226" width="121.6" height="20" rx="10" class="chip"/>
+<text x="314.40000000000003" y="240" class="chip-text" text-anchor="middle">env 9b1e2c3d4f5a</text>
+<rect x="34" y="252" width="181" height="20" rx="10" class="chip"/>
+<text x="124.5" y="266" class="chip-text" text-anchor="middle">read plate.csv @ a41c0e12</text>
+<path d="M220,278 L220,306" class="edge" marker-end="url(#a)"/>
+<rect x="20" y="306" width="400" height="30" rx="8" class="box"/>
+<text x="34" y="326" class="m">attachments/environment-9b1e2c3d4f5a.txt</text>
+<text x="480" y="34" class="lane">LATER, ON ANY COMPUTER</text>
+<rect x="480" y="46" width="400" height="70" rx="9" class="warn"/>
+<text x="494" y="71" class="t">If plate.csv changes</text>
+<text x="494" y="91" class="s">The output is flagged, and so are the cells after it:</text>
+<text x="494" y="109" class="s">"plate.csv changed since this output"</text>
+<rect x="480" y="140" width="400" height="92" rx="9" class="key"/>
+<text x="494" y="165" class="t">Reproduce</text>
+<text x="494" y="185" class="s">1  Rebuild environment 9b1e2c3d4f5a exactly</text>
+<text x="494" y="203" class="s">2  Rerun the cells in a fresh Python</text>
+<text x="494" y="221" class="s">3  Compare text, tables and figures byte for byte</text>
+<path d="M420,321 L450,321 L450,186 L480,186" class="edge key-edge" marker-end="url(#k)"/>
+<rect x="480" y="256" width="194" height="80" rx="9" class="done"/>
+<text x="494" y="282" class="t">Same</text>
+<text x="494" y="302" class="s">All 2 outputs are the</text>
+<text x="494" y="320" class="s">same as recorded.</text>
+<rect x="686" y="256" width="194" height="80" rx="9" class="warn"/>
+<text x="700" y="282" class="t">Different</text>
+<text x="700" y="302" class="s">Printed text: different</text>
+<text x="700" y="320" class="s">Figure 1: same</text>
+<path d="M620,232 L578,256" class="edge" marker-end="url(#a)"/>
+<path d="M740,232 L782,256" class="edge" marker-end="url(#a)"/>
+</svg>
