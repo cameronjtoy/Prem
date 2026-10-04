@@ -47,6 +47,8 @@ const api: Api = {
   search: (query) => ipcRenderer.invoke(Channels.search, query),
   index: {
     get: () => ipcRenderer.invoke(Channels.getIndex),
+    links: (path) => ipcRenderer.invoke(Channels.indexLinks, path),
+    graph: () => ipcRenderer.invoke(Channels.indexGraph),
     onUpdated: (listener) => subscribe(Channels.indexUpdated, listener)
   },
   settings: {

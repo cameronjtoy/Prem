@@ -39,6 +39,8 @@ The end-to-end tests in `e2e/` drive the built app with [Playwright](https://pla
 
 CI runs the whole suite on Linux, and the tests tagged `@smoke` (`test('…', { tag: '@smoke' }, …)`) on macOS and Windows too, along with the unit tests. Tag a new test `@smoke` when it covers something people do every day; `npm run e2e -- --grep @smoke` runs just those.
 
+`npm run e2e:scale` generates a vault of 10,000 notes (`scripts/bench-vault.mjs`) and checks that Prem opens it, searches it and notices edits made in other apps within budget, and how much memory it uses. CI runs it on Linux; run it when you change how notes are read, indexed or sent to the window.
+
 ## How changes are made
 - Work on a branch and open a pull request against `main`. `main` is protected, and every change goes through a pull request with passing CI.
 - Keep each pull request to one change, and say in the description what changed, why, and how you tested it.

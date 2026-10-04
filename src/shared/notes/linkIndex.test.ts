@@ -106,3 +106,29 @@ describe('LinkIndex jobs and workflows', () => {
     expect(index.snapshot().jobs).toEqual([])
   })
 })
+
+describe('LinkIndex slices for the window', () => {
+  it('serves a small summary, one note’s links, and works out the full index once per change', () => {
+    const index = new LinkIndex()
+    index.build([
+      { path: 'A.md', content: 'See [[B]] and [[Nowhere]].' },
+      { path: 'B.md', content: 'Back to [[A]].' }
+    ])
+    const summary = index.summary()
+    expect(Object.keys(summary).sort()).toEqual(['jobs', 'version', 'workflows'])
+    expect(index.linksFor('A.md')).toEqual({
+      backlinks: [{ source: 'B.md', snippets: ['Back to [[A]].'] }],
+      outgoing: [
+        { target: 'B', resolved: 'B.md' },
+        { target: 'Nowhere', resolved: null }
+      ]
+    })
+    expect(index.linksFor('Missing.md')).toEqual({ backlinks: [], outgoing: [] })
+    expect(index.snapshot()).toBe(index.snapshot())
+    const before = index.snapshot()
+    index.upsert('C.md', 'New, linking [[A]].')
+    expect(index.snapshot()).not.toBe(before)
+    expect(index.linksFor('A.md').backlinks.map((b) => b.source)).toEqual(['B.md', 'C.md'])
+    expect(index.summary().version).toBeGreaterThan(summary.version)
+  })
+})

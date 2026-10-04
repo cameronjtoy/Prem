@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import ForceGraph2D, { type ForceGraphMethods } from 'react-force-graph-2d'
 import type { GraphNode } from '@shared/vault/types'
-import { useLinkIndex } from '../../state/LinkIndexContext'
+import { useLinkGraph } from '../../state/LinkIndexContext'
 import { useWorkspace } from '../../state/WorkspaceContext'
 
 type Node = GraphNode & { x?: number; y?: number }
@@ -23,7 +23,7 @@ function readColors() {
 const idOf = (end: string | Node): string => (typeof end === 'string' ? end : end.id)
 
 export function GraphView() {
-  const snapshot = useLinkIndex()
+  const graph = useLinkGraph()
   const { active, openNote, openLink } = useWorkspace()
   const containerRef = useRef<HTMLDivElement>(null)
   const [size, setSize] = useState({ width: 0, height: 0 })
@@ -52,15 +52,15 @@ export function GraphView() {
 
   // Reuse node objects between snapshots so the layout doesn't jump when a note changes.
   const data = useMemo(() => {
-    if (!snapshot) return { nodes: [] as Node[], links: [] as Link[] }
+    if (!graph) return { nodes: [] as Node[], links: [] as Link[] }
     const previous = positions.current
-    const nodes = snapshot.graph.nodes.map((n) => {
+    const nodes = graph.nodes.map((n) => {
       const old = previous.get(n.id)
       return old ? Object.assign(old, n) : ({ ...n } as Node)
     })
     positions.current = new Map(nodes.map((n) => [n.id, n]))
-    return { nodes, links: snapshot.graph.links.map((l) => ({ ...l })) as Link[] }
-  }, [snapshot])
+    return { nodes, links: graph.links.map((l) => ({ ...l })) as Link[] }
+  }, [graph])
 
   const focus = hovered ?? active?.path ?? null
   const neighbors = useMemo(() => {
