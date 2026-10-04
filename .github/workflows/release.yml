@@ -49,13 +49,24 @@ jobs:
           node-version-file: .nvmrc
           cache: npm
       - run: npm ci
+      # Signing turns on by itself once its secrets are added (see electron-builder.config.cjs and
+      # docs/install.md). Each platform only gets its own certificate. Without them, installers are unsigned.
       - run: npm run build
+        env:
+          CSC_LINK: ${{ matrix.os == 'macos-latest' && secrets.CSC_LINK || '' }}
+          WIN_CSC_LINK: ${{ matrix.os == 'windows-latest' && secrets.WIN_CSC_LINK || '' }}
       - run: npm run notices
       - name: Package
-        # Installers are unsigned until signing secrets are added (see docs/install.md).
-        run: npx electron-builder --publish never
+        run: npx electron-builder --config electron-builder.config.cjs --publish never
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+          CSC_LINK: ${{ matrix.os == 'macos-latest' && secrets.CSC_LINK || '' }}
+          CSC_KEY_PASSWORD: ${{ matrix.os == 'macos-latest' && secrets.CSC_KEY_PASSWORD || '' }}
+          APPLE_ID: ${{ matrix.os == 'macos-latest' && secrets.APPLE_ID || '' }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ matrix.os == 'macos-latest' && secrets.APPLE_APP_SPECIFIC_PASSWORD || '' }}
+          APPLE_TEAM_ID: ${{ matrix.os == 'macos-latest' && secrets.APPLE_TEAM_ID || '' }}
+          WIN_CSC_LINK: ${{ matrix.os == 'windows-latest' && secrets.WIN_CSC_LINK || '' }}
+          WIN_CSC_KEY_PASSWORD: ${{ matrix.os == 'windows-latest' && secrets.WIN_CSC_KEY_PASSWORD || '' }}
       - uses: actions/upload-artifact@v7
         with:
           name: app-${{ matrix.os }}
@@ -66,6 +77,8 @@ jobs:
             dist/*.exe
             dist/*.AppImage
             dist/*.deb
+            dist/latest*.yml
+            dist/*.blockmap
 
   server:
     name: Team server
@@ -145,8 +158,15 @@ jobs:
             found
           ' CHANGELOG.md > notes.md
           if [ ! -s notes.md ]; then echo "Release $GITHUB_REF_NAME." > notes.md; fi
-          printf '\n---\n\n**Installing:** these builds are not signed yet, so macOS and Windows warn on first launch. See the [install guide](https://github.com/%s/blob/%s/docs/install.md).\n' \
-            "$GITHUB_REPOSITORY" "$GITHUB_REF_NAME" >> notes.md
+          if [ "$SIGNED" = "true" ]; then
+            printf '\n---\n\n**Installing:** see the [install guide](https://github.com/%s/blob/%s/docs/install.md). Installed copies update themselves.\n' \
+              "$GITHUB_REPOSITORY" "$GITHUB_REF_NAME" >> notes.md
+          else
+            printf '\n---\n\n**Installing:** these builds are not signed yet, so macOS and Windows warn on first launch. See the [install guide](https://github.com/%s/blob/%s/docs/install.md).\n' \
+              "$GITHUB_REPOSITORY" "$GITHUB_REF_NAME" >> notes.md
+          fi
+        env:
+          SIGNED: ${{ secrets.CSC_LINK != '' && secrets.WIN_CSC_LINK != '' }}
       - name: Create draft release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

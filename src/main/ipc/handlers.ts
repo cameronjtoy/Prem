@@ -21,6 +21,7 @@ import type { AnalysisManager } from '../analysis/AnalysisManager'
 import type { KeybindingsStore } from '../keybindings'
 import type { LogFile } from '../log'
 import type { SettingsStore } from '../settings'
+import { installUpdate } from '../updates'
 import { loadState, recallToken } from '../state'
 import type { VaultManager } from '../vault/VaultManager'
 
@@ -241,6 +242,7 @@ export function registerIpc(
     })
   })
 
+  handle(Channels.installUpdate, () => installUpdate())
   handle(Channels.logError, (message) => log.write('error', `[window] ${str(message, 'message').slice(0, 8000)}`))
   handle(Channels.diagnostics, (): ReportInfo => {
     const where = vaults.location()

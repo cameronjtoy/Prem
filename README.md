@@ -186,7 +186,7 @@ npm run format         # prettier
 npm run typecheck      # main, preload, renderer and server
 npm run build          # production bundles into out/
 npm run server:build   # the team server as a single file, out/server/index.js
-npm run package        # installers for this computer, into dist/ (see electron-builder.yml)
+npm run package        # installers for this computer, into dist/ (see electron-builder.config.cjs)
 npm run package:dir    # an unpacked app in dist/, quicker for testing packaging
 npm run site           # the website (site/ and docs/) into _site/, with a link check
 ```

@@ -37,7 +37,9 @@ function contentSecurityPolicy(): Plugin {
 export default defineConfig({
   main: {
     resolve: { alias },
-    build: { externalizeDeps: { exclude: ['chokidar'] } }
+    build: { externalizeDeps: { exclude: ['chokidar', 'electron-updater'] } },
+    // Auto-update only runs in builds signed by the release workflow (see src/shared/updates.ts).
+    define: { PREM_SIGNED_BUILD: JSON.stringify(!!(process.env.CSC_LINK || process.env.WIN_CSC_LINK)) }
   },
   preload: {
     resolve: { alias }

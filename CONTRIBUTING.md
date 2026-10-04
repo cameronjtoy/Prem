@@ -71,6 +71,17 @@ The Python package (`python/`) is released separately. Set `__version__` in `pyt
 
 To try packaging locally, `npm run package:dir` builds an unpacked app in `dist/` for your platform.
 
+### Turning on signing and auto-update
+Installers are unsigned until these repository secrets exist (Settings → Secrets and variables → Actions). Nothing else needs changing: `electron-builder.config.cjs` and the release workflow switch signing on when they find them.
+
+| Secret | What it is |
+|---|---|
+| `CSC_LINK`, `CSC_KEY_PASSWORD` | The macOS Developer ID Application certificate, exported as a base64 `.p12`, and its password |
+| `APPLE_ID`, `APPLE_APP_SPECIFIC_PASSWORD`, `APPLE_TEAM_ID` | For notarization: the Apple ID, an app-specific password for it, and the team ID |
+| `WIN_CSC_LINK`, `WIN_CSC_KEY_PASSWORD` | The Windows code-signing certificate, as a base64 `.pfx`, and its password |
+
+Signed builds update themselves: once a day they check this repository's releases, download a new version in the background and offer to restart (`src/main/updates.ts`). Linux AppImages do the same without signing. Unsigned macOS and Windows builds never update themselves, and **Settings → Updates** turns checking off. A draft release isn't seen by installed copies until it's published.
+
 ## The website
 The site at https://cameronjtoy.github.io/Prem/ is built from `site/` and the guides in `docs/` by `npm run site`, and published from `main` by [the website workflow](.github/workflows/site.yml). Pages share `site/layout.html`; a guide in `docs/` appears on the site once it's listed in `DOCS` in `scripts/build-site.mjs`. Open `_site/index.html` in a browser to preview.
 

@@ -67,6 +67,9 @@ function Shell() {
   const linksPanel = usePanelRef()
   // Panel widths, and whether each side panel is hidden, are kept between launches.
   const layout = useDefaultLayout({ id: 'prem-panels', storage: localStorage })
+  // A new version downloaded in the background, ready to install on restart.
+  const [update, setUpdate] = useState<string | null>(null)
+  useEffect(() => window.api.app.onUpdateReady(setUpdate), [])
   const [reporting, setReporting] = useState(false)
   const [filesHidden, setFilesHidden] = useState(false)
   const [linksHidden, setLinksHidden] = useState(false)
@@ -296,6 +299,13 @@ function Shell() {
               <div className="banner warning settings-trouble">
                 <span>{trouble.message}</span>
                 <button onClick={() => setOverlay(trouble.tab)}>Show</button>
+              </div>
+            )}
+            {update && (
+              <div className="banner info update-ready">
+                <span>Prem {update} is ready. It's installed when you restart.</span>
+                <button onClick={() => void window.api.app.installUpdate()}>Restart now</button>
+                <button onClick={() => setUpdate(null)}>Later</button>
               </div>
             )}
             {ws.notice && (

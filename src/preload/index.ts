@@ -80,6 +80,8 @@ const api: Api = {
   },
   app: {
     openExternal: (url) => ipcRenderer.invoke(Channels.openExternal, url),
+    onUpdateReady: (listener) => subscribe(Channels.updateReady, listener),
+    installUpdate: () => ipcRenderer.invoke(Channels.installUpdate),
     logError: (message) => ipcRenderer.invoke(Channels.logError, message),
     diagnostics: () => ipcRenderer.invoke(Channels.diagnostics),
     showLogs: () => ipcRenderer.invoke(Channels.showLogs),
