@@ -16,7 +16,7 @@ test('opens the example vault with every link resolving', { tag: '@smoke' }, asy
 })
 
 test('creates an entry from a template and saves it to disk', { tag: '@smoke' }, async ({ prem: { page, read } }) => {
-  await page.locator('.main-toolbar').getByText('New from template').click()
+  await page.locator('.main-toolbar').getByRole('button', { name: 'New from template' }).click()
   await page.locator('.modal input').fill('PCR check')
   await page.locator('.template-list li', { hasText: 'Experiment' }).click()
   await expect(page.locator('.breadcrumb')).toHaveAttribute('title', /PCR check\.md$/)

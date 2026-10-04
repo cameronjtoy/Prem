@@ -4,6 +4,7 @@ id: {{title}}
 sample-type:
 source:
 location:
+status: available
 created: {{date}}
 created-by: {{author}}
 tags: [sample]

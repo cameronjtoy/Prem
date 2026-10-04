@@ -1,8 +1,13 @@
 import { isInside, isMarkdown, noteTitle, TEMPLATES_FOLDER } from '../vault/paths'
 import { createResolver, type Resolver } from './resolve'
-import { isJob, isWorkflow, summarizeJob, summarizeWorkflow } from '../records/workflows'
+import { parseFrontmatter } from './frontmatter'
+import { summarizeBox, summarizeSample } from '../records/samples'
+import { summarizeJob, summarizeWorkflow } from '../records/workflows'
 import type {
   Backlink,
+  BoxSummary,
+  SampleIndex,
+  SampleSummary,
   IndexSummary,
   JobSummary,
   NoteLinks,
@@ -20,6 +25,9 @@ interface IndexedNote {
   /** Set for job and workflow notes, which the board shows. */
   job?: JobSummary
   workflow?: WorkflowSummary
+  /** Set for sample and box notes, which the Samples view shows. */
+  sample?: SampleSummary
+  box?: BoxSummary
   links: ParsedLink[]
   /** Only the lines that contain links, keyed by line number, for backlink snippets. */
   lines: Map<number, string>
@@ -35,6 +43,7 @@ export class LinkIndex {
   private version = 0
   /** The full snapshot for the current version, worked out once however many times it's asked for. */
   private cached: LinkIndexSnapshot | null = null
+  private cachedSamples: (SampleIndex & { version: number }) | null = null
 
   constructor(private readonly excludedFolders: VaultPath[] = [TEMPLATES_FOLDER]) {}
 
@@ -76,6 +85,23 @@ export class LinkIndex {
   summary(): IndexSummary {
     const { version, workflows, jobs } = this.snapshot()
     return { version, workflows, jobs }
+  }
+
+  /** Every sample and box, for the Samples view. Asked for only while it's open, since a lab can have thousands. */
+  samples(): SampleIndex {
+    if (this.cachedSamples?.version !== this.version) {
+      const samples: SampleSummary[] = []
+      const boxes: BoxSummary[] = []
+      for (const [path, note] of this.notes) {
+        if (this.excludedFolders.some((f) => isInside(path, f))) continue
+        if (note.sample) samples.push(note.sample)
+        if (note.box) boxes.push(note.box)
+      }
+      samples.sort((a, b) => a.id.localeCompare(b.id, undefined, { numeric: true }))
+      this.cachedSamples = { version: this.version, samples, boxes }
+    }
+    const { samples, boxes } = this.cachedSamples
+    return { samples, boxes }
   }
 
   /** The links into and out of one note. */
@@ -163,8 +189,12 @@ export class LinkIndex {
       for (const l of links) lines.set(l.line, all[l.line] ?? '')
     }
     const note: IndexedNote = { links, lines }
-    if (isJob(content)) note.job = summarizeJob(path, content)
-    else if (isWorkflow(content)) note.workflow = summarizeWorkflow(path, content)
+    // Read the type once: this runs for every note in the vault when it opens.
+    const type = /^---\r?\n/.test(content) ? parseFrontmatter(content).fields.type : undefined
+    if (type === 'job') note.job = summarizeJob(path, content)
+    else if (type === 'workflow') note.workflow = summarizeWorkflow(path, content)
+    else if (type === 'sample') note.sample = summarizeSample(path, content)
+    else if (type === 'box') note.box = summarizeBox(path, content)
     this.notes.set(path, note)
   }
 

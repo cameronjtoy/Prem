@@ -15,6 +15,7 @@ import type {
   FileRecord,
   IndexSummary,
   LinkIndexSnapshot,
+  SampleIndex,
   NoteLinks,
   RenameResult,
   TemplateInfo,
@@ -52,6 +53,7 @@ export const Channels = {
   getIndex: 'index:get',
   indexLinks: 'index:links',
   indexGraph: 'index:graph',
+  indexSamples: 'index:samples',
   search: 'search:query',
   openExternal: 'app:openExternal',
   updateReady: 'app:updateReady',
@@ -140,6 +142,8 @@ export interface Api {
     links(path: string): R<NoteLinks | null>
     /** Every note and link, for the graph view. */
     graph(): R<LinkIndexSnapshot['graph'] | null>
+    /** Every sample and box, for the Samples view. */
+    samples(): R<SampleIndex | null>
     onUpdated(listener: (summary: IndexSummary) => void): () => void
   }
   settings: {

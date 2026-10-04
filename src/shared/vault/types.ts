@@ -160,3 +160,36 @@ export interface RenameResult {
   /** Notes you can read but not edit that link to what moved; their links weren't changed. */
   readOnly: VaultPath[]
 }
+
+/** A sample note, as the Samples view and the freezer map need it. */
+export interface SampleSummary {
+  path: VaultPath
+  title: string
+  /** Its `id`, or the note's name. */
+  id: string
+  /** Its `sample-type`. */
+  kind: string
+  /** Its `location`, as written. */
+  location: string
+  /** The container part of the location ("Freezer B, box 3"), or null if none is given. */
+  box: string | null
+  /** The well ("A1"), or null. */
+  well: string | null
+  status: 'available' | 'used up' | 'discarded'
+  created: string
+  createdBy: string
+}
+
+/** A box note: where the box is and its size. */
+export interface BoxSummary {
+  path: VaultPath
+  location: string
+  rows: number
+  columns: number
+}
+
+/** Every sample and box note, asked for when the Samples view is open. */
+export interface SampleIndex {
+  samples: SampleSummary[]
+  boxes: BoxSummary[]
+}

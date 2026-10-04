@@ -59,6 +59,13 @@ export const BoardIcon = (p: IconProps) => (
   </svg>
 )
 
+export const SampleIcon = (p: IconProps) => (
+  <svg {...base(p)}>
+    <path d="M9 3h6M10 3v13.5a2 2 0 0 0 4 0V3" />
+    <path d="M10 11h4" />
+  </svg>
+)
+
 export const TasksIcon = (p: IconProps) => (
   <svg {...base(p)}>
     <path d="M4 7l2 2 3.5-3.5M4 15l2 2 3.5-3.5M13 7.5h7M13 15.5h7" />

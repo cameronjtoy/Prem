@@ -50,6 +50,7 @@ const api: Api = {
     get: () => ipcRenderer.invoke(Channels.getIndex),
     links: (path) => ipcRenderer.invoke(Channels.indexLinks, path),
     graph: () => ipcRenderer.invoke(Channels.indexGraph),
+    samples: () => ipcRenderer.invoke(Channels.indexSamples),
     onUpdated: (listener) => subscribe(Channels.indexUpdated, listener)
   },
   settings: {

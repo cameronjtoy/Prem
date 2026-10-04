@@ -43,6 +43,7 @@ export const vaultClient = {
   showLogs: () => unwrap(window.api.app.showLogs()),
   noteLinks: (path: string) => unwrap(window.api.index.links(path)),
   linkGraph: () => unwrap(window.api.index.graph()),
+  sampleIndex: () => unwrap(window.api.index.samples()),
   search: (query: string) => unwrap(window.api.search(query)),
   onIndexUpdated: window.api.index.onUpdated,
   openExternal: (url: string) => unwrap(window.api.app.openExternal(url)),

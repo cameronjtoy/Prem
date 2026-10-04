@@ -1742,3 +1742,301 @@ kbd {
   align-items: center;
   gap: 8px;
 }
+
+/* The main toolbar drops its button labels, keeping the icons, when it gets narrow. */
+
+.main-toolbar {
+  container-type: inline-size;
+}
+
+@container (max-width: 860px) {
+  .main-toolbar .text-button .toolbar-label {
+    display: none;
+  }
+}
+
+@container (max-width: 560px) {
+  .main-toolbar .segmented .toolbar-label {
+    display: none;
+  }
+}
+
+/* Samples */
+
+.samples-view {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.samples-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 18px;
+  border-bottom: 1px solid var(--border);
+}
+
+.sample-list,
+.freezer-map {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 12px 18px 24px;
+}
+
+.sample-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.sample-filters .search-input {
+  flex: 1;
+  min-width: 220px;
+  max-width: 420px;
+  padding: 6px 10px;
+  font-size: 13px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg-elevated);
+  color: var(--text);
+}
+
+.sample-filters .search-input:focus {
+  border-color: var(--accent);
+  outline: none;
+}
+
+.sample-show-all {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.sample-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.sample-table th {
+  position: sticky;
+  top: 0;
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+  padding: 0;
+}
+
+.sample-table th button {
+  width: 100%;
+  padding: 6px 8px;
+  border: none;
+  background: none;
+  text-align: left;
+  font-weight: 600;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.sample-table th button:hover {
+  color: var(--text);
+}
+
+.sample-table td {
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+}
+
+.sample-table tr.gone td {
+  color: var(--text-muted);
+}
+
+.sample-open,
+.sample-place {
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--accent);
+  cursor: pointer;
+  text-align: left;
+}
+
+.sample-open {
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+
+.sample-open:hover,
+.sample-place:hover {
+  text-decoration: underline;
+}
+
+.freezer-map .segmented {
+  margin-bottom: 16px;
+}
+
+.freezer-boxes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.box-panel {
+  padding: 12px 14px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  max-width: 100%;
+}
+
+.box-panel.focused {
+  border-color: var(--accent);
+}
+
+.box-panel header {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.box-panel h3 {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-size: 17px;
+  color: var(--text-strong);
+}
+
+.box-detail {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  min-height: 32px;
+  margin-top: 10px;
+  font-size: 13px;
+}
+
+.box-detail-sample {
+  color: var(--text-muted);
+}
+
+/* A box of wells: a header row of column numbers, then a row letter and the wells of each row. */
+
+.box-grid {
+  display: grid;
+  gap: 3px;
+  width: max-content;
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.box-grid-row,
+.well-cell {
+  display: contents;
+}
+
+.box-grid-label {
+  display: grid;
+  place-items: center;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.well {
+  min-width: 2.4em;
+  height: 2.4em;
+  padding: 0 2px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.well:hover {
+  background: var(--bg-hover);
+}
+
+.well.filled {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+}
+
+.well.clash {
+  background: var(--error-bg);
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
+.well.selected {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.well[aria-disabled='true'] {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* The bar above a sample, and moving it. */
+
+.sample-bar.gone {
+  background: var(--bg-side);
+}
+
+.sample-status {
+  font: inherit;
+  font-size: 13px;
+  padding: 3px 6px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg-elevated);
+  color: var(--text);
+}
+
+.move-modal {
+  width: min(560px, 92vw);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.move-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.move-field select {
+  font: inherit;
+  padding: 6px 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg-elevated);
+  color: var(--text);
+}
+
+.move-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.well.current {
+  border-style: dashed;
+  border-color: var(--accent);
+}

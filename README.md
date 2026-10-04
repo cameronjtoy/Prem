@@ -143,6 +143,12 @@ The command ids are listed on the Keyboard shortcuts tab. Like settings, the fil
 - **The board** (next to Note and Graph) shows every job of a workflow in a column per stage, filtered by who has it. Drag a card to the next column to complete its stage, or back to send it back with a reason. Signed jobs stay put.
 - **My tasks** in the toolbar counts the jobs waiting on you, and opens them. On a team server, only a job's assignee or a PI can move it to another stage.
 
+**Samples and freezers**
+- A `type: sample` note is one tube or vial: its ID, type and **location**, written the way you'd say it: `Freezer B, box 3, A1`. **New sample** gives the next free ID (`S-{####}` by default, changeable in Settings) from the **Sample** template.
+- **Samples** (next to Board) lists every sample in the vault, sortable and filterable by ID, type, place or person. Used up and discarded samples are hidden unless you ask for them.
+- **Freezers** draws each box as a grid of its places, with what's in each. Choose a free place for **New sample at B3**, or a filled one to open it; the arrow keys move around the grid. A `type: box` note sets a box's size (it's 9 × 9 otherwise), and two samples in one place are flagged.
+- A sample's bar shows where it is. **Move…** picks a new place on the box's grid and refuses one that's taken; the status changes it to used up or discarded. Each change is added to the sample's **Location log**, so the note says where it has been and who moved it.
+
 **Records you can trust**
 
 ![One note's history: saves, then signed, witnessed and amended, each entry carrying the hash of the one before](site/assets/diagrams/history.svg)
