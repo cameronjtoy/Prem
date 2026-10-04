@@ -26,6 +26,7 @@ export const COMMANDS = [
   { id: 'note.new', title: 'New note', category: 'Note', key: 'Mod+N' },
   { id: 'note.newFromTemplate', title: 'New note from template', category: 'Note', key: 'Mod+Shift+N' },
   { id: 'vault.open', title: 'Open another vault', category: 'General', key: 'Mod+O' },
+  { id: 'vault.backup', title: 'Back up vault…', category: 'General' },
   { id: 'note.exportPdf', title: 'Export as PDF', category: 'Note', key: 'Mod+P' },
   { id: 'note.save', title: 'Save now', category: 'Note', key: 'Mod+S' },
   { id: 'note.history', title: 'History of this note', category: 'Note', key: 'Mod+Shift+H' },

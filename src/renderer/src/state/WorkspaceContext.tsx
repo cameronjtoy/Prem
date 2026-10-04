@@ -95,6 +95,8 @@ interface WorkspaceState {
   remove(path: VaultPath): Promise<void>
   /** Saves a note, or every note in a folder, as a PDF with its signatures and history check. */
   exportPdf(path: VaultPath): Promise<void>
+  /** Zips the whole vault, history included, to a file you choose. */
+  backupVault(): Promise<void>
   showTemplatePicker(folder: VaultPath | null): void
   showNotice(message: string | null): void
   registerEditor(handle: EditorHandle | null): void
@@ -477,6 +479,20 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
     [fail, setNotice]
   )
 
+  const backupVault = useCallback(async () => {
+    try {
+      // The backup holds what's on screen, not what was last saved.
+      await editor.current?.flush()
+      const saved = await vaultClient.backupVault()
+      if (saved) {
+        const size = saved.bytes >= 1e6 ? `${(saved.bytes / 1e6).toFixed(1)} MB` : `${Math.ceil(saved.bytes / 1e3)} KB`
+        setNotice(`Backed up ${saved.files} files (${size}) to ${saved.file}`, 'info')
+      }
+    } catch (err) {
+      fail(err)
+    }
+  }, [fail, setNotice])
+
   const registerEditor = useCallback((handle: EditorHandle | null) => {
     editor.current = handle
   }, [])
@@ -513,6 +529,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
       rename,
       remove,
       exportPdf,
+      backupVault,
       showTemplatePicker: setTemplatePickerFolder,
       showNotice: (message: string | null) => setNotice(message),
       registerEditor,
@@ -547,6 +564,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
       rename,
       remove,
       exportPdf,
+      backupVault,
       registerEditor,
       currentFolder,
       goBack,

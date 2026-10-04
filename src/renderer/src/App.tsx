@@ -117,6 +117,7 @@ function Shell() {
     () => !!ws.active
   )
   useCommand('vault.open', () => void openVault())
+  useCommand('vault.backup', () => void ws.backupVault(), vaultOpen)
   useCommand('view.graph', () => ws.setView(ws.view === 'graph' ? 'editor' : 'graph'), vaultOpen)
   useCommand('view.board', () => ws.setView(ws.view === 'board' ? 'editor' : 'board'), vaultOpen)
   useCommand('view.myTasks', () => setTasksOpen((open) => !open), vaultOpen)
