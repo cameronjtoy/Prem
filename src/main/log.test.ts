@@ -1,4 +1,4 @@
-import { mkdtemp, readdir, rm } from 'node:fs/promises'
+import { mkdtemp, readdir, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
@@ -34,8 +34,11 @@ describe('LogFile', () => {
     expect(tail[tail.length - 1]).toMatch(/WARN {2}29 x+$/)
   })
 
-  it('never throws, even when it cannot write', () => {
-    const log = new LogFile('/dev/null/not-a-folder')
+  it('never throws, even when it cannot write', async () => {
+    // A folder inside a file can't be created on any system.
+    const file = path.join(dir, 'a-file')
+    await writeFile(file, '')
+    const log = new LogFile(path.join(file, 'logs'))
     expect(() => log.write('error', 'lost')).not.toThrow()
     expect(log.tail(5)).toEqual([])
   })
