@@ -12,6 +12,15 @@ import './styles/app.css'
 import './styles/editor.css'
 import { App } from './App'
 
+// Errors in the window go to Prem's log too, so a problem report can include them.
+const logError = (message: string): void => void window.api.app.logError(message).catch(() => {})
+window.addEventListener('error', (e) => logError(e.error instanceof Error ? (e.error.stack ?? e.message) : e.message))
+window.addEventListener('unhandledrejection', (e) =>
+  logError(
+    `Unhandled rejection: ${e.reason instanceof Error ? (e.reason.stack ?? e.reason.message) : String(e.reason)}`
+  )
+)
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <App />

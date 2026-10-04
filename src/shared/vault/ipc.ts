@@ -1,3 +1,4 @@
+import type { ReportInfo } from '../diagnostics'
 import type { IpcResult } from './errors'
 import type { AnalysisStatus } from '../analysis/environment'
 import type { Reproduction } from '../analysis/reproduce'
@@ -52,6 +53,9 @@ export const Channels = {
   indexGraph: 'index:graph',
   search: 'search:query',
   openExternal: 'app:openExternal',
+  logError: 'app:logError',
+  diagnostics: 'app:diagnostics',
+  showLogs: 'app:showLogs',
   command: 'app:command',
   getSettings: 'settings:get',
   setSetting: 'settings:set',
@@ -177,6 +181,12 @@ export interface Api {
   }
   app: {
     openExternal(url: string): R<void>
+    /** Writes an error from the window to Prem's log. */
+    logError(message: string): R<void>
+    /** What a problem report contains: versions, the system, and the end of the log with private paths removed. */
+    diagnostics(): R<ReportInfo>
+    /** Opens the folder with Prem's log files. */
+    showLogs(): R<void>
     /** Commands chosen from the application menu, by id. */
     onCommand(listener: (id: string) => void): () => void
   }

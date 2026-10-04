@@ -1,5 +1,6 @@
-import { readFile, stat } from 'node:fs/promises'
-import { basename as baseNameOf, join } from 'node:path'
+import { mkdir, readFile, stat } from 'node:fs/promises'
+import { homedir } from 'node:os'
+import { basename as baseNameOf, dirname as dirOf, join } from 'node:path'
 import {
   app,
   dialog,
@@ -10,6 +11,7 @@ import {
   type SaveDialogOptions
 } from 'electron'
 import { MAX_ATTACHMENT_BYTES } from '@shared/attachments/attachments'
+import { redact, type ReportInfo } from '@shared/diagnostics'
 import { settingDef, type SettingKey } from '@shared/settings/schema'
 import { VaultError, type IpcResult } from '@shared/vault/errors'
 import { Channels } from '@shared/vault/ipc'
@@ -17,6 +19,7 @@ import { basename, normalizeVaultPath, sanitizeFileName, stripMd } from '@shared
 import type { WriteOptions } from '@shared/vault/types'
 import type { AnalysisManager } from '../analysis/AnalysisManager'
 import type { KeybindingsStore } from '../keybindings'
+import type { LogFile } from '../log'
 import type { SettingsStore } from '../settings'
 import { loadState, recallToken } from '../state'
 import type { VaultManager } from '../vault/VaultManager'
@@ -61,7 +64,8 @@ export function registerIpc(
   settings: SettingsStore,
   keybindings: KeybindingsStore,
   analysis: AnalysisManager,
-  getWindow: () => BrowserWindow | null
+  getWindow: () => BrowserWindow | null,
+  log: LogFile
 ): void {
   handle(Channels.pickAndOpen, async () => {
     const win = getWindow()
@@ -220,6 +224,24 @@ export function registerIpc(
       environment: environment === undefined ? undefined : str(environment, 'environment'),
       code: code === undefined ? undefined : strings(code, 'code')
     })
+  })
+
+  handle(Channels.logError, (message) => log.write('error', `[window] ${str(message, 'message').slice(0, 8000)}`))
+  handle(Channels.diagnostics, (): ReportInfo => {
+    const where = vaults.location()
+    const os = `${{ darwin: 'macOS', win32: 'Windows', linux: 'Linux' }[process.platform as string] ?? process.platform} ${process.getSystemVersion()} (${process.arch})`
+    return {
+      version: app.getVersion(),
+      os,
+      electron: process.versions.electron,
+      vault: where?.kind ?? 'none',
+      log: log.tail(200).map((line) => redact(line, { vault: where?.root, home: homedir() }))
+    }
+  })
+  handle(Channels.showLogs, async () => {
+    await mkdir(dirOf(log.file), { recursive: true })
+    const problem = await shell.openPath(dirOf(log.file))
+    if (problem) throw new VaultError('UNKNOWN', problem)
   })
 
   handle(Channels.openExternal, async (url) => {
