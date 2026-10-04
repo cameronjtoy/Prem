@@ -306,6 +306,13 @@ export class LocalFsProvider implements VaultProvider {
     )
   }
 
+  private ready: Promise<void> = Promise.resolve()
+
+  /** Resolves once the watcher has scanned the folder, so it reports every change made after this. */
+  watching(): Promise<void> {
+    return this.ready
+  }
+
   watch(listener: (changes: VaultChange[]) => void): () => void {
     let pending: VaultChange[] = []
     let timer: NodeJS.Timeout | null = null
@@ -332,9 +339,11 @@ export class LocalFsProvider implements VaultProvider {
       }
       if (kind === 'file' && isMarkdown(rel)) {
         const changed = await this.recordOutsideChange(type, rel, abs)
-        // A note whose content matches its latest recorded version is Prem's own save, however late the
-        // watcher reports it, so there's nothing new to announce. This backs up the timed selfWrites check.
-        if (type === 'modified' && !changed) return
+        // A note whose content matches its latest recorded version is usually Prem's own save, however late
+        // the watcher reports it, so there's nothing new to announce. This backs up the timed selfWrites
+        // check. But if that version was itself recorded as an outside edit (something like a signing check
+        // caught up with the file before the watcher fired), it's still news to everyone else.
+        if (type === 'modified' && !changed && (await this.notes.latest(rel))?.kind !== 'external') return
       }
       push({ type, path: rel, kind } as VaultChange)
     }
@@ -352,6 +361,7 @@ export class LocalFsProvider implements VaultProvider {
       .on('unlinkDir', (p) => void onEvent('deleted', 'folder', p))
       .on('error', (err) => console.error('[watcher]', err))
     this.watcher = watcher
+    this.ready = new Promise((resolve) => watcher.once('ready', () => resolve()))
 
     return () => {
       if (timer) clearTimeout(timer)

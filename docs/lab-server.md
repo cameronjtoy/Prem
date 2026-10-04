@@ -82,8 +82,10 @@ Each person has a role, which sets what they can do:
 | Role | Can write | Can read |
 |---|---|---|
 | `pi` | Everything except other people's notebooks: protocols, samples, templates, their own notebook | Everything, including every notebook |
-| `member` | Their own notebook (`Notebooks/<name>`) and `Samples` | Protocols, templates and the rest of the lab; other notebooks only if notebooks are shared |
+| `member` | Their own notebook (`Notebooks/<name>`), `Samples` and `Jobs` | Protocols, templates and the rest of the lab; other notebooks only if notebooks are shared |
 | `viewer` | Nothing | The same as a member |
+
+**Jobs** can be edited by anyone who can write to `Jobs`, but only a job's assignee or a PI can move it to another stage (complete a stage, send it back). Labs set up before members could write to `Jobs` can add `"Jobs": "write"` to each member's `access` in the config.
 
 Manage people with these commands. With Docker, run them through `docker exec prem node /app/prem-server.js … --config /data/prem-server.json`.
 

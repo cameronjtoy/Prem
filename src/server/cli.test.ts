@@ -111,7 +111,7 @@ describe('managing people', () => {
     await runCli(['list', '--config', file], io())
     expect(output).toEqual([
       'pat (pi): writes everything, Notebooks/pat',
-      'alice (member): writes Notebooks/alice, Samples'
+      'alice (member): writes Notebooks/alice, Samples, Jobs'
     ])
   })
 

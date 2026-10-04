@@ -32,7 +32,13 @@ export function roleAccess(role: Role, name: string, options: LabOptions): Recor
     case 'pi':
       return { '': 'write', Notebooks: 'read', [own]: 'write' }
     case 'member':
-      return { '': 'read', Notebooks: options.shareNotebooks ? 'read' : 'none', [own]: 'write', Samples: 'write' }
+      return {
+        '': 'read',
+        Notebooks: options.shareNotebooks ? 'read' : 'none',
+        [own]: 'write',
+        Samples: 'write',
+        Jobs: 'write'
+      }
     case 'viewer':
       return { '': 'read', Notebooks: options.shareNotebooks ? 'read' : 'none' }
   }

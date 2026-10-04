@@ -29,5 +29,7 @@ export interface VaultProvider {
   recordStatus(path: VaultPath): Promise<RecordCheck>
   exists(path: VaultPath): Promise<boolean>
   watch(listener: (changes: VaultChange[]) => void): () => void
+  /** Resolves once changes made from now on will be reported by `watch`. */
+  watching?(): Promise<void>
   dispose(): Promise<void>
 }

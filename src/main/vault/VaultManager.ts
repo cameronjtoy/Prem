@@ -42,6 +42,7 @@ import { RemoteProvider } from './RemoteProvider'
 import type { VaultProvider } from './VaultProvider'
 import serifFont from '@fontsource-variable/source-serif-4/files/source-serif-4-latin-wght-normal.woff2?inline'
 
+const WATCH_READY_MS = 5000
 export interface VaultEvents {
   onChanged(changes: VaultChange[]): void
   onIndexUpdated(snapshot: LinkIndexSnapshot): void
@@ -100,7 +101,8 @@ export class VaultManager {
       root: provider.root,
       user: provider.user,
       author: provider.user,
-      access: provider.access
+      access: provider.access,
+      role: provider.role
     }
   }
 
@@ -115,6 +117,11 @@ export class VaultManager {
     this.search = search
     this.provider = provider
     this.unwatch = provider.watch((changes) => void this.handleChanges(changes))
+    // Until the watcher has scanned the folder, edits made in other apps would go unnoticed. A very large
+    // vault opens anyway after a few seconds; its watcher catches up in the background.
+    let timer: NodeJS.Timeout | undefined
+    await Promise.race([provider.watching?.(), new Promise((resolve) => (timer = setTimeout(resolve, WATCH_READY_MS)))])
+    clearTimeout(timer)
   }
 
   async close(): Promise<void> {

@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { VaultError } from '@shared/vault/errors'
+import { parseFrontmatter } from '@shared/notes/frontmatter'
 import {
   basename,
   dirname,
@@ -11,14 +12,23 @@ import {
   stripMd
 } from '@shared/vault/paths'
 import { createRun, runPath } from '@shared/records/runs'
-import { createJob, jobPath, jobWorkflow, rerunJob as rerunJobText, tagRun } from '@shared/records/workflows'
+import {
+  completeStage,
+  createJob,
+  jobPath,
+  jobState,
+  jobWorkflow,
+  redoStage,
+  rerunJob as rerunJobText,
+  tagRun
+} from '@shared/records/workflows'
 import { formatDate } from '@shared/notes/templates'
 import type { RenameResult, VaultPath } from '@shared/vault/types'
 import { errorMessage, vaultClient } from '../services/vaultClient'
 import { useNotebookFolder, useSettings } from './SettingsContext'
 import { useVault } from './VaultContext'
 
-export type MainView = 'editor' | 'graph'
+export type MainView = 'editor' | 'graph' | 'board'
 
 /** Lets the workspace save or drop the open editor's pending edits before moving files around. */
 export interface EditorHandle {
@@ -73,6 +83,13 @@ interface WorkspaceState {
   newJob(workflowPath: VaultPath): Promise<void>
   /** Starts a new job with a job's stages and samples, linked back to it, and opens it. */
   rerunJob(jobPath: VaultPath): Promise<void>
+  /**
+   * Completes a job's current stage from outside the job (the board), asking first if the stage's run isn't
+   * complete. Resolves to whether the job moved on.
+   */
+  advanceJob(jobPath: VaultPath): Promise<boolean>
+  /** Sends a job back to an earlier stage, with a reason noted in the job. Resolves to whether it went back. */
+  sendJobBack(jobPath: VaultPath, stage: string, reason: string): Promise<boolean>
   startRename(path: VaultPath | null): void
   rename(path: VaultPath, newName: string): Promise<void>
   remove(path: VaultPath): Promise<void>
@@ -288,6 +305,56 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
     [info, writeNew, openNote, fail]
   )
 
+  /** Rewrites a job note that isn't open in the editor, failing if it changed in the meantime. */
+  const changeJob = useCallback(
+    async (path: VaultPath, change: (text: string) => Promise<string | null> | string | null): Promise<boolean> => {
+      try {
+        await editor.current?.flush()
+        if ((await vaultClient.recordStatus(path)).locked) {
+          setNotice(`${noteTitle(path)} is signed, so it can't change any more.`)
+          return false
+        }
+        const file = await vaultClient.read(path)
+        const next = await change(file.content)
+        if (next === null || next === file.content) return false
+        await vaultClient.write(path, next, { expectedVersion: file.version })
+        return true
+      } catch (err) {
+        fail(err)
+        return false
+      }
+    },
+    [fail, setNotice]
+  )
+
+  const advanceJob = useCallback(
+    (path: VaultPath) =>
+      changeJob(path, async (text) => {
+        const state = jobState(text)
+        if (!state.current) return null
+        const run = state.openRow?.run ? resolver(state.openRow.run, path) : null
+        if (run) {
+          const status = await vaultClient
+            .read(run)
+            .then((r) => parseFrontmatter(r.content).fields.status)
+            .catch(() => undefined)
+          if (
+            status !== 'complete' &&
+            !window.confirm(`The ${state.current.name} run isn't complete. Complete the stage anyway?`)
+          )
+            return null
+        }
+        return completeStage(text, { by: info?.author ?? '', now: new Date() })
+      }),
+    [changeJob, resolver, info]
+  )
+
+  const sendJobBack = useCallback(
+    (path: VaultPath, stage: string, reason: string) =>
+      changeJob(path, (text) => redoStage(text, stage, { by: info?.author ?? '', now: new Date(), reason })),
+    [changeJob, info]
+  )
+
   const openLink = useCallback(
     async (target: string, fromPath?: VaultPath) => {
       const resolved = resolver(target, fromPath)
@@ -437,6 +504,8 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
       startRun,
       newJob,
       rerunJob,
+      advanceJob,
+      sendJobBack,
       startRename: (path: VaultPath | null) => {
         setDraft(null)
         setRenamingPath(path)
@@ -473,6 +542,8 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
       startRun,
       newJob,
       rerunJob,
+      advanceJob,
+      sendJobBack,
       rename,
       remove,
       exportPdf,

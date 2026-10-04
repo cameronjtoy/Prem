@@ -30,6 +30,8 @@ const LAYOUT: Record<string, Entry[]> = {
     'app.commandPalette',
     '-',
     'view.graph',
+    'view.board',
+    'view.myTasks',
     'view.toggleFiles',
     'view.toggleLinks',
     '-',

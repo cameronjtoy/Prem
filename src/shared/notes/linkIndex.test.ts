@@ -79,3 +79,30 @@ describe('LinkIndex', () => {
     expect(index.has('Sub/D.md')).toBe(false)
   })
 })
+
+const workflowNote =
+  '---\ntype: workflow\n---\n# W\n\n## Stages\n| Stage | Protocol | Assignee | Outputs |\n| --- | --- | --- | --- |\n| Prep | | bob | |\n| Check | | alice | |\n'
+const jobNote = (stage: string, assignee: string) =>
+  `---\ntype: job\nworkflow: "[[W]]"\nstage: ${stage}\nassignee: ${assignee}\nstatus: open\ncreated: 2026-10-03 09:30\n---\n# W job\n\n## Stages\n| Stage | Protocol | Assignee | Outputs |\n| --- | --- | --- | --- |\n| Prep | | bob | |\n| Check | | alice | |\n`
+
+describe('LinkIndex jobs and workflows', () => {
+  it('lists workflows and jobs, leaving out templates, and keeps them up to date', () => {
+    const index = new LinkIndex()
+    index.build([
+      { path: 'Workflows/W.md', content: workflowNote },
+      { path: 'Jobs/W/W job 1.md', content: jobNote('Prep', 'bob') },
+      { path: 'templates/Job.md', content: jobNote('Prep', 'bob') },
+      { path: 'Notes/plain.md', content: '# Plain' }
+    ])
+    let snap = index.snapshot()
+    expect(snap.workflows).toEqual([{ path: 'Workflows/W.md', title: 'W', stages: ['Prep', 'Check'] }])
+    expect(snap.jobs.map((j) => [j.path, j.stage, j.assignee])).toEqual([['Jobs/W/W job 1.md', 'Prep', 'bob']])
+
+    index.upsert('Jobs/W/W job 1.md', jobNote('Check', 'alice'))
+    snap = index.snapshot()
+    expect(snap.jobs.map((j) => [j.stage, j.assignee])).toEqual([['Check', 'alice']])
+
+    index.upsert('Jobs/W/W job 1.md', '# No longer a job')
+    expect(index.snapshot().jobs).toEqual([])
+  })
+})

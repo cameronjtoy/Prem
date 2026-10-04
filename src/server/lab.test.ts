@@ -64,7 +64,7 @@ describe('people in the config', () => {
     expect(config.users[1].access['Notebooks/alice']).toBe('write')
     expect(describePeople(config)).toEqual([
       'pat (pi): writes everything, Notebooks/pat',
-      'alice (member): writes Notebooks/alice, Samples'
+      'alice (member): writes Notebooks/alice, Samples, Jobs'
     ])
   })
 

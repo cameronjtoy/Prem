@@ -8,6 +8,8 @@ export interface UserConfig {
   /** `sha256:<hex>` of the user's token. The token itself is never stored. */
   tokenHash: string
   access: Record<string, AccessLevel>
+  /** "pi", "member" or "viewer", as `prem-server` sets it. A PI can move anyone's jobs on. */
+  role?: string
 }
 
 export interface ServerConfig {
@@ -22,6 +24,7 @@ export interface User {
   name: string
   access: Access
   rules: Record<string, AccessLevel>
+  role?: string
   /** Which token they signed in with, so a reload can tell when it was replaced. */
   tokenHash: string
 }
@@ -53,7 +56,7 @@ export function parseConfig(raw: unknown, baseDir: string): ServerConfig {
 
   const names = new Set<string>()
   const parsedUsers = users.map((u: unknown, i): UserConfig => {
-    const { name, tokenHash, access } = (u ?? {}) as Record<string, unknown>
+    const { name, tokenHash, access, role } = (u ?? {}) as Record<string, unknown>
     if (typeof name !== 'string' || !name) fail(`users[${i}].name is required`)
     if (names.has(name)) fail(`user "${name}" is listed twice`)
     names.add(name)
@@ -64,7 +67,8 @@ export function parseConfig(raw: unknown, baseDir: string): ServerConfig {
     for (const [folder, level] of Object.entries(access)) {
       if (!isAccessLevel(level)) fail(`users[${i}].access["${folder}"] must be "none", "read" or "write"`)
     }
-    return { name, tokenHash, access: access as Record<string, AccessLevel> }
+    if (role !== undefined && typeof role !== 'string') fail(`users[${i}].role must be a string`)
+    return { name, tokenHash, access: access as Record<string, AccessLevel>, ...(role ? { role } : {}) }
   })
 
   return { vault: path.resolve(baseDir, vault), host, port, users: parsedUsers }
@@ -82,7 +86,7 @@ export class UserDirectory {
   constructor(users: UserConfig[]) {
     this.users = users.map((u) => ({
       hash: Buffer.from(u.tokenHash.slice(HASH_PREFIX.length), 'hex'),
-      user: { name: u.name, access: new Access(u.access), rules: u.access, tokenHash: u.tokenHash }
+      user: { name: u.name, access: new Access(u.access), rules: u.access, role: u.role, tokenHash: u.tokenHash }
     }))
   }
 
@@ -90,7 +94,10 @@ export class UserDirectory {
   stillValid(user: User): boolean {
     const current = this.users.find((e) => e.user.name === user.name)?.user
     return (
-      !!current && current.tokenHash === user.tokenHash && JSON.stringify(current.rules) === JSON.stringify(user.rules)
+      !!current &&
+      current.tokenHash === user.tokenHash &&
+      current.role === user.role &&
+      JSON.stringify(current.rules) === JSON.stringify(user.rules)
     )
   }
 

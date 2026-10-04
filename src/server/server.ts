@@ -4,7 +4,8 @@ import { realpath, stat } from 'node:fs/promises'
 import type { AddressInfo } from 'node:net'
 import { isVaultError, VaultError } from '@shared/vault/errors'
 import { MAX_ATTACHMENT_BYTES } from '@shared/attachments/attachments'
-import { joinPath, normalizeVaultPath, TEMPLATES_FOLDER } from '@shared/vault/paths'
+import { isMarkdown, joinPath, normalizeVaultPath, TEMPLATES_FOLDER } from '@shared/vault/paths'
+import { jobMoveRefusal } from '@shared/records/workflows'
 import { CLIENT_HEADER, Routes, STATUS_BY_CODE, type ServerInfo } from '@shared/vault/remote'
 import type { VaultChange, VaultPath, WriteOptions } from '@shared/vault/types'
 import { DEFAULT_TEMPLATES } from '../main/vault/defaultTemplates'
@@ -178,7 +179,7 @@ export async function startServer(config: ServerConfig, log: Logger = console): 
 
     switch (`${req.method} ${url.pathname}`) {
       case `GET ${Routes.info}`: {
-        const info: ServerInfo = { name: provider.name, user: user.name, access: user.rules }
+        const info: ServerInfo = { name: provider.name, user: user.name, access: user.rules, role: user.role }
         return sendJson(res, 200, info)
       }
       case `GET ${Routes.entries}`: {
@@ -255,6 +256,11 @@ export async function startServer(config: ServerConfig, log: Logger = console): 
         }
         const result = await locks.run(path.toLowerCase(), async () => {
           const existed = await provider.exists(path)
+          // Moving a job to another stage is the assignee's (or a PI's) call, not everyone with write access.
+          if (existed && isMarkdown(path)) {
+            const refusal = jobMoveRefusal((await provider.read(path)).content, content, user)
+            if (refusal) throw new VaultError('FORBIDDEN', refusal)
+          }
           try {
             const written = await provider.write(path, content, options)
             // The provider hides its own writes from its watcher, so tell everyone else here.

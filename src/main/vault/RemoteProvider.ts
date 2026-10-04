@@ -78,6 +78,7 @@ export class RemoteProvider implements VaultProvider {
   readonly name: string
   readonly user: string
   readonly access: ServerInfo['access']
+  readonly role: string | undefined
   private readonly clientId = randomUUID()
   private readonly streams = new Set<AbortController>()
   /** What this client last knew of the vault, so a reconnect can report what it missed. */
@@ -92,6 +93,7 @@ export class RemoteProvider implements VaultProvider {
     this.name = info.name
     this.user = info.user
     this.access = info.access
+    this.role = info.role
   }
 
   /** Checks the address and token, and fails with UNAUTHORIZED or UNAVAILABLE before anything is opened. */

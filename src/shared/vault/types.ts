@@ -20,6 +20,8 @@ export interface VaultInfo {
   author?: string
   /** Your per-folder permissions on a team vault. Local vaults are fully writable. */
   access?: Record<string, AccessLevel>
+  /** Your role on a team vault ("pi", "member" or "viewer"), if the server gives one. */
+  role?: string
 }
 
 export interface FileRecord {
@@ -84,6 +86,36 @@ export interface LinkIndexSnapshot {
   backlinks: Record<VaultPath, Backlink[]>
   outgoing: Record<VaultPath, OutgoingLink[]>
   graph: { nodes: GraphNode[]; links: GraphLink[] }
+  /** Every workflow in the vault, for the board's columns. */
+  workflows: WorkflowSummary[]
+  /** Every job in the vault, for the board and My tasks. */
+  jobs: JobSummary[]
+}
+
+export interface WorkflowSummary {
+  path: VaultPath
+  title: string
+  /** Stage names, in order. */
+  stages: string[]
+}
+
+export interface JobSummary {
+  path: VaultPath
+  title: string
+  /** The workflow it follows, as a link target, or null. */
+  workflow: string | null
+  /** The stage it's at (from its frontmatter). */
+  stage: string
+  /** The job's own copy of its stages, in order, with each one's default assignee. */
+  stages: { name: string; assignee: string }[]
+  assignee: string
+  status: 'open' | 'in progress' | 'done'
+  /** A run was started for the current stage and isn't complete yet. */
+  runOpen: boolean
+  /** How many samples it lists. */
+  samples: number
+  created: string
+  finished: string
 }
 
 export interface TemplateInfo {
