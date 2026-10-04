@@ -177,6 +177,10 @@ Examples: `ReportProblem.tsx`, `ApproveRun.tsx`, the history and search dialogs.
 - `board-chip`: a pill with a person's name or a status.
 - `badge`: a small pill with a count, as on the My tasks button. The button it sits on says the count in its `aria-label` ("My tasks, 3 waiting").
 
+### Well grid
+
+[`BoxGrid.tsx`](../src/renderer/src/components/Samples/BoxGrid.tsx) draws a storage box: column numbers across the top, row letters down the side, and a round `well` per place. A filled well is `--accent-soft` with an `--accent` edge and shows the sample's number; two samples in one place are `--error-bg` with a `--danger` edge; the selected well has the focus ring, and in a picker the sample's current place has a dashed edge. Each well's `aria-label` says the place and what's in it ("A1: S-0001, plasmid DNA"). The grid is one tab stop: the arrow keys move between wells and Enter opens one. In a picker, taken wells are `aria-disabled` rather than disabled, so the keyboard can still pass over them and choosing one says why it can't be used.
+
 ### Empty states and hints
 
 `empty` (with `.centered` for a whole view) and `hint` use `--text-muted`. Say what's missing and how to fill it: "Nothing is waiting on you."
@@ -187,7 +191,7 @@ Icons are in [`icons.tsx`](../src/renderer/src/components/icons.tsx): 24-unit SV
 
 ## Accessibility
 
-- **Keyboard:** everything works without a mouse. Commands have shortcuts listed in the palette and the menu (see [`commands.ts`](../src/shared/commands.ts)); anything you can drag also has a menu item.
+- **Keyboard:** everything works without a mouse. A grid of many small buttons (the well grid) is one tab stop, moved around with the arrow keys. Commands have shortcuts listed in the palette and the menu (see [`commands.ts`](../src/shared/commands.ts)); anything you can drag also has a menu item.
 - **Focus:** one ring for everything you can tab to: a 2px `--accent` outline, 2px out. Don't remove it; text fields are the exception, with their accent border.
 - **Targets:** at least 24×24px for anything clickable.
 - **Labels:** icon-only buttons have an `aria-label`; toggles use `aria-pressed`; dialogs are labelled; status changes that matter use `role="alert"` or `role="status"`.
