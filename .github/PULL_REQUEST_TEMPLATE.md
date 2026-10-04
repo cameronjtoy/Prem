@@ -11,4 +11,5 @@
 - [ ] Logic lives in `src/shared/` or `src/server/` with tests, not in React components or IPC handlers
 - [ ] Changes to storage, permissions, history or signing keep the guarantees in [CONTRIBUTING.md](https://github.com/cameronjtoy/Prem/blob/main/CONTRIBUTING.md#notebook-data-is-sensitive)
 - [ ] `CHANGELOG.md` has a line under **Unreleased** if users would notice the change
+- [ ] Interface changes use the tokens and components in [docs/DESIGN_SYSTEM.md](https://github.com/cameronjtoy/Prem/blob/main/docs/DESIGN_SYSTEM.md)
 - [ ] Docs updated if behaviour or setup changed (`README.md`, `docs/`)
