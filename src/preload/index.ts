@@ -77,6 +77,8 @@ const api: Api = {
   },
   app: {
     openExternal: (url) => ipcRenderer.invoke(Channels.openExternal, url),
+    onUpdateReady: (listener) => subscribe(Channels.updateReady, listener),
+    installUpdate: () => ipcRenderer.invoke(Channels.installUpdate),
     onCommand: (listener) => subscribe(Channels.command, listener)
   }
 }

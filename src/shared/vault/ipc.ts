@@ -48,6 +48,8 @@ export const Channels = {
   getIndex: 'index:get',
   search: 'search:query',
   openExternal: 'app:openExternal',
+  updateReady: 'app:updateReady',
+  installUpdate: 'app:installUpdate',
   command: 'app:command',
   getSettings: 'settings:get',
   setSetting: 'settings:set',
@@ -168,6 +170,10 @@ export interface Api {
   }
   app: {
     openExternal(url: string): R<void>
+    /** A new version has been downloaded and is ready to install. */
+    onUpdateReady(listener: (version: string) => void): () => void
+    /** Restarts into the downloaded version. */
+    installUpdate(): R<void>
     /** Commands chosen from the application menu, by id. */
     onCommand(listener: (id: string) => void): () => void
   }

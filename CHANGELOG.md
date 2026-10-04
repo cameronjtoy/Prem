@@ -7,6 +7,7 @@ All notable changes to Prem are listed here. The format follows [Keep a Changelo
 Everything below will ship as **0.1.0**, the first pilot release.
 
 ### Added
+- **Ready for signed installers and updates**: once the maintainers add signing certificates, releases are signed and notarized automatically. Installed copies then check for a new version once a day, download it in the background and offer to restart. **Settings → Updates** turns this off. Until then, the Linux AppImage updates itself and other installers stay as they are.
 - **The board and My tasks**:
   - **The board:** a Board view next to Note and Graph shows every job of a workflow in a column per stage, with who has it, whether its run is open, and its samples. Filter by assignee, and show finished jobs if you like.
   - **Moving cards:** drag a card to the next column to complete its stage (Prem asks first), or back to send it back with a reason. Signed jobs stay put.

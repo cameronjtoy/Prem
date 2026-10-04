@@ -18,6 +18,7 @@ import type { WriteOptions } from '@shared/vault/types'
 import type { AnalysisManager } from '../analysis/AnalysisManager'
 import type { KeybindingsStore } from '../keybindings'
 import type { SettingsStore } from '../settings'
+import { installUpdate } from '../updates'
 import { loadState, recallToken } from '../state'
 import type { VaultManager } from '../vault/VaultManager'
 
@@ -219,6 +220,8 @@ export function registerIpc(
       code: code === undefined ? undefined : strings(code, 'code')
     })
   })
+
+  handle(Channels.installUpdate, () => installUpdate())
 
   handle(Channels.openExternal, async (url) => {
     const target = new URL(str(url, 'url'))

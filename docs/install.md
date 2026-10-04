@@ -68,7 +68,9 @@ Choose **Open a folder as a vault** and pick an empty folder; Prem adds a `templ
 
 ## Updating
 
-Prem doesn't update itself yet. Download the new version from the releases page and install it over the old one. Your notebooks are ordinary folders and are not touched by installing or uninstalling.
+Signed versions of Prem update themselves. Once a day they look for a new release, download it in the background, and offer to restart. You can turn this off in **Settings → Updates**. Updating never touches your notes, and nothing about them is sent.
+
+Until the installers are signed, download each new version from the releases page and install it over the old one. The Linux AppImage updates itself already. Your notebooks are ordinary folders and are not touched by installing or uninstalling.
 
 ## The lab server
 

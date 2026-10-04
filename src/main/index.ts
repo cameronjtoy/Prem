@@ -10,6 +10,7 @@ import { AnalysisManager } from './analysis/AnalysisManager'
 import runnerSource from './analysis/prem_runner.py?raw'
 import { KeybindingsStore } from './keybindings'
 import { installMenu } from './menu'
+import { startUpdates } from './updates'
 import { SettingsStore } from './settings'
 import { migrateState } from './state'
 import { VaultManager } from './vault/VaultManager'
@@ -121,6 +122,10 @@ app.whenReady().then(async () => {
   keybindings.watch()
   registerIpc(vaults, settings, keybindings, analysis, () => mainWindow)
   createWindow()
+  startUpdates({
+    enabled: () => settings?.values['updates.check'] ?? true,
+    onReady: (version) => send(Channels.updateReady, version)
+  })
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow()
   })
