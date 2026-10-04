@@ -83,8 +83,10 @@ def _sha256(path):
 
 def _inputs(opened, root):
     found = []
-    root = os.path.abspath(root)
-    for path in sorted(opened):
+    # Compare real paths: the vault may be reached through a symlink (macOS's /var is /private/var), while
+    # Python reports files by where they really are.
+    root = os.path.realpath(root)
+    for path in sorted({os.path.realpath(p) for p in opened}):
         try:
             if os.path.commonpath([root, path]) != root or not os.path.isfile(path):
                 continue

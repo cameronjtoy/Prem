@@ -3,7 +3,9 @@ import { createResolver, type Resolver } from './resolve'
 import { isJob, isWorkflow, summarizeJob, summarizeWorkflow } from '../records/workflows'
 import type {
   Backlink,
+  IndexSummary,
   JobSummary,
+  NoteLinks,
   WorkflowSummary,
   GraphLink,
   GraphNode,
@@ -31,6 +33,8 @@ export class LinkIndex {
   private notes = new Map<VaultPath, IndexedNote>()
   private resolver: Resolver | null = null
   private version = 0
+  /** The full snapshot for the current version, worked out once however many times it's asked for. */
+  private cached: LinkIndexSnapshot | null = null
 
   constructor(private readonly excludedFolders: VaultPath[] = [TEMPLATES_FOLDER]) {}
 
@@ -68,7 +72,25 @@ export class LinkIndex {
     return this.resolver(target, fromPath)
   }
 
+  /** The small part the window is always sent: the version, workflows and jobs. */
+  summary(): IndexSummary {
+    const { version, workflows, jobs } = this.snapshot()
+    return { version, workflows, jobs }
+  }
+
+  /** The links into and out of one note. */
+  linksFor(path: VaultPath): NoteLinks {
+    const snap = this.snapshot()
+    return { backlinks: snap.backlinks[path] ?? [], outgoing: snap.outgoing[path] ?? [] }
+  }
+
   snapshot(): LinkIndexSnapshot {
+    if (this.cached?.version === this.version) return this.cached
+    this.cached = this.compute()
+    return this.cached
+  }
+
+  private compute(): LinkIndexSnapshot {
     const backlinks: Record<VaultPath, Backlink[]> = {}
     const outgoing: Record<VaultPath, OutgoingLink[]> = {}
     const nodes = new Map<string, GraphNode>()

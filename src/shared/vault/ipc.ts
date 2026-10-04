@@ -13,7 +13,9 @@ import type {
   AddedAttachment,
   CreatedNote,
   FileRecord,
+  IndexSummary,
   LinkIndexSnapshot,
+  NoteLinks,
   RenameResult,
   TemplateInfo,
   VaultChange,
@@ -47,6 +49,8 @@ export const Channels = {
   createFromTemplate: 'templates:create',
   openDaily: 'notebook:openDaily',
   getIndex: 'index:get',
+  indexLinks: 'index:links',
+  indexGraph: 'index:graph',
   search: 'search:query',
   openExternal: 'app:openExternal',
   logError: 'app:logError',
@@ -125,8 +129,13 @@ export interface Api {
   }
   search(query: string): R<SearchHit[]>
   index: {
-    get(): R<LinkIndexSnapshot | null>
-    onUpdated(listener: (snapshot: LinkIndexSnapshot) => void): () => void
+    /** The small summary: version, workflows and jobs. */
+    get(): R<IndexSummary | null>
+    /** The links into and out of one note. */
+    links(path: string): R<NoteLinks | null>
+    /** Every note and link, for the graph view. */
+    graph(): R<LinkIndexSnapshot['graph'] | null>
+    onUpdated(listener: (summary: IndexSummary) => void): () => void
   }
   settings: {
     get(): R<SettingsSnapshot>

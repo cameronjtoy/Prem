@@ -8,6 +8,7 @@ Everything below will ship as **0.1.0**, the first pilot release.
 
 ### Added
 - **Report a problem**: **Help → Report a problem…** shows exactly what a report contains (Prem's version, your system and the end of its log, with your vault's location, your home folder and access tokens left out) and opens it as a GitHub issue in your browser, or copies it. Prem now keeps a small log of errors and warnings, including errors in the window; **Help → Show logs** opens its folder. Nothing is sent automatically.
+- **Large vaults stay quick**: with 10,000 notes, an edit made in another app now shows up in about half a second instead of over 15, and Prem uses about a fifth less memory. The window is no longer sent the whole link index on every change, only a small summary; the Links panel and the graph ask for what they show. A benchmark (`npm run e2e:scale`) keeps it that way.
 - **The board and My tasks**:
   - **The board:** a Board view next to Note and Graph shows every job of a workflow in a column per stage, with who has it, whether its run is open, and its samples. Filter by assignee, and show finished jobs if you like.
   - **Moving cards:** drag a card to the next column to complete its stage (Prem asks first), or back to send it back with a reason. Signed jobs stay put.

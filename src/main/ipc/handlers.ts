@@ -159,7 +159,9 @@ export function registerIpc(
 
   handle(Channels.openDaily, (day) => vaults.openDaily(str(day, 'day')))
 
-  handle(Channels.getIndex, () => vaults.snapshot())
+  handle(Channels.getIndex, () => vaults.summary())
+  handle(Channels.indexLinks, (path) => vaults.linksFor(normalizeVaultPath(str(path, 'path'))))
+  handle(Channels.indexGraph, () => vaults.graph())
   handle(Channels.search, (query) => vaults.find(str(query, 'query')))
 
   handle(Channels.getSettings, () => settings.current)

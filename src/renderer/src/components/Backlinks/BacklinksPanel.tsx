@@ -2,7 +2,7 @@ import { useMemo } from 'react'
 import { plainSnippet } from '@shared/notes/snippet'
 import { splitLinkText } from '@shared/notes/wikilinks'
 import { noteTitle } from '@shared/vault/paths'
-import { useLinkIndex } from '../../state/LinkIndexContext'
+import { useNoteLinks } from '../../state/LinkIndexContext'
 import { keyFor } from '../../commands/registry'
 import { useWorkspace } from '../../state/WorkspaceContext'
 import { SidebarRightIcon } from '../icons'
@@ -40,20 +40,20 @@ function PanelHeader({ onHide }: { onHide(): void }) {
 }
 
 export function BacklinksPanel({ onHide }: { onHide(): void }) {
-  const snapshot = useLinkIndex()
   const { active, openNote, openLink } = useWorkspace()
   const path = active?.path
+  const links = useNoteLinks(path)
 
-  const backlinks = (path && snapshot?.backlinks[path]) || []
+  const backlinks = links?.backlinks ?? []
   const outgoing = useMemo(() => {
     const seen = new Set<string>()
-    return ((path && snapshot?.outgoing[path]) || []).filter((l) => {
+    return (links?.outgoing ?? []).filter((l) => {
       const key = l.resolved ?? `?${l.target.toLowerCase()}`
       if (seen.has(key)) return false
       seen.add(key)
       return true
     })
-  }, [path, snapshot])
+  }, [links])
 
   if (!path) {
     return (
