@@ -37,6 +37,8 @@ Also try your change in the app itself. Unit tests cover the shared logic, but m
 
 The end-to-end tests in `e2e/` drive the built app with [Playwright](https://playwright.dev): each test gets a fresh copy of the example vault and its own settings, and `team.spec.ts` runs the real server with two people. They take about 20 seconds. When you add a feature people use through the app, add a test there; `e2e/fixtures.ts` has helpers to open notes, rename, and answer save dialogs. On failure CI keeps a trace you can open with `npx playwright show-trace`.
 
+CI runs the whole suite on Linux, and the tests tagged `@smoke` (`test('…', { tag: '@smoke' }, …)`) on macOS and Windows too, along with the unit tests. Tag a new test `@smoke` when it covers something people do every day; `npm run e2e -- --grep @smoke` runs just those.
+
 `npm run e2e:scale` generates a vault of 10,000 notes (`scripts/bench-vault.mjs`) and checks that Prem opens it, searches it and notices edits made in other apps within budget, and how much memory it uses. CI runs it on Linux; run it when you change how notes are read, indexed or sent to the window.
 
 ## How changes are made

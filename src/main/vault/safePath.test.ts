@@ -14,7 +14,8 @@ beforeAll(async () => {
   outside = path.join(base, 'outside')
   await mkdir(root)
   await mkdir(outside)
-  await symlink(outside, path.join(root, 'escape'))
+  // A junction on Windows, where ordinary symlinks need admin rights; other systems ignore the type.
+  await symlink(outside, path.join(root, 'escape'), 'junction')
 })
 
 afterAll(() => rm(base, { recursive: true, force: true }))
