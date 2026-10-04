@@ -38,6 +38,8 @@ export const vaultClient = {
     unwrap(window.api.templates.create(templatePath, title, folder)),
   openDaily: (day: string) => unwrap(window.api.notebook.openDaily(day)),
   getIndex: () => unwrap(window.api.index.get()),
+  noteLinks: (path: string) => unwrap(window.api.index.links(path)),
+  linkGraph: () => unwrap(window.api.index.graph()),
   search: (query: string) => unwrap(window.api.search(query)),
   onIndexUpdated: window.api.index.onUpdated,
   openExternal: (url: string) => unwrap(window.api.app.openExternal(url)),
