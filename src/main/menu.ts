@@ -10,6 +10,7 @@ const LAYOUT: Record<string, Entry[]> = {
     'note.new',
     'note.newFromTemplate',
     'note.today',
+    'sample.new',
     '-',
     'vault.open',
     'vault.backup',
@@ -41,6 +42,7 @@ const LAYOUT: Record<string, Entry[]> = {
     '-',
     'view.graph',
     'view.board',
+    'view.samples',
     'view.myTasks',
     'view.toggleFiles',
     'view.toggleLinks',
@@ -68,6 +70,7 @@ const LAYOUT: Record<string, Entry[]> = {
     'job.completeStage',
     'job.redoStage',
     'job.rerun',
+    'sample.move',
     '-',
     // Not "Run Python cell": its Shift+Enter would be taken by the macOS menu even while typing elsewhere.
     'analysis.runAll',

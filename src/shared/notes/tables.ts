@@ -95,3 +95,14 @@ export function formatTable(header: string[], rows: string[][]): string {
 export function column(table: Pick<Table, 'header'>, name: string): number {
   return table.header.findIndex((h) => h.toLowerCase() === name.toLowerCase())
 }
+
+/** The first table inside a `## Heading` section, with where the section is. */
+export function sectionTable(
+  text: string,
+  heading: string
+): { section: { from: number; to: number }; table: Table } | null {
+  const section = findSection(text, heading)
+  if (!section) return null
+  const table = parseTable(text.slice(0, section.to), section.from)
+  return table ? { section, table } : null
+}

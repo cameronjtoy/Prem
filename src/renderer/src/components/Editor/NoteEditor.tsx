@@ -30,6 +30,8 @@ import { ApproveRun, type RunApprovalRequest } from './ApproveRun'
 import { NoteSession, type Conflict, type SaveStatus } from './NoteSession'
 import { RecordBar } from './RecordBar'
 import { readMeta, RunBar, type NoteMeta } from './RunBar'
+import { SampleBar } from '../Samples/SampleBar'
+import { moveSample, setSampleStatus } from '@shared/records/samples'
 
 const STATUS_LABEL: Record<SaveStatus, string> = {
   saved: 'Saved',
@@ -270,6 +272,7 @@ export function NoteEditor({ path, cursor }: { path: string; cursor: number | nu
   }
 
   const [redoRequest, setRedoRequest] = useState(0)
+  const [moveRequest, setMoveRequest] = useState(0)
   const onRedoStage = (stage: string, reason: string): void => {
     try {
       rewrite((text) => ({ text: redoStage(text, stage, { by: info?.author ?? '', now: new Date(), reason }) }))
@@ -405,6 +408,11 @@ export function NoteEditor({ path, cursor }: { path: string; cursor: number | nu
     () => void rerunJob(path),
     () => !loading && meta.type === 'job' && !!meta.job?.stages.length && canWrite('Jobs')
   )
+  useCommand(
+    'sample.move',
+    () => setMoveRequest((n) => n + 1),
+    () => editable() && meta.type === 'sample'
+  )
   useCommand('format.task', () => view() && toggleTaskAtCursor(view()!), onLine(/^\s*(?:[-*+]|\d+[.)])\s+\[[ xX]\]/))
   useCommand('format.bold', () => view() && toggleWrap(view()!, '**'), editable)
   useCommand('format.italic', () => view() && toggleWrap(view()!, '*'), editable)
@@ -498,6 +506,20 @@ export function NoteEditor({ path, cursor }: { path: string; cursor: number | nu
           onCompleteStage={() => void onCompleteStage()}
           onRedoStage={onRedoStage}
           redoRequest={redoRequest}
+        />
+      )}
+      {!loading && meta.type === 'sample' && (
+        <SampleBar
+          path={path}
+          fields={meta.fields}
+          readOnly={readOnly}
+          moveRequest={moveRequest}
+          onMove={(to) =>
+            rewrite((text) => ({ text: moveSample(text, to, { by: info?.author ?? '', now: new Date() }) }))
+          }
+          onStatus={(next) =>
+            rewrite((text) => ({ text: setSampleStatus(text, next, { by: info?.author ?? '', now: new Date() }) }))
+          }
         />
       )}
       {conflict && (

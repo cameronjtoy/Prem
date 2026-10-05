@@ -25,6 +25,7 @@ import type {
   CreatedNote,
   IndexSummary,
   LinkIndexSnapshot,
+  SampleIndex,
   NoteLinks,
   RenameResult,
   TemplateInfo,
@@ -174,6 +175,11 @@ export class VaultManager {
   /** Every note and link, for the graph view. */
   graph(): LinkIndexSnapshot['graph'] | null {
     return this.provider ? this.index.snapshot().graph : null
+  }
+
+  /** Every sample and box, for the Samples view. */
+  samples(): SampleIndex | null {
+    return this.provider ? this.index.samples() : null
   }
 
   async write(path: VaultPath, content: string, options?: WriteOptions): Promise<WriteResult> {

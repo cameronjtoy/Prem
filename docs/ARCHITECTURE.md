@@ -109,15 +109,17 @@ A log that can't be read (after a sync conflict or a disk error) is never treate
 
 Signatures are **attestations tied to the authenticated user** (team-server token, or the OS user locally); they are tamper-evident but not cryptographic yet.
 
-## Records: runs, workflows and jobs
+## Records: runs, workflows, jobs and samples
 
-Runs, workflows and jobs are notes told apart by their `type` field, with the logic in pure functions.
+Runs, workflows, jobs, samples and boxes are notes told apart by their `type` field, with the logic in pure functions.
 
 - [`shared/records/runs.ts`](../src/shared/records/runs.ts) copies a protocol's materials and steps into a run and timestamps ticked steps.
 - [`shared/records/workflows.ts`](../src/shared/records/workflows.ts) reads a workflow's Stages table, creates a job with a copy of it, logs the run started for each stage and moves the job on (`completeStage`). `redoStage` moves a job back without touching its log, and `rerunJob` copies a job's own stages and samples into a new job, so a rerun repeats what was done even if the workflow changed since.
 - Frontmatter stays flat `key: value`, so anything with rows (stages, the stage log) is a markdown table, read and written by [`shared/notes/tables.ts`](../src/shared/notes/tables.ts).
 - The bar above the editor ([`RunBar.tsx`](../src/renderer/src/components/Editor/RunBar.tsx)) offers the next step for each type.
 - The link index keeps a summary of every job and workflow (`summarizeJob`, `summarizeWorkflow`), so the board and My tasks ([`components/Board/`](../src/renderer/src/components/Board)) need no extra reads. On a team server, `jobMoveRefusal` lets only a job's assignee or a PI change its stage, assignee or status.
+
+- [`shared/records/samples.ts`](../src/shared/records/samples.ts) reads a sample's `location` as written (`Freezer B, box 3, A1`: the container's parts, then a well), lays out each box with the samples in each well (`storageBoxes`; a `type: box` note sets the size, otherwise 9 × 9 or what fits), refuses a taken place (`placeRefusal`), finds the next free ID for a format such as `S-{####}` (`nextSampleId`), and moves a sample or changes its status with a row in its Location log. The link index keeps a summary of every sample and box, but a lab can have thousands, so unlike jobs they aren't pushed with every change: the Samples view ([`components/Samples/`](../src/renderer/src/components/Samples)) asks for them with `index:samples` while it's open, as the graph does.
 
 A new record type follows the same pattern: a `type` value, a pure module in `shared/records/` with tests, a summary in the link index if a view lists them, and a branch in the bar.
 
@@ -127,7 +129,7 @@ A new record type follows the same pattern: a `type` value, a pure module in `sh
 
 On open, `VaultManager` reads every note once into the [link index](../src/shared/notes/linkIndex.ts) and the [search index](../src/shared/search). After that only changed notes are read again.
 
-The window is never sent the whole index. After each change main pushes a small `IndexSummary` (a version number plus the job and workflow summaries), and the renderer asks for the rest only when it is on screen: the Links panel calls `index:links` for the open note, and the graph calls `index:graph` (`useLinkIndex`, `useNoteLinks` and `useLinkGraph` in [`LinkIndexContext.tsx`](../src/renderer/src/state/LinkIndexContext.tsx)). `LinkIndex.snapshot()` is cached per version.
+The window is never sent the whole index. After each change main pushes a small `IndexSummary` (a version number plus the job and workflow summaries), and the renderer asks for the rest only when it is on screen: the Links panel calls `index:links` for the open note, the graph calls `index:graph`, and the Samples view calls `index:samples` (`useLinkIndex`, `useNoteLinks`, `useLinkGraph` and `useSampleIndex` in [`LinkIndexContext.tsx`](../src/renderer/src/state/LinkIndexContext.tsx)). `LinkIndex.snapshot()` is cached per version.
 
 `npm run e2e:scale` checks this holds with 10,000 notes ([`scripts/bench-vault.mjs`](../scripts/bench-vault.mjs), [`e2e/scale.spec.ts`](../e2e/scale.spec.ts)): open within 8 s, search within 1 s, an outside edit shown within 3 s, and main under 900 MB. Run it when you change how notes are read, indexed or sent to the window.
 
@@ -204,7 +206,7 @@ The server bundles to a single file (`out/server/index.js`) with only Node built
 
 - The editor is CodeMirror 6 with a live-preview extension that hides markdown syntax except on the active line, and widgets for wikilinks, checkboxes, tables, math (KaTeX), attachments and analysis cells.
 - State lives in a few contexts: `VaultContext` (what's open, permissions, your role), `LinkIndexContext` (the index summary, and links and graph on demand), `WorkspaceContext` (open note, views, actions) and `SettingsContext` (settings as CSS variables and editor options).
-- Views: Note, Graph and Board, plus dialogs (search, palette, history, approvals, report a problem).
+- Views: Note, Graph, Board and Samples, plus dialogs (search, palette, history, approvals, report a problem).
 - How it should look and behave is in [`DESIGN_SYSTEM.md`](DESIGN_SYSTEM.md).
 
 ## Testing and CI

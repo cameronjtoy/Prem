@@ -9,8 +9,10 @@ import {
   joinPath,
   noteTitle,
   sanitizeFileName,
-  stripMd
+  stripMd,
+  TEMPLATES_FOLDER
 } from '@shared/vault/paths'
+import { createSample, nextSampleId, SAMPLE_TEMPLATE_FALLBACK, samplePath } from '@shared/records/samples'
 import { createRun, runPath } from '@shared/records/runs'
 import {
   completeStage,
@@ -28,7 +30,7 @@ import { errorMessage, vaultClient } from '../services/vaultClient'
 import { useNotebookFolder, useSettings } from './SettingsContext'
 import { useVault } from './VaultContext'
 
-export type MainView = 'editor' | 'graph' | 'board'
+export type MainView = 'editor' | 'graph' | 'board' | 'samples'
 
 /** Lets the workspace save or drop the open editor's pending edits before moving files around. */
 export interface EditorHandle {
@@ -90,6 +92,15 @@ interface WorkspaceState {
   advanceJob(jobPath: VaultPath): Promise<boolean>
   /** Sends a job back to an earlier stage, with a reason noted in the job. Resolves to whether it went back. */
   sendJobBack(jobPath: VaultPath, stage: string, reason: string): Promise<boolean>
+  /** Creates a sample with the next free ID, at `location` if given, and opens it. */
+  newSample(location?: string): Promise<void>
+  /** Rewrites a sample note that isn't open, such as from the freezer map. Resolves to whether it changed. */
+  changeSample(path: VaultPath, change: (text: string) => string | null): Promise<boolean>
+  /** A box to show on the freezer map, set by showInFreezer until the Samples view takes it. */
+  samplesFocus: string | null
+  /** Opens the freezer map at a box. */
+  showInFreezer(box: string): void
+  clearSamplesFocus(): void
   startRename(path: VaultPath | null): void
   rename(path: VaultPath, newName: string): Promise<void>
   remove(path: VaultPath): Promise<void>
@@ -132,9 +143,11 @@ function renameReport({ updated, locked, readOnly }: RenameResult): { text: stri
 export function WorkspaceProvider({ children }: { children: ReactNode }) {
   const { info, entries, resolver, subscribe, refresh, canWrite } = useVault()
   const notebook = useNotebookFolder(info?.user)
-  const confirmTrash = useSettings().values['notebook.confirmTrash']
+  const settings = useSettings().values
+  const confirmTrash = settings['notebook.confirmTrash']
   const [active, setActive] = useState<OpenNote | null>(null)
   const [view, setView] = useState<MainView>('editor')
+  const [samplesFocus, setSamplesFocus] = useState<string | null>(null)
   const [renamingPath, setRenamingPath] = useState<VaultPath | null>(null)
   const [draft, setDraft] = useState<Draft | null>(null)
   const [templatePickerFolder, setTemplatePickerFolder] = useState<VaultPath | null>(null)
@@ -357,6 +370,31 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
     [changeJob, info]
   )
 
+  const newSample = useCallback(
+    async (location = '') => {
+      try {
+        await editor.current?.flush()
+        const now = new Date()
+        const known = (await vaultClient.sampleIndex())?.samples.map((s) => s.id) ?? []
+        const id = nextSampleId(settings['samples.idFormat'], known, now)
+        const template = await vaultClient
+          .read(joinPath(TEMPLATES_FOLDER, 'Sample.md'))
+          .then((f) => f.content)
+          .catch(() => SAMPLE_TEMPLATE_FALLBACK)
+        const content = createSample(template, { id, location, author: info?.author ?? '', now })
+        openNote(await writeNew(samplePath(settings['samples.folder'], id), content))
+      } catch (err) {
+        fail(err)
+      }
+    },
+    [settings, info, writeNew, openNote, fail]
+  )
+
+  const showInFreezer = useCallback((box: string) => {
+    setSamplesFocus(box)
+    setView('samples')
+  }, [])
+
   const openLink = useCallback(
     async (target: string, fromPath?: VaultPath) => {
       const resolved = resolver(target, fromPath)
@@ -522,6 +560,11 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
       rerunJob,
       advanceJob,
       sendJobBack,
+      newSample,
+      changeSample: changeJob,
+      samplesFocus,
+      showInFreezer,
+      clearSamplesFocus: () => setSamplesFocus(null),
       startRename: (path: VaultPath | null) => {
         setDraft(null)
         setRenamingPath(path)
@@ -561,6 +604,10 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
       rerunJob,
       advanceJob,
       sendJobBack,
+      newSample,
+      changeJob,
+      samplesFocus,
+      showInFreezer,
       rename,
       remove,
       exportPdf,

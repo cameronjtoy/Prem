@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
-import type { IndexSummary, LinkIndexSnapshot, NoteLinks } from '@shared/vault/types'
+import type { IndexSummary, LinkIndexSnapshot, NoteLinks, SampleIndex } from '@shared/vault/types'
 import { vaultClient } from '../services/vaultClient'
 import { useVault } from './VaultContext'
 
@@ -62,4 +62,9 @@ export function useNoteLinks(path: string | null | undefined): NoteLinks | null 
 /** Every note and link, for the graph view. */
 export function useLinkGraph(): LinkIndexSnapshot['graph'] | null {
   return useIndexed(() => vaultClient.linkGraph(), 'graph')
+}
+
+/** Every sample and box, for the Samples view. */
+export function useSampleIndex(): SampleIndex | null {
+  return useIndexed(() => vaultClient.sampleIndex(), 'samples')
 }

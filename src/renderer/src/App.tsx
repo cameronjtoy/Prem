@@ -6,11 +6,13 @@ import { FileTree } from './components/FileTree/FileTree'
 import { GraphView } from './components/Graph/GraphView'
 import { ReportProblem } from './components/ReportProblem'
 import { BoardView } from './components/Board/BoardView'
+import { SamplesView } from './components/Samples/SamplesView'
 import { MyTasks, useMyTasks } from './components/Board/MyTasks'
 import {
   EditIcon,
   GraphIcon,
   BoardIcon,
+  SampleIcon,
   TasksIcon,
   SearchIcon,
   SidebarLeftIcon,
@@ -58,7 +60,8 @@ function Shell() {
   const [overlay, setOverlay] = useState<
     'search' | 'commands' | 'notes' | 'shortcuts' | 'settings' | 'keybindings' | null
   >(null)
-  const { snapshot: settingsSnapshot } = useSettings()
+  const { snapshot: settingsSnapshot, values: settingValues } = useSettings()
+  const samplesFolder = settingValues['samples.folder']
   // Reading the shortcuts here re-renders the app when they change, so every label shows the new keys.
   const { snapshot: keysSnapshot } = useKeybindings()
   const trouble = troubleWith(settingsSnapshot, keysSnapshot)
@@ -123,6 +126,12 @@ function Shell() {
   useCommand('vault.backup', () => void ws.backupVault(), vaultOpen)
   useCommand('view.graph', () => ws.setView(ws.view === 'graph' ? 'editor' : 'graph'), vaultOpen)
   useCommand('view.board', () => ws.setView(ws.view === 'board' ? 'editor' : 'board'), vaultOpen)
+  useCommand('view.samples', () => ws.setView(ws.view === 'samples' ? 'editor' : 'samples'), vaultOpen)
+  useCommand(
+    'sample.new',
+    () => void ws.newSample(),
+    () => vaultOpen() && canWrite(samplesFolder)
+  )
   useCommand('view.myTasks', () => setTasksOpen((open) => !open), vaultOpen)
   useCommand('view.toggleFiles', togglePanel(filesPanel), vaultOpen)
   useCommand('view.toggleLinks', togglePanel(linksPanel), vaultOpen)
@@ -216,30 +225,43 @@ function Shell() {
               )}
               <div className="segmented" role="tablist">
                 <button
+                  aria-label="Note"
                   role="tab"
                   aria-selected={ws.view === 'editor'}
                   className={ws.view === 'editor' ? 'on' : undefined}
                   onClick={() => ws.setView('editor')}
                 >
-                  <EditIcon /> Note
+                  <EditIcon /> <span className="toolbar-label">Note</span>
                 </button>
                 <button
+                  aria-label="Graph"
                   role="tab"
                   aria-selected={ws.view === 'graph'}
                   className={ws.view === 'graph' ? 'on' : undefined}
                   onClick={() => ws.setView('graph')}
                   title={`Graph view (${keyFor('view.graph')})`}
                 >
-                  <GraphIcon /> Graph
+                  <GraphIcon /> <span className="toolbar-label">Graph</span>
                 </button>
                 <button
+                  aria-label="Board"
                   role="tab"
                   aria-selected={ws.view === 'board'}
                   className={ws.view === 'board' ? 'on' : undefined}
                   onClick={() => ws.setView('board')}
                   title="Board: every job of a workflow, by stage"
                 >
-                  <BoardIcon /> Board
+                  <BoardIcon /> <span className="toolbar-label">Board</span>
+                </button>
+                <button
+                  role="tab"
+                  aria-selected={ws.view === 'samples'}
+                  className={ws.view === 'samples' ? 'on' : undefined}
+                  onClick={() => ws.setView('samples')}
+                  aria-label="Samples"
+                  title="Samples: every sample, and a map of each freezer"
+                >
+                  <SampleIcon /> <span className="toolbar-label">Samples</span>
                 </button>
               </div>
               <div className="toolbar-spacer" />
@@ -257,32 +279,39 @@ function Shell() {
                 {tasksOpen && <MyTasks onClose={closeTasks} />}
               </div>
               <button
+                aria-label="Search"
                 className="text-button"
                 onClick={() => setOverlay('search')}
                 title={`Search all notes (${keyFor('app.search')})`}
               >
-                <SearchIcon /> Search
+                <SearchIcon /> <span className="toolbar-label">Search</span>
               </button>
               {canKeepNotebook && (
                 <button
+                  aria-label="Today"
                   className="text-button"
                   onClick={() => void ws.openToday()}
                   title={`Today's notebook entry (${keyFor('note.today')})`}
                 >
-                  <TodayIcon /> Today
+                  <TodayIcon /> <span className="toolbar-label">Today</span>
                 </button>
               )}
               {canCreate && (
-                <button className="text-button" onClick={() => ws.showTemplatePicker(ws.currentFolder())}>
-                  <TemplateIcon /> New from template
+                <button
+                  aria-label="New from template"
+                  className="text-button"
+                  onClick={() => ws.showTemplatePicker(ws.currentFolder())}
+                >
+                  <TemplateIcon /> <span className="toolbar-label">New from template</span>
                 </button>
               )}
               <button
+                aria-label="Switch vault"
                 className="text-button"
                 onClick={() => void openVault()}
                 title={`Open another vault (${keyFor('vault.open')})`}
               >
-                <VaultIcon /> Switch vault
+                <VaultIcon /> <span className="toolbar-label">Switch vault</span>
               </button>
               {linksHidden && (
                 <button
@@ -319,6 +348,8 @@ function Shell() {
                 <GraphView />
               ) : ws.view === 'board' ? (
                 <BoardView />
+              ) : ws.view === 'samples' ? (
+                <SamplesView />
               ) : ws.active ? (
                 <NoteEditor key={ws.active.path} path={ws.active.path} cursor={ws.active.cursor} />
               ) : (

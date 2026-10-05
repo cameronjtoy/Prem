@@ -1,5 +1,5 @@
 import { parseFrontmatter, setFrontmatterField } from '../notes/frontmatter'
-import { column, findSection, formatTable, parseTable } from '../notes/tables'
+import { column, findSection, formatTable, sectionTable } from '../notes/tables'
 import { formatDate } from '../notes/templates'
 import { splitLinkText } from '../notes/wikilinks'
 import { joinPath, noteTitle, sanitizeFileName } from '../vault/paths'
@@ -62,13 +62,6 @@ export function linkTarget(value: string | undefined): string | null {
 const link = (target: string | null): string => (target ? `[[${target}]]` : '')
 
 /** The table under a `## Heading`, or null if the section or its table is missing. */
-function sectionTable(text: string, heading: string) {
-  const section = findSection(text, heading)
-  if (!section) return null
-  const table = parseTable(text.slice(0, section.to), section.from)
-  return table ? { section, table } : null
-}
-
 /** The stages listed in a workflow's (or a job's) Stages table, skipping rows without a name. */
 export function parseStages(text: string): Stage[] {
   const found = sectionTable(text, STAGES_HEADING)

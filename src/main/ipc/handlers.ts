@@ -178,6 +178,7 @@ export function registerIpc(
   handle(Channels.getIndex, () => vaults.summary())
   handle(Channels.indexLinks, (path) => vaults.linksFor(normalizeVaultPath(str(path, 'path'))))
   handle(Channels.indexGraph, () => vaults.graph())
+  handle(Channels.indexSamples, () => vaults.samples())
   handle(Channels.search, (query) => vaults.find(str(query, 'query')))
 
   handle(Channels.getSettings, () => settings.current)

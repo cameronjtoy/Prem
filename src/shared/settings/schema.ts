@@ -124,6 +124,27 @@ export const SETTINGS = [
     default: true
   },
   {
+    key: 'samples.folder',
+    section: 'Notebook',
+    title: 'Samples folder',
+    description: 'Where new samples go. Samples anywhere in the vault are listed in the Samples view.',
+    type: 'string',
+    pattern: /^(?!\.)(?!.*\/\.)[^/\\]+(\/[^/\\]+)*$/,
+    patternHint: 'A folder inside the vault, such as "Samples".',
+    default: 'Samples'
+  },
+  {
+    key: 'samples.idFormat',
+    section: 'Notebook',
+    title: 'Sample IDs',
+    description:
+      'How new sample IDs look. {####} counts up from the highest ID already used, with as many digits as #; {YYYY}, {YY} and {MM} are the date.',
+    type: 'string',
+    pattern: /\{#+\}/,
+    patternHint: 'Include a counter such as {####}.',
+    default: 'S-{####}'
+  },
+  {
     key: 'analysis.enabled',
     section: 'Analysis',
     title: 'Run Python in notes',
